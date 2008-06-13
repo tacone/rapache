@@ -1,0 +1,139 @@
+#!/usr/bin/env python
+#
+# Copyright (C) Stefano Forenza 2008 <tacone@gmail.com>
+# 
+# This is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# main.py is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import sys
+import re
+
+try:
+     import pygtk
+     pygtk.require("2.0")
+except:
+      pass
+try:
+    import gtk
+    import gtk.glade
+except:
+    sys.exit(1)
+
+import os
+import pango
+import tempfile
+
+from RapacheCore.VirtualHost import *
+
+        
+class VirtualHostWindow:
+    
+    create_new = True
+    name = None
+    
+    def __init__ ( self, gladepath, father = None):
+        self.father = father
+        self.gladefile = gladepath + "/" + "edit_vhost.glade"  
+        self.xml = gtk.glade.XML(self.gladefile)     
+        #Create our dictionary and connect it
+        dic = { 
+            "quit" : self.quit
+            , "on_ok":self.save
+            , "on_cancel":self.close  
+            , "domain_name_updated":self.domain_name_updated
+            , "custom_folder_toggled":self.custom_folder_toggled
+            }
+        self.xml.signal_autoconnect(dic)
+        self.xml.get_widget( 'custom_folder' ).set_action ( gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER )                
+        font_desc = pango.FontDescription('monospace')
+        self.xml.get_widget( 'vhost_source' ).modify_font(font_desc)
+        
+   
+    def load (self, name ):
+
+        site = VirtualHostModel( name )
+        self.create_new = False
+        self.name = name 
+        self._get( 'create_hosts_entry' ).hide()
+        self._get( 'create_hosts_label' ).hide()
+        try:
+            site.load()
+            self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
+            self._get( 'domain_name' ).set_text( site.data[ 'domain_name' ] )
+            self._get( 'default_folder' ).set_text( site.data[ 'target_folder' ] )
+            self.xml.get_widget( 'ok_button' ).set_sensitive(True);
+        except "VhostUnparsable":            
+            print self._get( 'notebook' ).get_nth_page( 0 )
+            self._get( 'notebook' ).get_nth_page( 0 ).hide()
+        buffer = self.xml.get_widget( 'vhost_source' ).get_buffer()
+        buffer.set_text( site.get_source() )
+    def _get(self, id ):
+        return self.xml.get_widget( id )
+    
+    
+    def error ( self, message ):
+        self.xml.get_widget( 'message_text' ).set_label( '<span size="large"><b>'+message+'</b></span>' )
+        self.xml.get_widget( 'message_container' ).show()
+        
+    def quit (self, widget):      
+        self.father.new_vhost_window = None
+    
+    def close ( self, widget = None ):
+        self.window = self.xml.get_widget( 'vhost_edit_window' )
+        self.window.destroy()
+    def domain_name_updated ( self, widget, a = None, b = None, c = None ):
+        name = widget.get_text()
+        if ( valid_domain_name( name ) ):
+            self.xml.get_widget( 'ok_button' ).set_sensitive(True);
+            if self.create_new :
+                self.xml.get_widget( 'default_folder' ).set_text( '/var/www/'+name+'/httpdocs' )
+        else:
+            self.xml.get_widget( 'ok_button' ).set_sensitive(False);
+    def custom_folder_toggled( self, widget ):
+        if ( widget.get_active() == True ):
+            self.xml.get_widget( 'custom_folder' ).show()
+            self.xml.get_widget( 'default_folder' ).hide()
+        else:
+            self.xml.get_widget( 'custom_folder' ).hide()
+            self.xml.get_widget( 'default_folder' ).show()            
+    
+    
+    def save( self, widget ):
+        options = {}
+        options[ 'has_www' ] = self.xml.get_widget( 'has_www' ).get_active()     
+        options[ 'domain_name' ] = ( self.xml.get_widget( 'domain_name' ).get_text() )
+        options[ 'hack_hosts' ] = self.xml.get_widget( 'create_hosts_entry' ).get_active()                
+        if self.xml.get_widget( 'set_custom_folder' ).get_active():
+            target_folder =  self.xml.get_widget( 'custom_folder' ).get_filename ()     
+        else:
+            target_folder =  self.xml.get_widget( 'default_folder' ).get_text()
+        options[ 'target_folder' ] = target_folder
+                       
+        
+        
+        if ( self.create_new ):
+            site = VirtualHostModel( options[ 'domain_name' ] )
+            site.create ( options )
+        else:
+            print "Current name:", self.name
+            site = VirtualHostModel( self.name )
+            site.update( options, self.name )
+        
+        self.father.create_vhost_list()        
+        self.father.please_restart()
+        self.close()
+             
+        return True
+    def _command ( self, command ):
+        print "COMMAND: "+command
+        return os.system( command )
