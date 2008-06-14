@@ -38,7 +38,7 @@ import re
 (
     COLUMN_FIXED,
     COLUMN_SEVERITY,
-    COLUMN_DESCRIPTION
+    COLUMN_MARKUP
 ) = range(3)
 
 
@@ -147,8 +147,9 @@ class MainWindow:
 
         # create tree view
         treeview = gtk.TreeView(model)
+        treeview.set_headers_visible( False )
         treeview.set_rules_hint(True)
-        treeview.set_search_column(COLUMN_DESCRIPTION)
+        treeview.set_search_column(COLUMN_SEVERITY)
         self.vhosts_list = treeview
         sw.add(treeview)
         
@@ -187,10 +188,11 @@ class MainWindow:
         data = []  
         dirList=os.listdir( self.Configuration.SITES_AVAILABLE_DIR )
         #blacklist
+
         for idx, fname in enumerate( dirList ):
             if self._blacklisted( fname ) == False : del dirList[ idx ]
             
-        for fname in dirList:
+        for fname in sorted( dirList ):
             isLink = self.is_site_enabled( fname )
             data.append( ( isLink, fname, 'normal' ) )           
 
@@ -199,7 +201,8 @@ class MainWindow:
             lstore.set(iter,
                 COLUMN_FIXED, item[COLUMN_FIXED],
                 COLUMN_SEVERITY, item[COLUMN_SEVERITY],
-                COLUMN_DESCRIPTION, item[COLUMN_DESCRIPTION])
+                COLUMN_MARKUP, "<b><big>%s</big></b>\n<small>DocumentRoot: /var/www/htdocs/example</small>"
+                % ( item[COLUMN_SEVERITY]) )    
         return lstore
         
     def reload_vhosts ( self ):
@@ -246,7 +249,33 @@ class MainWindow:
         else:
             self.xml.get_widget( 'delete_button' ).set_sensitive( True )
             self.xml.get_widget( 'edit_button' ).set_sensitive( True )
+    
+    #TODO: warning ! This function get's called even on mousehover
+    #      check for a way to optimize it
+    def _get_vhost_icon (self, column, cell, model, iter):
+        """node = model.get_value(iter, MODEL_FIELD_NODE)
+        pixbuf = getPixbufForNode(node)
+        cell.set_property('pixbuf', pixbuf)"""
+        #stock = model.get_value(iter, 4)
+        #print stock
         
+        #Stock icon sizes are gtk.ICON_SIZE_MENU, gtk.ICON_SIZE_SMALL_TOOLBAR, 
+        #gtk.ICON_SIZE_LARGE_TOOLBAR, gtk.ICON_SIZE_BUTTON, gtk.ICON_SIZE_DND 
+        #and gtk.ICON_SIZE_DIALOG
+        
+        #/usr/share/icons/Human/48x48/filesystems/gnome-fs-web.png
+        #pixbuf = self.vhosts_list.render_icon(gtk.STOCK_NO , gtk.ICON_SIZE_LARGE_TOOLBAR, None)
+        
+        #TODO CHANGE THIS !
+        filename = model.get_value(iter, COLUMN_SEVERITY )
+        filename = '/var/www/%s/httpdocs/favicon.ico' % filename
+        
+        if ( os.path.exists( filename ) == False ): 
+            filename = '/usr/share/icons/Human/24x24/filesystems/gnome-fs-web.png'
+        pixbuf = gtk.gdk.pixbuf_new_from_file( filename )
+        cell.set_property("pixbuf", pixbuf)
+
+         
     def __add_columns(self, treeview):
         #print os.system( 'ls' )
         model = treeview.get_model()
@@ -259,18 +288,25 @@ class MainWindow:
 
         # set this column to a fixed sizing(of 50 pixels)
         column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
-        column.set_fixed_width(80)
+        column.set_fixed_width(40)
         treeview.append_column(column)
 
+        column = gtk.TreeViewColumn()
+        cellRenderer = gtk.CellRendererPixbuf()
+        column.pack_start(cellRenderer, expand = False)
+        column.set_cell_data_func(cellRenderer, self._get_vhost_icon)
+        treeview.append_column(column)
+        
+        """
         # columns for severities
-        column = gtk.TreeViewColumn('Vhost Name', gtk.CellRendererText(), text=COLUMN_SEVERITY)
+        column = gtk.TreeViewColumn('Vhost Name', gtk.CellRendererText(), text    =COLUMN_SEVERITY)
         column.set_sort_column_id(COLUMN_SEVERITY)
         treeview.append_column(column)
-
+        """
         # column for description
         column = gtk.TreeViewColumn('Description', gtk.CellRendererText(),
-                                     text=COLUMN_DESCRIPTION)
-        column.set_sort_column_id(COLUMN_DESCRIPTION)
+                                     markup=COLUMN_MARKUP)
+        column.set_sort_column_id(COLUMN_MARKUP)
         treeview.append_column(column)
                
         treeview.get_selection().connect("changed", self.row_selected )
