@@ -45,7 +45,7 @@ import re
 from RapacheGtk.VirtualHostGui import VirtualHostWindow
 from RapacheCore.VirtualHost import VirtualHostModel
 from RapacheGtk import easygui
-
+from RapacheGtk import GuiUtils
 data = \
 [(False, "Loading", "please wait" )]
 
@@ -77,6 +77,7 @@ class MainWindow:
         self._change_label ( self.xml.get_widget( 'restart_apache' ), "Restart\nApache" )
         self.create_vhost_list()
         self.new_vhost_window = None
+        GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
     
     def browse_sites_available(self, widget):
         self.command ('gksudo "nautilus '+self.Configuration.SITES_AVAILABLE_DIR+' --no-desktop" & ' )

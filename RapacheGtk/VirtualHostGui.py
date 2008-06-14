@@ -34,7 +34,7 @@ import pango
 import tempfile
 
 from RapacheCore.VirtualHost import *
-
+from RapacheGtk import GuiUtils
         
 class VirtualHostWindow:
     
@@ -57,7 +57,7 @@ class VirtualHostWindow:
         self.xml.get_widget( 'custom_folder' ).set_action ( gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER )                
         font_desc = pango.FontDescription('monospace')
         self.xml.get_widget( 'vhost_source' ).modify_font(font_desc)
-        
+        GuiUtils.style_as_tooltip( self.xml.get_widget( 'message_container' ) )
    
     def load (self, name ):
 
@@ -82,7 +82,7 @@ class VirtualHostWindow:
     
     
     def error ( self, message ):
-        self.xml.get_widget( 'message_text' ).set_label( '<span size="large"><b>'+message+'</b></span>' )
+        self.xml.get_widget( 'message_text' ).set_label( '<b>'+message+'</b>' )
         self.xml.get_widget( 'message_container' ).show()
         
     def quit (self, widget):      
@@ -120,18 +120,22 @@ class VirtualHostWindow:
         options[ 'target_folder' ] = target_folder
                        
         
+        try:
+            if ( self.create_new ):
+                site = VirtualHostModel( options[ 'domain_name' ] )
+                site.create ( options )
+            else:
+                print "Current name:", self.name
+                site = VirtualHostModel( self.name )
+                site.update( options, self.name )
+            
+            self.father.create_vhost_list()        
+            self.father.please_restart()
+            self.close()
+        except "VhostExists":
+           print "========================"
+           self.error( "A virtual host with the same name already exists" )     
         
-        if ( self.create_new ):
-            site = VirtualHostModel( options[ 'domain_name' ] )
-            site.create ( options )
-        else:
-            print "Current name:", self.name
-            site = VirtualHostModel( self.name )
-            site.update( options, self.name )
-        
-        self.father.create_vhost_list()        
-        self.father.please_restart()
-        self.close()
              
         return True
     def _command ( self, command ):
