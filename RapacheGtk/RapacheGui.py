@@ -54,8 +54,10 @@ APPVERSION="0.1"
 
 
 class MainWindow:
-    """This is an Hello World GTK application"""
+    """This is an Hello World Rapacheefication application"""
 
+    virtual_hosts = {}
+    
     def __init__(self, Configuration):
 
         gnome.init(APPNAME, APPVERSION)
@@ -182,28 +184,44 @@ class MainWindow:
         if re.match( '.*.swp$', fname ) != None : return False
         return True
     def load_vhosts(self):
+        site_template = "<b><big>%s</big></b>\n<small>DocumentRoot: %s</small>"
+        site_unparsable_template = "<b><big>%s</big></b>\n<small>Further information not available</small>"
         lstore = gtk.ListStore(
             gobject.TYPE_BOOLEAN,
             gobject.TYPE_STRING,
             gobject.TYPE_STRING)
         data = []  
         dirList=os.listdir( self.Configuration.SITES_AVAILABLE_DIR )
-        #blacklist
 
         for idx, fname in enumerate( dirList ):
             if self._blacklisted( fname ) == False : del dirList[ idx ]
             
-        for fname in sorted( dirList ):
-            isLink = self.is_site_enabled( fname )
-            data.append( ( isLink, fname, 'normal' ) )           
+        for fname in  dirList :            
+            
+            site = VirtualHostModel( fname )
+            print fname
+            try:
+                site.load()
+            except "VhostUnparsable":
+                pass
+            self.virtual_hosts[ fname ] = site
+            site = None
 
-        for item in data:
+                            
+        for idx in sorted( self.virtual_hosts ):
+            
+            site = self.virtual_hosts[ idx ]
+            if ( site.parsable ):
+                markup = site_template \
+                % ( site.data['name'] , site.data[ 'target_folder' ] )
+            else:
+                markup = site_unparsable_template % site.data['name']
             iter = lstore.append()
             lstore.set(iter,
-                COLUMN_FIXED, item[COLUMN_FIXED],
-                COLUMN_SEVERITY, item[COLUMN_SEVERITY],
-                COLUMN_MARKUP, "<b><big>%s</big></b>\n<small>DocumentRoot: /var/www/htdocs/example</small>"
-                % ( item[COLUMN_SEVERITY]) )    
+                COLUMN_FIXED, site.data['enabled'],
+                COLUMN_SEVERITY, site.data['name'],
+                COLUMN_MARKUP, markup )
+             
         return lstore
         
     def reload_vhosts ( self ):
@@ -257,16 +275,7 @@ class MainWindow:
         """node = model.get_value(iter, MODEL_FIELD_NODE)
         pixbuf = getPixbufForNode(node)
         cell.set_property('pixbuf', pixbuf)"""
-        #stock = model.get_value(iter, 4)
-        #print stock
-        
-        #Stock icon sizes are gtk.ICON_SIZE_MENU, gtk.ICON_SIZE_SMALL_TOOLBAR, 
-        #gtk.ICON_SIZE_LARGE_TOOLBAR, gtk.ICON_SIZE_BUTTON, gtk.ICON_SIZE_DND 
-        #and gtk.ICON_SIZE_DIALOG
-        
-        #/usr/share/icons/Human/48x48/filesystems/gnome-fs-web.png
-        #pixbuf = self.vhosts_list.render_icon(gtk.STOCK_NO , gtk.ICON_SIZE_LARGE_TOOLBAR, None)
-        
+                
         #TODO CHANGE THIS !
         filename = model.get_value(iter, COLUMN_SEVERITY )
         filename = '/var/www/%s/httpdocs/favicon.ico' % filename

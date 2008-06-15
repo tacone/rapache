@@ -45,20 +45,21 @@ def valid_domain_name ( name ):
     return valid
        
 class VirtualHostModel:
-    defaults = {
-        'enabled' : False
-        , 'name' : None
-        , 'domain_name': None
-        , 'changed' : False
-        , 'has_www' : False
-        , 'hack_hosts' : False
-        , 'target_folder' : None
-    }
-    data = {}
-    changed = False
-    simulation = False
+    
     def __init__(self, name = None):
-        #TODO move in a configuration class
+        self.defaults = {
+            'enabled' : False
+            , 'name' : None
+            , 'domain_name': None
+            , 'changed' : False
+            , 'has_www' : False
+            , 'hack_hosts' : False
+            , 'target_folder' : None            
+        }
+        self.data = {}
+        self.parsable = False
+        self.changed = False
+        self.simulation = False
         
         self.data = self.defaults
         if ( name != None ):
@@ -121,6 +122,7 @@ class VirtualHostModel:
                 options['hack_hosts'] = False
             else:
                 options['hack_hosts'] = True
+            self.parsable = True
         except:
             print "Unparsable by me - unsupported"
             raise "VhostUnparsable"
