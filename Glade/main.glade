@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Sat Jun 14 11:07:41 2008 -->
+<!--Generated with glade3 3.4.5 on Sun Jun 15 11:07:51 2008 -->
 <glade-interface>
   <requires lib="bonobo"/>
   <requires lib="gnome"/>
@@ -157,8 +157,7 @@
                 <child>
                   <widget class="GtkLabel" id="label1">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Changes got applied. 
-They won't be effective until you restart apache though.</property>
+                    <property name="label" translatable="yes">Applied changes will not take effect until web server is restarted</property>
                     <property name="justify">GTK_JUSTIFY_CENTER</property>
                     <property name="wrap">True</property>
                     <property name="width_chars">0</property>
