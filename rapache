@@ -20,7 +20,7 @@ from RapacheCore import Configuration
 
 if __name__ == "__main__":    
          
-    Configuration.APPPATH = os.path.abspath(os.path.dirname(__file__))
-    Configuration.GLADEPATH = Configuration.APPPATH + "/Glade"        
+    Configuration.APPPATH = "/usr/bin"
+    Configuration.GLADEPATH = "/usr/share/rapache/Glade"        
     hwg = MainWindow( Configuration )
     gtk.main()
