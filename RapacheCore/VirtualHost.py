@@ -43,7 +43,32 @@ def valid_domain_name ( name ):
     # TODO: fix regular expression 
     valid = ( re.search( '^[a-zA-Z0-9.-]+$', name ) != None )
     return valid
-       
+
+def is_denormalized_vhost ( fname ):
+    try:   
+        flink = os.readlink( Configuration.SITES_ENABLED_DIR +"/"+fname )
+        flink = os.path.join(os.path.dirname( Configuration.SITES_AVAILABLE_DIR ), flink)                        
+        #no exceptions ? Means it's a link
+        return True
+    except:
+        return False
+    return False
+def is_not_normalizable( fname):
+     dest = Configuration.SITES_AVAILABLE_DIR + "/" + fname
+     return os.path.exists( dest )
+ 
+def normalize_vhost( fname ):
+    print "Normalizing:", fname
+    orig = Configuration.SITES_ENABLED_DIR + "/" + fname
+    dest = Configuration.SITES_AVAILABLE_DIR + "/" + fname    
+    if ( os.path.exists( dest ) == True ):
+        print fname, "already exists in available dir. not even trying"
+        return False
+    command = 'gksudo "mv \''+orig+'\' \''+dest+'\'"'
+    print "COMMAND: "+command
+    return os.system( command )
+    return  os.path.exists( dest )
+    
 class VirtualHostModel:
     
     def __init__(self, name = None):
@@ -72,8 +97,6 @@ class VirtualHostModel:
             match = re.search( regexp , line, re.IGNORECASE )            
             if ( match != None ) :
                 if match != False:
-                    #print regexp+" " +line
-                    #print match
                     return match            
         return False
     
@@ -117,7 +140,6 @@ class VirtualHostModel:
             
             print "Document Root :\t"+str( options[ 'target_folder' ] )
             hosts = HostsManager()
-            print domain_name
             if ( hosts.find ( domain_name ) == False ):
                 options['hack_hosts'] = False
             else:
@@ -141,7 +163,7 @@ class VirtualHostModel:
                 if ( flink == Configuration.SITES_AVAILABLE_DIR+"/"+orig ):
                     return True
             except:
-                1
+                pass
           
         return False
     def _command ( self, command ):
@@ -297,4 +319,3 @@ class VirtualHostModel:
         self.toggle( True ) #activate by default 
             
         return True
- 

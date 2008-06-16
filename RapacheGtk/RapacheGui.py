@@ -43,7 +43,7 @@ import re
 
 
 from RapacheGtk.VirtualHostGui import VirtualHostWindow
-from RapacheCore.VirtualHost import VirtualHostModel
+from RapacheCore.VirtualHost import *
 from RapacheGtk import easygui
 from RapacheGtk import GuiUtils
 data = \
@@ -55,11 +55,10 @@ APPVERSION="0.1"
 
 class MainWindow:
     """This is an Hello World Rapacheefication application"""
-
-    virtual_hosts = {}
     
     def __init__(self, Configuration):
-
+        self.virtual_hosts = {}
+        self.denormalized_virtual_hosts = {}
         gnome.init(APPNAME, APPVERSION)
         
         self.Configuration = Configuration 
@@ -73,23 +72,25 @@ class MainWindow:
             "please_restart" : self.restart_apache ,            
             "on_delete" : self.delete_button_clicked,
             "edit_button_clicked" : self.edit_button_clicked,
-            "browse_sites_available" : self.browse_sites_available,            
+            "browse_sites_available" : self.browse_sites_available,
+            "fix_vhosts_clicked" : self.fix_vhosts,            
             "quit" : self.quit }
         self.xml.signal_autoconnect(dic)
         self._change_label ( self.xml.get_widget( 'restart_apache' ), "Restart\nApache" )
+        self._change_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
         self.create_vhost_list()
         self.new_vhost_window = None
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
-    
+        GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )    
     def browse_sites_available(self, widget):
         self.command ('gksudo "nautilus '+self.Configuration.SITES_AVAILABLE_DIR+' --no-desktop" & ' )
         return
     def get_selected_vhost( self ):
         try:
-            selection = self.vhosts_list.get_selection()
+            selection = self.vhosts_treeview.get_selection()
             rows = selection.get_selected_rows()[1][0]
             num_row = rows[0]
-            model = self.vhosts_list.get_model()
+            model = self.vhosts_treeview.get_model()
             name = model[ num_row ][1]
             return name
         except:
@@ -98,17 +99,14 @@ class MainWindow:
     def new_button_clicked(self, widget):
         if ( self.new_vhost_window ):
             print "A window is already open"
-            print self.new_vhost_window
             return
         self.new_vhost_window = VirtualHostWindow ( self.Configuration.GLADEPATH, self )
         
     def edit_button_clicked(self, widget):        
         name = self.get_selected_vhost()
         print "edit button clicked on:" + name
-
         if ( self.new_vhost_window ):
             print "A window is already open"
-            print self.new_vhost_window
             return
         
         self.new_vhost_window = VirtualHostWindow ( self.Configuration.GLADEPATH, self )
@@ -135,31 +133,63 @@ class MainWindow:
     def create_vhost_list(self ):
         #print parent
         #sw = gtk.ScrolledWindow()
-        sw = self.xml.get_widget( 'vhost_container' )
+        sw = self.xml.get_widget( 'scroll_box' )
         try:
-            self.vhosts_list.destroy()
+            self.vhosts_treeview.destroy()
         except:
-            1
-            
-        self.xml.get_widget( 'vhost_container' )
-        sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
-        sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
-
-        # create tree model
-        model = self.load_vhosts()
-
+            pass
+        try:
+            self.denormalized_treeview.destroy()
+        except:
+            pass
+        
+        
         # create tree view
+        model = self.load_vhosts()
         treeview = gtk.TreeView(model)
         treeview.set_headers_visible( False )
         treeview.set_rules_hint(True)
         treeview.set_search_column(COLUMN_SEVERITY)
-        self.vhosts_list = treeview
-        sw.add(treeview)
+        self.__add_columns(treeview)
+        self.vhosts_treeview = treeview        
+        # attach it
+        self.xml.get_widget( 'vhost_container' ).add(treeview)        
+        self.xml.get_widget( 'vhost_container' ).reorder_child( treeview, 0)
+
+        sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+        sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        
+        # create denormalized vhosts
+        
+        denormalized_model = self.load_denormalized_vhosts()
+                
+        if len( self.denormalized_virtual_hosts ) > 0 :
+            self.xml.get_widget( 'unnormalized_notice' ).show_all()
+            denormalized_treeview = gtk.TreeView(denormalized_model)
+            denormalized_treeview.set_headers_visible( False )
+            denormalized_treeview.set_rules_hint(True)
+            self.__add_denormalized_columns(denormalized_treeview)
+            denormalized_treeview.set_sensitive( False )
+            denormalized_treeview.show()
+            self.denormalized_treeview = denormalized_treeview
+            # attach it
+            self.xml.get_widget( 'vhost_container' ).add(denormalized_treeview)        
+            self.xml.get_widget( 'vhost_container' ).reorder_child( denormalized_treeview, 2)
+            sw.show_all()
+        else:
+            sw.show_all()
+            self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+            
+        
+        
+
+        
+
         
         # add columns to the tree view
-        self.__add_columns(treeview)
+        
 
-        sw.show_all()
+        
         
     def _change_label ( self, button, new_label ):        
         button.show()
@@ -180,26 +210,22 @@ class MainWindow:
                 1
         return False
     def _blacklisted ( self, fname ):
-        if re.match( '.*[~]$', fname ) != None : return False
-        if re.match( '.*.swp$', fname ) != None : return False
-        return True
+        if re.match( '.*[~]\s*$', fname ) != None : return True
+        if re.match( '.*.swp$', fname ) != None : return True
+        return False
     def load_vhosts(self):
+        self.virtual_hosts = {}
         site_template = "<b><big>%s</big></b>\n<small>DocumentRoot: %s</small>"
-        site_unparsable_template = "<b><big>%s</big></b>\n<small>Further information not available</small>"
+        site_unparsable_template = "<b><big>%s</big></b>\n<small><i>Further information not available</i></small>"
         lstore = gtk.ListStore(
             gobject.TYPE_BOOLEAN,
             gobject.TYPE_STRING,
             gobject.TYPE_STRING)
         data = []  
         dirList=os.listdir( self.Configuration.SITES_AVAILABLE_DIR )
-
-        for idx, fname in enumerate( dirList ):
-            if self._blacklisted( fname ) == False : del dirList[ idx ]
-            
-        for fname in  dirList :            
-            
+        dirList = [x for x in dirList if self._blacklisted( x ) == False ]            
+        for fname in  dirList :                        
             site = VirtualHostModel( fname )
-            print fname
             try:
                 site.load()
             except "VhostUnparsable":
@@ -223,12 +249,42 @@ class MainWindow:
                 COLUMN_MARKUP, markup )
              
         return lstore
-        
+    def load_denormalized_vhosts(self):
+        self.denormalized_virtual_hosts = {}
+        site_template = "<b><big>%s</big></b>"        
+        lstore = gtk.ListStore(
+            gobject.TYPE_BOOLEAN,
+            gobject.TYPE_STRING,
+            gobject.TYPE_STRING)
+        data = []  
+        dirList=os.listdir( self.Configuration.SITES_ENABLED_DIR )
+        dirList = [x for x in dirList if self._blacklisted( x ) == False ]
+        dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]
+                   
+        for fname in  dirList :
+            site = VirtualHostModel( fname )                        
+            self.denormalized_virtual_hosts[ fname ] = site
+            site = None
+
+        for idx in sorted( self.denormalized_virtual_hosts ):            
+            site = self.denormalized_virtual_hosts[ idx ]
+            normalizable = not is_not_normalizable(site.data['name'])
+            markup = site_template % site.data['name']
+            if ( normalizable == False ):
+                markup = markup + " CANNOT FIX"
+            iter = lstore.append()
+            lstore.set(iter,
+                COLUMN_FIXED, normalizable,
+                COLUMN_SEVERITY, site.data['name'],
+                COLUMN_MARKUP, markup 
+                )
+        return lstore
+            
     def reload_vhosts ( self ):
         print "reloading vhosts.."
         #recreate model
         model = self.load_vhosts()            
-        self.vhosts_list.set_model ( model )
+        self.vhosts_treeview.set_model ( model )
         
     def fixed_toggled(self, cell, path, model):
         simulation = True
@@ -245,7 +301,6 @@ class MainWindow:
         # set new value        
         site = VirtualHostModel( name )
         site.toggle( fixed )
-        print site.data
         model.set(iter, COLUMN_FIXED, site.data['enabled'] )        
         if ( site.changed ):
             self.please_restart()
@@ -287,7 +342,6 @@ class MainWindow:
 
          
     def __add_columns(self, treeview):
-        #print os.system( 'ls' )
         model = treeview.get_model()
 
         # column for fixed toggles
@@ -305,14 +359,8 @@ class MainWindow:
         cellRenderer = gtk.CellRendererPixbuf()
         column.pack_start(cellRenderer, expand = False)
         column.set_cell_data_func(cellRenderer, self._get_vhost_icon)
-        treeview.append_column(column)
-        
-        """
-        # columns for severities
-        column = gtk.TreeViewColumn('Vhost Name', gtk.CellRendererText(), text    =COLUMN_SEVERITY)
-        column.set_sort_column_id(COLUMN_SEVERITY)
-        treeview.append_column(column)
-        """
+        treeview.append_column(column)        
+   
         # column for description
         column = gtk.TreeViewColumn('Description', gtk.CellRendererText(),
                                      markup=COLUMN_MARKUP)
@@ -321,5 +369,29 @@ class MainWindow:
                
         treeview.get_selection().connect("changed", self.row_selected )
 
-  
+    def __add_denormalized_columns(self, treeview):
+        model = treeview.get_model()
+       
+        column = gtk.TreeViewColumn()
+        cellRenderer = gtk.CellRendererPixbuf()
+        cellRenderer.set_property( 'stock-id',  gtk.STOCK_DIALOG_WARNING )
+        column.pack_start(cellRenderer, expand = False)
 
+        treeview.append_column(column)        
+   
+        # column for description
+        column = gtk.TreeViewColumn('Description', gtk.CellRendererText(),
+                                     markup=COLUMN_MARKUP)
+        column.set_sort_column_id(COLUMN_MARKUP)
+        treeview.append_column(column)
+               
+               
+        treeview.get_selection().connect("changed", self.row_selected )
+    def fix_vhosts(self, widget):
+        for name in self.denormalized_virtual_hosts:
+            normalize_vhost( name )
+        #since they were in the enabled, let's enabl'em again
+        for name in self.denormalized_virtual_hosts:
+            site = VirtualHostModel( name )
+            site.toggle(True)            
+        self.create_vhost_list()

@@ -73,7 +73,6 @@ class VirtualHostWindow:
             self._get( 'default_folder' ).set_text( site.data[ 'target_folder' ] )
             self.xml.get_widget( 'ok_button' ).set_sensitive(True);
         except "VhostUnparsable":            
-            print self._get( 'notebook' ).get_nth_page( 0 )
             self._get( 'notebook' ).get_nth_page( 0 ).hide()
         buffer = self.xml.get_widget( 'vhost_source' ).get_buffer()
         buffer.set_text( site.get_source() )
