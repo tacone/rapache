@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 
-# This file has been found on a internet tutorial without any Licence/copyright
-# claim and it's therefore believed to be of public domain.
-# We are redistributing it under the GPL v.3
 
 
 import sys
