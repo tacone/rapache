@@ -316,9 +316,9 @@ class MainWindow:
         pixbuf = getPixbufForNode(node)
         cell.set_property('pixbuf', pixbuf)"""
                 
-        #TODO CHANGE THIS !
         filename = model.get_value(iter, COLUMN_SEVERITY )
-        filename = '/var/www/%s/httpdocs/favicon.ico' % filename
+        site = self.virtual_hosts[ filename ]
+        filename = os.path.join(os.path.dirname( site.data['target_folder']+"/" ), "favicon.ico")                        
         
         if ( os.path.exists( filename ) == False ): 
             filename = '/usr/share/icons/Human/24x24/filesystems/gnome-fs-web.png'
