@@ -316,13 +316,14 @@ class MainWindow:
         pixbuf = getPixbufForNode(node)
         cell.set_property('pixbuf', pixbuf)"""
                 
-        filename = model.get_value(iter, COLUMN_SEVERITY )
-        site = self.virtual_hosts[ filename ]
-        filename = os.path.join(os.path.dirname( site.data['target_folder']+"/" ), "favicon.ico")                        
-        
-        if ( os.path.exists( filename ) == False ): 
-            filename = '/usr/share/icons/Human/24x24/filesystems/gnome-fs-web.png'
-        pixbuf = gtk.gdk.pixbuf_new_from_file( filename )
+        favicon = '/usr/share/icons/Human/24x24/filesystems/gnome-fs-web.png'
+        fname = model.get_value(iter, COLUMN_SEVERITY )
+        site = self.virtual_hosts[ fname ]
+        if site.data['target_folder'] != None:
+            custom_favicon = os.path.join(os.path.dirname( site.data['target_folder']+"/" ), "favicon.ico")                                                    
+            if ( os.path.exists( custom_favicon ) ): favicon = custom_favicon
+            
+        pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
         cell.set_property("pixbuf", pixbuf)
 
          
