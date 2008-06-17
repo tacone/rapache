@@ -280,9 +280,9 @@ class MainWindow:
         
         fixed = not fixed        
         if fixed:
-    	    self.command ('gksudo '+self.Configuration.APPPATH+'"/hosts-manager.py -a '+name+'"')
+    	    self.command ('gksudo '+self.Configuration.APPPATH+'"/hosts-manager -a '+name+'"')
         else :
-    	    self.command ('gksudo '+self.Configuration.APPPATH+'"/hosts-manager.py -r '+name+'"')
+    	    self.command ('gksudo '+self.Configuration.APPPATH+'"/hosts-manager -r '+name+'"')
         # set new value        
         site = VirtualHostModel( name )
         site.toggle( fixed )

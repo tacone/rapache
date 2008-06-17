@@ -272,8 +272,8 @@ class HostsManager:
         print 1
     def usage ( self ):
         print """Hosts manager v. 0.1
-USAGE: hosts-manager.py -a hostname [ip]
-       hosts-manager.py -r hostname [ip]
+USAGE: hosts-manager -a hostname [ip]
+       hosts-manager -r hostname [ip]
 
 Options:
    -a create a new entry in /etc/hosts

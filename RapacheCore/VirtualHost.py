@@ -297,9 +297,9 @@ class VirtualHostModel:
         self._write( complete_path, template )
           
         if ( options[ 'hack_hosts' ] ):
-            self._command ('gksudo '+Configuration.APPPATH+'"/hosts-manager.py -a '+options['domain_name']+'"')
+            self._command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a '+options['domain_name']+'"')
             if ( options[ 'has_www' ] ):
-                self._command ('gksudo '+Configuration.APPPATH+'"/hosts-manager.py -a www.'+options['domain_name']+'"')
+                self._command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a www.'+options['domain_name']+'"')
         self.changed = True        
         self.toggle( True ) #activate by default 
             
