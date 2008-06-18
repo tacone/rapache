@@ -31,6 +31,8 @@ from RapacheGtk.VirtualHostGui import VirtualHostWindow
 from RapacheCore.VirtualHost import *
 from RapacheGtk import easygui
 from RapacheGtk import GuiUtils
+from RapacheCore import Shell
+
 data = \
 [(False, "Loading", "please wait" )]
 
@@ -68,7 +70,7 @@ class MainWindow:
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )    
     def browse_sites_available(self, widget):
-        self.command ('gksudo "nautilus '+self.Configuration.SITES_AVAILABLE_DIR+' --no-desktop" & ' )
+        Shell.command ('gksudo "nautilus '+self.Configuration.SITES_AVAILABLE_DIR+' --no-desktop" & ' )
         return
     def get_selected_vhost( self ):
         try:
@@ -144,10 +146,12 @@ class MainWindow:
         sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
         sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         
-        # create denormalized vhosts
-        
+        # create denormalized vhosts.
+        # We check for conf files only present in /etc/apache2/sites-enabled,
+        # display them as a separate list and offer user to normalize them
+        # moving them in /etc/apache2/sites-available and linking them back
+        # from /etc/apache2/sites-enabled
         denormalized_model = self.load_denormalized_vhosts()
-                
         if len( self.denormalized_virtual_hosts ) > 0 :
             self.xml.get_widget( 'unnormalized_notice' ).show_all()
             denormalized_treeview = gtk.TreeView(denormalized_model)
@@ -164,36 +168,15 @@ class MainWindow:
         else:
             sw.show_all()
             self.xml.get_widget( 'unnormalized_notice' ).hide_all()
-            
-        
-        
 
-        
-
-        
-        # add columns to the tree view
-        
-
-        
-        
-    def _change_label ( self, button, new_label ):        
+    def _change_label ( self, button, new_label ):
+        """Changes the label of a button"""
         button.show()
         alignment = button.get_children()[0]
         hbox = alignment.get_children()[0]
         image, label = hbox.get_children()
         label.set_text( new_label )
         
-    def is_site_enabled ( self, orig ):
-        dirList=os.listdir( self.Configuration.SITES_ENABLED_DIR )
-        for fname in dirList:
-            try:                
-                flink = os.readlink( self.Configuration.SITES_ENABLED_DIR+"/"+fname )
-                flink = os.path.join(os.path.dirname( self.Configuration.SITES_ENABLED_DIR ), flink)             
-                if ( flink == self.Configuration.SITES_AVAILABLE_DIR+"/"+orig ):
-                    return True
-            except:
-                1
-        return False
     def _blacklisted ( self, fname ):
         if re.match( '.*[~]\s*$', fname ) != None : return True
         if re.match( '.*.swp$', fname ) != None : return True
@@ -217,10 +200,8 @@ class MainWindow:
                 pass
             self.virtual_hosts[ fname ] = site
             site = None
-
                             
         for idx in sorted( self.virtual_hosts ):
-            
             site = self.virtual_hosts[ idx ]
             if ( site.parsable ):
                 markup = site_template \
@@ -232,7 +213,6 @@ class MainWindow:
                 COLUMN_FIXED, site.data['enabled'],
                 COLUMN_SEVERITY, site.data['name'],
                 COLUMN_MARKUP, markup )
-             
         return lstore
     def load_denormalized_vhosts(self):
         self.denormalized_virtual_hosts = {}
@@ -280,9 +260,9 @@ class MainWindow:
         
         fixed = not fixed        
         if fixed:
-    	    self.command ('gksudo '+self.Configuration.APPPATH+'"/hosts-manager -a '+name+'"')
+    	    Shell.command ('gksudo '+self.Configuration.APPPATH+'"/hosts-manager -a '+name+'"')
         else :
-    	    self.command ('gksudo '+self.Configuration.APPPATH+'"/hosts-manager -r '+name+'"')
+    	    Shell.command ('gksudo '+self.Configuration.APPPATH+'"/hosts-manager -r '+name+'"')
         # set new value        
         site = VirtualHostModel( name )
         site.toggle( fixed )
@@ -292,13 +272,12 @@ class MainWindow:
                
     def please_restart ( self ):
         self.xml.get_widget( 'restart_apache_notice' ).show()
-    def command ( self, command ):
-        print "COMMAND: "+command
-        return os.system( command )
+   
+    
     def restart_apache ( self, widget ):
         print "Restarting apache on user's request"
-        self.command( "gksudo /etc/init.d/apache2 stop" )
-        self.command( "gksudo /etc/init.d/apache2 start" )
+        Shell.command( "gksudo /etc/init.d/apache2 stop" )
+        Shell.command( "gksudo /etc/init.d/apache2 start" )
         self.xml.get_widget( 'restart_apache_notice' ).hide()
     def row_selected( self, widget ):
         name = self.get_selected_vhost()
@@ -312,6 +291,8 @@ class MainWindow:
     #TODO: warning ! This function get's called even on mousehover
     #      check for a way to optimize it
     def _get_vhost_icon (self, column, cell, model, iter):
+        """ Provides the icon for a virtual host looking up it's favicon"""
+        
         """node = model.get_value(iter, MODEL_FIELD_NODE)
         pixbuf = getPixbufForNode(node)
         cell.set_property('pixbuf', pixbuf)"""
@@ -325,7 +306,6 @@ class MainWindow:
             
         pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
         cell.set_property("pixbuf", pixbuf)
-
          
     def __add_columns(self, treeview):
         model = treeview.get_model()
@@ -362,17 +342,14 @@ class MainWindow:
         cellRenderer = gtk.CellRendererPixbuf()
         cellRenderer.set_property( 'stock-id',  gtk.STOCK_DIALOG_WARNING )
         column.pack_start(cellRenderer, expand = False)
-
-        treeview.append_column(column)        
-   
+        treeview.append_column(column)           
         # column for description
         column = gtk.TreeViewColumn('Description', gtk.CellRendererText(),
                                      markup=COLUMN_MARKUP)
         column.set_sort_column_id(COLUMN_MARKUP)
-        treeview.append_column(column)
-               
-               
+        treeview.append_column(column)               
         treeview.get_selection().connect("changed", self.row_selected )
+        
     def fix_vhosts(self, widget):
         for name in self.denormalized_virtual_hosts:
             normalize_vhost( name )

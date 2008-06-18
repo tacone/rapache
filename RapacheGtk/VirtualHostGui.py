@@ -122,6 +122,3 @@ class VirtualHostWindow:
         
              
         return True
-    def _command ( self, command ):
-        print "COMMAND: "+command
-        return os.system( command )

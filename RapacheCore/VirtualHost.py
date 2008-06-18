@@ -7,8 +7,8 @@ import re
 from RapacheCore import Configuration
 from RapacheCore.ApacheConf import *
 from RapacheCore.HostsManager import HostsManager
+from RapacheCore import Shell
 
-        
 VHOST_TEMPLATE = """#created for you by Rapache
 <VirtualHost *>
 	ServerAdmin webmaster@||example||
@@ -50,8 +50,7 @@ def normalize_vhost( fname ):
         print fname, "already exists in available dir. not even trying"
         return False
     command = 'gksudo "mv \''+orig+'\' \''+dest+'\'"'
-    print "COMMAND: "+command
-    return os.system( command )
+    return Shell.command( command )
     return  os.path.exists( dest )
     
 class VirtualHostModel:
@@ -151,9 +150,7 @@ class VirtualHostModel:
                 pass
           
         return False
-    def _command ( self, command ):
-        print "COMMAND: "+command
-        return os.system( command )
+   
     def toggle( self, status ):
         "status = True|False"
         if status:
@@ -166,14 +163,14 @@ class VirtualHostModel:
             print "SIMULATED "+command
             self.data['enabled'] = status
         else:
-            self._command( command )
+            Shell.command( command )
             self.data['enabled'] = self.is_enabled()
         self.changed = True
         
     def delete( self ):
         "Deletes a VirtualHost configuration file"
         if ( self.is_enabled() ): self.toggle( False )
-        self._command( 'gksudo rm '+Configuration.SITES_AVAILABLE_DIR+'/'+self.data['name'] )
+        Shell.command( 'gksudo rm '+Configuration.SITES_AVAILABLE_DIR+'/'+self.data['name'] )
     def _create_complete_path ( self, complete_path ):
         print "Attempting to create: " + complete_path
         tokens = complete_path.split( '/' )
@@ -183,7 +180,7 @@ class VirtualHostModel:
             path = path + '/' + piece
             if ( os.path.exists( path ) == False ):
                 try:
-                    self._command( 'gksudo "mkdir '+path+'"' )
+                    Shell.command( 'gksudo "mkdir '+path+'"' )
                 except:
                     print "error on creating path"+path
                     return False                   
@@ -235,7 +232,7 @@ class VirtualHostModel:
         if old_name != new_name and os.path.exists( new_name ) == False:
             print "Server name changed, updating conf filename"
             self.toggle( False )     
-            self._command( 'gksudo mv "'+old_name+'" "'+new_name+'"' )
+            Shell.command( 'gksudo mv "'+old_name+'" "'+new_name+'"' )
             if os.path.exists( new_name ) == True:
                 #success ! we need to reload vhost with the new name
                 self.load( new_options['domain_name'] )
@@ -256,7 +253,7 @@ class VirtualHostModel:
         logfile.close()
         command = "gksudo cp "+tempfilename+" "+complete_path
         print "copying tempfile in the appropriate location: "+command
-        self._command( command )
+        Shell.command( command )
         
         
     def create ( self, new_options ):                
@@ -297,9 +294,9 @@ class VirtualHostModel:
         self._write( complete_path, template )
           
         if ( options[ 'hack_hosts' ] ):
-            self._command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a '+options['domain_name']+'"')
+            Shell.command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a '+options['domain_name']+'"')
             if ( options[ 'has_www' ] ):
-                self._command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a www.'+options['domain_name']+'"')
+                Shell.command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a www.'+options['domain_name']+'"')
         self.changed = True        
         self.toggle( True ) #activate by default 
             

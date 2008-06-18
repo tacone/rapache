@@ -265,9 +265,7 @@ class HostsManager:
                 dest.writelines( content )
                 dest.close()
             except:
-                print "Error writing to file. Do you have the needed permissions?"
-    def _system_output ( command ):
-        1
+                print "Error writing to file. Do you have the needed permissions?"    
     def _get_opt ():
         print 1
     def usage ( self ):
