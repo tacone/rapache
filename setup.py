@@ -14,5 +14,9 @@ setup(
     license='GNU GPL',
     packages=['RapacheCore', 'RapacheGtk'],
     scripts=['rapache', 'hosts-manager'],
-    data_files=[('share/rapache/Glade', glob.glob('Glade/*')),],
-)
+    data_files=[
+                ('share/rapache/Glade', glob.glob('Glade/*')),
+                ('share/applications', ['data/rapache.desktop']),
+               ],
+    )
+
