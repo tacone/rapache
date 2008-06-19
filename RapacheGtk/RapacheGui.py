@@ -32,6 +32,7 @@ from RapacheCore.VirtualHost import *
 from RapacheGtk import easygui
 from RapacheGtk import GuiUtils
 from RapacheCore import Shell
+import VhostsTreeView
 
 data = \
 [(False, "Loading", "please wait" )]
@@ -72,16 +73,7 @@ class MainWindow:
     def browse_sites_available(self, widget):
         Shell.command ('gksudo "nautilus '+self.Configuration.SITES_AVAILABLE_DIR+' --no-desktop" & ' )
         return
-    def get_selected_vhost( self ):
-        try:
-            selection = self.vhosts_treeview.get_selection()
-            rows = selection.get_selected_rows()[1][0]
-            num_row = rows[0]
-            model = self.vhosts_treeview.get_model()
-            name = model[ num_row ][1]
-            return name
-        except:
-            return None
+    
         
     def new_button_clicked(self, widget):
         if ( self.new_vhost_window ):
@@ -90,7 +82,7 @@ class MainWindow:
         self.new_vhost_window = VirtualHostWindow ( self.Configuration.GLADEPATH, self )
         
     def edit_button_clicked(self, widget):        
-        name = self.get_selected_vhost()
+        name = self.vhosts_treeview.get_selected_line()
         print "edit button clicked on:" + name
         if ( self.new_vhost_window ):
             print "A window is already open"
@@ -100,7 +92,7 @@ class MainWindow:
         self.new_vhost_window.load( name )
             
     def delete_button_clicked( self, widget ):
-        name = self.get_selected_vhost()
+        name = self.vhosts_treeview.get_selected_line()
         if ( name == None ): return False
         result = easygui.message_box(
             title='Delete '+name,
@@ -133,17 +125,18 @@ class MainWindow:
         
         # create tree view
         model = self.load_vhosts()
-        treeview = gtk.TreeView(model)
-        treeview.set_headers_visible( False )
-        treeview.set_rules_hint(True)
-        treeview.set_search_column(COLUMN_SEVERITY)
-        self.__add_columns(treeview)
+        #treeview = gtk.TreeView(model)
+        treeview = VhostsTreeView.VhostsTreeView( model )
+        treeview.connect_toggled( self.fixed_toggled )
+        treeview.connect_selected( self.row_selected ) 
+        treeview.connect_icon( self._get_vhost_icon ) 
+        
         self.vhosts_treeview = treeview        
         # attach it
         self.xml.get_widget( 'vhost_container' ).add(treeview)        
         self.xml.get_widget( 'vhost_container' ).reorder_child( treeview, 0)
 
-        sw.set_shadow_type(gtk.SHADOW_ETCHED_IN)
+        sw.set_shadow_type(gtk.SHADOW_NONE)
         sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         
         # create denormalized vhosts.
@@ -280,7 +273,7 @@ class MainWindow:
         Shell.command( "gksudo /etc/init.d/apache2 start" )
         self.xml.get_widget( 'restart_apache_notice' ).hide()
     def row_selected( self, widget ):
-        name = self.get_selected_vhost()
+        name = self.vhosts_treeview.get_selected_line()
         if ( name == None ):
             self.xml.get_widget( 'delete_button' ).set_sensitive( False )
             self.xml.get_widget( 'edit_button' ).set_sensitive( False )
@@ -306,35 +299,7 @@ class MainWindow:
             
         pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
         cell.set_property("pixbuf", pixbuf)
-         
-    def __add_columns(self, treeview):
-        model = treeview.get_model()
-
-        # column for fixed toggles
-        renderer = gtk.CellRendererToggle()
-        renderer.connect('toggled', self.fixed_toggled, model)
-        
-        column = gtk.TreeViewColumn('Enabled', renderer, active=COLUMN_FIXED)
-
-        # set this column to a fixed sizing(of 50 pixels)
-        column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
-        column.set_fixed_width(40)
-        treeview.append_column(column)
-
-        column = gtk.TreeViewColumn()
-        cellRenderer = gtk.CellRendererPixbuf()
-        column.pack_start(cellRenderer, expand = False)
-        column.set_cell_data_func(cellRenderer, self._get_vhost_icon)
-        treeview.append_column(column)        
-   
-        # column for description
-        column = gtk.TreeViewColumn('Description', gtk.CellRendererText(),
-                                     markup=COLUMN_MARKUP)
-        column.set_sort_column_id(COLUMN_MARKUP)
-        treeview.append_column(column)
-               
-        treeview.get_selection().connect("changed", self.row_selected )
-
+             
     def __add_denormalized_columns(self, treeview):
         model = treeview.get_model()
        
@@ -348,7 +313,6 @@ class MainWindow:
                                      markup=COLUMN_MARKUP)
         column.set_sort_column_id(COLUMN_MARKUP)
         treeview.append_column(column)               
-        treeview.get_selection().connect("changed", self.row_selected )
         
     def fix_vhosts(self, widget):
         for name in self.denormalized_virtual_hosts:
