@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
 
-#TODO Refactor CRUD in VirtualHost class
-
-#TODO move configs into a separate module
-
-#TODO throw appropriate exceptions (bug: vhost already exist doesn't display)
+#TODO throw appropriate exceptions (bug: vhost already exist displays only 
+# after actually trying to create it's dir. check before )
 
 #TODO read ERRORLEVEL from command line operations
 #TODO stop operation if gksudo fails
@@ -33,6 +30,8 @@ from RapacheGtk import easygui
 from RapacheGtk import GuiUtils
 from RapacheCore import Shell
 import VhostsTreeView
+import RapacheCore.Observer
+from RapacheGtk.EventDispatcher import Master
 
 data = \
 [(False, "Loading", "please wait" )]
@@ -41,18 +40,18 @@ APPNAME="Rapache"
 APPVERSION="0.1"
 
 
-class MainWindow:
+class MainWindow( RapacheCore.Observer.Observable ) :
     """This is an Hello World Rapacheefication application"""
     
-    def __init__(self, Configuration):
-        self.virtual_hosts = {}
+    def __init__(self, *args, **kwargs):
+        super (MainWindow, self).__init__ (*args, **kwargs)
+        Master.register(self)
+
         self.denormalized_virtual_hosts = {}
         gnome.init(APPNAME, APPVERSION)
-        
-        self.Configuration = Configuration 
-        
+              
         #Set the Glade file
-        self.gladefile = self.Configuration.GLADEPATH + "/" + "main.glade"  
+        self.gladefile = Configuration.GLADEPATH + "/" + "main.glade"  
         self.xml = gtk.glade.XML(self.gladefile)         
         #Create our dictionary and connect it
         dic = { "new_button_clicked" : self.new_button_clicked,
@@ -70,25 +69,28 @@ class MainWindow:
         self.new_vhost_window = None
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )    
+    
+    def handle_event(self, event ):
+        if event.name == 'please_restart_apache':
+            self.please_restart()
     def browse_sites_available(self, widget):
-        Shell.command ('gksudo "nautilus '+self.Configuration.SITES_AVAILABLE_DIR+' --no-desktop" & ' )
+        Shell.command ('gksudo "nautilus '+Configuration.SITES_AVAILABLE_DIR+' --no-desktop" & ' )
         return
     
-        
     def new_button_clicked(self, widget):
         if ( self.new_vhost_window ):
             print "A window is already open"
             return
-        self.new_vhost_window = VirtualHostWindow ( self.Configuration.GLADEPATH, self )
+        self.new_vhost_window = VirtualHostWindow ( self )
         
-    def edit_button_clicked(self, widget):        
+    def edit_button_clicked(self, widget, notused = None, notused2 = None):        
         name = self.vhosts_treeview.get_selected_line()
         print "edit button clicked on:" + name
         if ( self.new_vhost_window ):
             print "A window is already open"
             return
         
-        self.new_vhost_window = VirtualHostWindow ( self.Configuration.GLADEPATH, self )
+        self.new_vhost_window = VirtualHostWindow ( self )
         self.new_vhost_window.load( name )
             
     def delete_button_clicked( self, widget ):
@@ -122,14 +124,11 @@ class MainWindow:
         except:
             pass
         
-        
         # create tree view
-        model = self.load_vhosts()
-        #treeview = gtk.TreeView(model)
-        treeview = VhostsTreeView.VhostsTreeView( model )
-        treeview.connect_toggled( self.fixed_toggled )
-        treeview.connect_selected( self.row_selected ) 
-        treeview.connect_icon( self._get_vhost_icon ) 
+        treeview = VhostsTreeView.VhostsTreeView()
+        treeview.load()        
+        treeview.selected_callback = self.row_selected
+        treeview.connect_after("row-activated", self.edit_button_clicked )
         
         self.vhosts_treeview = treeview        
         # attach it
@@ -144,6 +143,14 @@ class MainWindow:
         # display them as a separate list and offer user to normalize them
         # moving them in /etc/apache2/sites-available and linking them back
         # from /etc/apache2/sites-enabled
+        
+        """denormalized_treeview = VhostsTreeView.VhostsTreeView()
+        denormalized_treeview.load() 
+        self.xml.get_widget( 'vhost_container' ).add(denormalized_treeview) 
+        self.xml.get_widget( 'unnormalized_notice' ).show_all()
+        
+        self.xml.get_widget( 'vhost_container' ).reorder_child( denormalized_treeview, 2)
+        """
         denormalized_model = self.load_denormalized_vhosts()
         if len( self.denormalized_virtual_hosts ) > 0 :
             self.xml.get_widget( 'unnormalized_notice' ).show_all()
@@ -161,7 +168,11 @@ class MainWindow:
         else:
             sw.show_all()
             self.xml.get_widget( 'unnormalized_notice' ).hide_all()
-
+            
+    def _blacklisted ( self, fname ):
+        if re.match( '.*[~]\s*$', fname ) != None : return True
+        if re.match( '.*.swp$', fname ) != None : return True
+        return False
     def _change_label ( self, button, new_label ):
         """Changes the label of a button"""
         button.show()
@@ -170,43 +181,7 @@ class MainWindow:
         image, label = hbox.get_children()
         label.set_text( new_label )
         
-    def _blacklisted ( self, fname ):
-        if re.match( '.*[~]\s*$', fname ) != None : return True
-        if re.match( '.*.swp$', fname ) != None : return True
-        return False
-    def load_vhosts(self):
-        self.virtual_hosts = {}
-        site_template = "<b><big>%s</big></b>\n<small>DocumentRoot: %s</small>"
-        site_unparsable_template = "<b><big>%s</big></b>\n<small><i>Further information not available</i></small>"
-        lstore = gtk.ListStore(
-            gobject.TYPE_BOOLEAN,
-            gobject.TYPE_STRING,
-            gobject.TYPE_STRING)
-        data = []  
-        dirList=os.listdir( self.Configuration.SITES_AVAILABLE_DIR )
-        dirList = [x for x in dirList if self._blacklisted( x ) == False ]            
-        for fname in  dirList :                        
-            site = VirtualHostModel( fname )
-            try:
-                site.load()
-            except "VhostUnparsable":
-                pass
-            self.virtual_hosts[ fname ] = site
-            site = None
-                            
-        for idx in sorted( self.virtual_hosts ):
-            site = self.virtual_hosts[ idx ]
-            if ( site.parsable ):
-                markup = site_template \
-                % ( site.data['name'] , site.data[ 'target_folder' ] )
-            else:
-                markup = site_unparsable_template % site.data['name']
-            iter = lstore.append()
-            lstore.set(iter,
-                COLUMN_FIXED, site.data['enabled'],
-                COLUMN_SEVERITY, site.data['name'],
-                COLUMN_MARKUP, markup )
-        return lstore
+
     def load_denormalized_vhosts(self):
         self.denormalized_virtual_hosts = {}
         site_template = "<b><big>%s</big></b>"        
@@ -215,7 +190,7 @@ class MainWindow:
             gobject.TYPE_STRING,
             gobject.TYPE_STRING)
         data = []  
-        dirList=os.listdir( self.Configuration.SITES_ENABLED_DIR )
+        dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
         dirList = [x for x in dirList if self._blacklisted( x ) == False ]
         dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]
                    
@@ -244,24 +219,7 @@ class MainWindow:
         model = self.load_vhosts()            
         self.vhosts_treeview.set_model ( model )
         
-    def fixed_toggled(self, cell, path, model):
-        simulation = True
-        # get toggled iter
-        iter = model.get_iter((int(path),))
-        fixed = model.get_value(iter, COLUMN_FIXED)
-        name = model.get_value(iter, COLUMN_SEVERITY)
-        
-        fixed = not fixed        
-        if fixed:
-    	    Shell.command ('gksudo '+self.Configuration.APPPATH+'"/hosts-manager -a '+name+'"')
-        else :
-    	    Shell.command ('gksudo '+self.Configuration.APPPATH+'"/hosts-manager -r '+name+'"')
-        # set new value        
-        site = VirtualHostModel( name )
-        site.toggle( fixed )
-        model.set(iter, COLUMN_FIXED, site.data['enabled'] )        
-        if ( site.changed ):
-            self.please_restart()
+    
                
     def please_restart ( self ):
         self.xml.get_widget( 'restart_apache_notice' ).show()
@@ -281,25 +239,6 @@ class MainWindow:
             self.xml.get_widget( 'delete_button' ).set_sensitive( True )
             self.xml.get_widget( 'edit_button' ).set_sensitive( True )
     
-    #TODO: warning ! This function get's called even on mousehover
-    #      check for a way to optimize it
-    def _get_vhost_icon (self, column, cell, model, iter):
-        """ Provides the icon for a virtual host looking up it's favicon"""
-        
-        """node = model.get_value(iter, MODEL_FIELD_NODE)
-        pixbuf = getPixbufForNode(node)
-        cell.set_property('pixbuf', pixbuf)"""
-                
-        favicon = '/usr/share/icons/Human/24x24/filesystems/gnome-fs-web.png'
-        fname = model.get_value(iter, COLUMN_SEVERITY )
-        site = self.virtual_hosts[ fname ]
-        if site.data['target_folder'] != None:
-            custom_favicon = os.path.join(os.path.dirname( site.data['target_folder']+"/" ), "favicon.ico")                                                    
-            if ( os.path.exists( custom_favicon ) ): favicon = custom_favicon
-            
-        pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
-        cell.set_property("pixbuf", pixbuf)
-             
     def __add_denormalized_columns(self, treeview):
         model = treeview.get_model()
        

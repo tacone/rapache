@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-class Observable:   
+class Observable (object) :   
     """Any instance to be observed with PollyObserver should extend
     this class. Note this differs from the classical Observable
     implementation because it only allows the object to be observed
     from a single Observer"""
-    __observer = None
+    def __init__(self):
+        self.__observer = None
     def register (self, observer):
         self.__observer = observer
     def unregister (self):    
@@ -21,14 +22,17 @@ class PollyObserver:
     """Simple observer derivation. Observes and dispatches events
     from/to a poll of objects
     """
-    __observed = []
+    def __init__(self):
+        self.__observed = []
     def register(self, obj):
         """adds an Observable instance to the poll of observed objects
         and register itself to it."""
-        
+        print "checking for same obj"
         for registered_obj in self.__observed:
+            #print obj, ' == ', registered_obj, '??'
             if obj == registered_obj: return False
         self.__observed.append( obj )
+        #print "-->",self.__observed
         obj.register( self )
         return True
     def unregister(self, obj):

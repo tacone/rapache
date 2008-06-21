@@ -26,7 +26,8 @@ class Parser (Observable):
     content = None
     parser = None
     
-    def __init__(self):
+    def __init__ (self, *args, **kwargs):
+        super (Parser, self).__init__ (*args, **kwargs)
         self.parser = LineParser()
         parser_observer.register(self)
     

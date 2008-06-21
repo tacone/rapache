@@ -24,6 +24,7 @@ if __name__ == "__main__":
     if ( os.path.exists( current_path+"/RapacheCore" ) ):
         #self-contained mode
         Configuration.APPPATH = os.path.abspath(os.path.dirname(__file__))
-        Configuration.GLADEPATH = Configuration.APPPATH + "/Glade"        
-    hwg = MainWindow( Configuration )
+        Configuration.GLADEPATH = Configuration.APPPATH + "/Glade"              
+
+    hwg = MainWindow()
     gtk.main()

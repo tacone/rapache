@@ -26,9 +26,9 @@ class VirtualHostWindow:
     create_new = True
     name = None
     
-    def __init__ ( self, gladepath, father = None):
+    def __init__ ( self, father = None):
         self.father = father
-        self.gladefile = gladepath + "/" + "edit_vhost.glade"  
+        self.gladefile = Configuration.GLADEPATH + "/" + "edit_vhost.glade"  
         self.xml = gtk.glade.XML(self.gladefile)     
         #Create our dictionary and connect it
         dic = { 
