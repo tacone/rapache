@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Jun 19 05:31:26 2008 -->
+<!--Generated with glade3 3.4.5 on Sun Jun 22 02:40:58 2008 -->
 <glade-interface>
   <requires lib="bonobo"/>
   <requires lib="gnome"/>
@@ -240,7 +240,7 @@
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkScrolledWindow" id="scroll_box">
+                      <widget class="GtkScrolledWindow" id="vhosts_scroll_box">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
@@ -343,34 +343,12 @@
                         <property name="visible">True</property>
                         <property name="toolbar_style">GTK_TOOLBAR_BOTH_HORIZ</property>
                         <child>
-                          <widget class="GtkToolButton" id="new1">
-                            <property name="visible">True</property>
-                            <property name="is_important">True</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-new</property>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <widget class="GtkToolButton" id="edit_button1">
+                          <widget class="GtkToolButton" id="edit_module_button">
                             <property name="visible">True</property>
                             <property name="sensitive">False</property>
                             <property name="is_important">True</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-edit</property>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <widget class="GtkToolButton" id="delete_button1">
-                            <property name="visible">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="is_important">True</property>
-                            <property name="stock_id">gtk-delete</property>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -382,7 +360,7 @@
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkScrolledWindow" id="scroll_box1">
+                      <widget class="GtkScrolledWindow" id="modules_scroll_box">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
@@ -393,7 +371,7 @@
                             <property name="resize_mode">GTK_RESIZE_QUEUE</property>
                             <property name="shadow_type">GTK_SHADOW_NONE</property>
                             <child>
-                              <widget class="GtkVBox" id="vhost_container1">
+                              <widget class="GtkVBox" id="modules_container">
                                 <property name="visible">True</property>
                                 <child>
                                   <placeholder/>

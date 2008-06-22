@@ -66,7 +66,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self._change_label ( self.xml.get_widget( 'restart_apache' ), "Restart\nApache" )
         self._change_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
         self.create_vhost_list()
-        self.new_vhost_window = None
+        
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )    
     
@@ -78,20 +78,13 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         return
     
     def new_button_clicked(self, widget):
-        if ( self.new_vhost_window ):
-            print "A window is already open"
-            return
-        self.new_vhost_window = VirtualHostWindow ( self )
+        VirtualHostWindow ( self )
         
     def edit_button_clicked(self, widget, notused = None, notused2 = None):        
         name = self.vhosts_treeview.get_selected_line()
-        print "edit button clicked on:" + name
-        if ( self.new_vhost_window ):
-            print "A window is already open"
-            return
-        
-        self.new_vhost_window = VirtualHostWindow ( self )
-        self.new_vhost_window.load( name )
+        print "edit button clicked on:" + name          
+        new_vhost_window = VirtualHostWindow ( self )
+        new_vhost_window.load( name )
             
     def delete_button_clicked( self, widget ):
         name = self.vhosts_treeview.get_selected_line()
@@ -114,7 +107,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def create_vhost_list(self ):
         #print parent
         #sw = gtk.ScrolledWindow()
-        sw = self.xml.get_widget( 'scroll_box' )
+        sw = self.xml.get_widget( 'vhosts_scroll_box' )
         try:
             self.vhosts_treeview.destroy()
         except:
@@ -151,6 +144,27 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
         self.xml.get_widget( 'vhost_container' ).reorder_child( denormalized_treeview, 2)
         """
+        sw.set_shadow_type(gtk.SHADOW_NONE)
+        sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        
+        # create tree view
+        denormalized_treeview = VhostsTreeView.DenormalizedVhostsTreeView()
+        denormalized_treeview.load()
+        if ( denormalized_treeview.is_empty() == False ):           
+            #denormalized_treeview.selected_callback = self.row_selected
+            #denormalized_treeview.connect_after("row-activated", self.edit_button_clicked )        
+            self.denormalized_treeview = denormalized_treeview        
+            # attach it
+            self.xml.get_widget( 'vhost_container' ).add(denormalized_treeview)        
+            self.xml.get_widget( 'vhost_container' ).reorder_child( denormalized_treeview, 2)
+            denormalized_treeview.set_sensitive( False )
+            denormalized_treeview.show()
+            sw.show_all()
+        else:
+            sw.show_all()
+            self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+        
+        """
         denormalized_model = self.load_denormalized_vhosts()
         if len( self.denormalized_virtual_hosts ) > 0 :
             self.xml.get_widget( 'unnormalized_notice' ).show_all()
@@ -168,11 +182,12 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         else:
             sw.show_all()
             self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+        """
             
-    def _blacklisted ( self, fname ):
+    """def _blacklisted ( self, fname ):
         if re.match( '.*[~]\s*$', fname ) != None : return True
         if re.match( '.*.swp$', fname ) != None : return True
-        return False
+        return False"""
     def _change_label ( self, button, new_label ):
         """Changes the label of a button"""
         button.show()
@@ -182,7 +197,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         label.set_text( new_label )
         
 
-    def load_denormalized_vhosts(self):
+    """def load_denormalized_vhosts(self):
         self.denormalized_virtual_hosts = {}
         site_template = "<b><big>%s</big></b>"        
         lstore = gtk.ListStore(
@@ -211,20 +226,15 @@ class MainWindow( RapacheCore.Observer.Observable ) :
                 COLUMN_SEVERITY, site.data['name'],
                 COLUMN_MARKUP, markup 
                 )
-        return lstore
+        return lstore"""
             
     def reload_vhosts ( self ):
         print "reloading vhosts.."
         #recreate model
         model = self.load_vhosts()            
         self.vhosts_treeview.set_model ( model )
-        
-    
-               
     def please_restart ( self ):
         self.xml.get_widget( 'restart_apache_notice' ).show()
-   
-    
     def restart_apache ( self, widget ):
         print "Restarting apache on user's request"
         Shell.command( "gksudo /etc/init.d/apache2 stop" )
@@ -238,7 +248,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         else:
             self.xml.get_widget( 'delete_button' ).set_sensitive( True )
             self.xml.get_widget( 'edit_button' ).set_sensitive( True )
-    
+                
     def __add_denormalized_columns(self, treeview):
         model = treeview.get_model()
        
@@ -254,10 +264,11 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         treeview.append_column(column)               
         
     def fix_vhosts(self, widget):
-        for name in self.denormalized_virtual_hosts:
+        items = self.denormalized_treeview.get_items()
+        for name in items:
             normalize_vhost( name )
         #since they were in the enabled, let's enabl'em again
-        for name in self.denormalized_virtual_hosts:
+        for name in items:
             site = VirtualHostModel( name )
             site.toggle(True)            
         self.create_vhost_list()
