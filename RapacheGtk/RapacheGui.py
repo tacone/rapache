@@ -65,7 +65,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.xml.signal_autoconnect(dic)
         self._change_label ( self.xml.get_widget( 'restart_apache' ), "Restart\nApache" )
         self._change_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
-        self.create_vhost_list()
+        self.load_lists()
         
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )    
@@ -103,7 +103,9 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         print 'quitting'
         gtk.main_quit()
         exit()
-        
+    def load_lists(self):
+        self.create_vhost_list()
+        self.create_modules_list()
     def create_vhost_list(self ):
         #print parent
         #sw = gtk.ScrolledWindow()
@@ -117,17 +119,17 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         except:
             pass
         
-        # create tree view
+        # create virtualhosts treeview
         treeview = VhostsTreeView.VhostsTreeView()
         treeview.load()        
         treeview.selected_callback = self.row_selected
         treeview.connect_after("row-activated", self.edit_button_clicked )
-        
         self.vhosts_treeview = treeview        
-        # attach it
         self.xml.get_widget( 'vhost_container' ).add(treeview)        
         self.xml.get_widget( 'vhost_container' ).reorder_child( treeview, 0)
 
+        sw.set_shadow_type(gtk.SHADOW_NONE)
+        sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         sw.set_shadow_type(gtk.SHADOW_NONE)
         sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         
@@ -137,24 +139,10 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         # moving them in /etc/apache2/sites-available and linking them back
         # from /etc/apache2/sites-enabled
         
-        """denormalized_treeview = VhostsTreeView.VhostsTreeView()
-        denormalized_treeview.load() 
-        self.xml.get_widget( 'vhost_container' ).add(denormalized_treeview) 
-        self.xml.get_widget( 'unnormalized_notice' ).show_all()
-        
-        self.xml.get_widget( 'vhost_container' ).reorder_child( denormalized_treeview, 2)
-        """
-        sw.set_shadow_type(gtk.SHADOW_NONE)
-        sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
-        
-        # create tree view
         denormalized_treeview = VhostsTreeView.DenormalizedVhostsTreeView()
         denormalized_treeview.load()
         if ( denormalized_treeview.is_empty() == False ):           
-            #denormalized_treeview.selected_callback = self.row_selected
-            #denormalized_treeview.connect_after("row-activated", self.edit_button_clicked )        
             self.denormalized_treeview = denormalized_treeview        
-            # attach it
             self.xml.get_widget( 'vhost_container' ).add(denormalized_treeview)        
             self.xml.get_widget( 'vhost_container' ).reorder_child( denormalized_treeview, 2)
             denormalized_treeview.set_sensitive( False )
@@ -163,31 +151,57 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         else:
             sw.show_all()
             self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+   
+    def create_modules_list(self ):
+        #print parent
+        #sw = gtk.ScrolledWindow()
+        sw = self.xml.get_widget( 'modules_scroll_box' )
+        try:
+            self.modules_treeview.destroy()
+        except:
+            pass
+        try:
+            pass#self.denormalized_treeview.destroy()
+        except:
+            pass
         
+        # create virtualhosts treeview
+        treeview = VhostsTreeView.ModulesTreeView()
+        treeview.load()        
+        #treeview.selected_callback = self.row_selected
+        #treeview.connect_after("row-activated", self.edit_button_clicked )
+        self.modules_treeview = treeview        
+        self.xml.get_widget( 'modules_container' ).add(treeview)        
+        self.xml.get_widget( 'modules_container' ).reorder_child( treeview, 0)
+
+        sw.set_shadow_type(gtk.SHADOW_NONE)
+        sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        sw.set_shadow_type(gtk.SHADOW_NONE)
+        sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
+        
+        # create denormalized module list.
+        # We check for conf files only present in /etc/apache2/mods-enabled,
+        # display them as a separate list and offer user to normalize them
+        # moving them in /etc/apache2/mods-available and linking them back
+        # from /etc/apache2/mods-enabled
         """
-        denormalized_model = self.load_denormalized_vhosts()
-        if len( self.denormalized_virtual_hosts ) > 0 :
-            self.xml.get_widget( 'unnormalized_notice' ).show_all()
-            denormalized_treeview = gtk.TreeView(denormalized_model)
-            denormalized_treeview.set_headers_visible( False )
-            denormalized_treeview.set_rules_hint(True)
-            self.__add_denormalized_columns(denormalized_treeview)
-            denormalized_treeview.set_sensitive( False )
-            denormalized_treeview.show()
-            self.denormalized_treeview = denormalized_treeview
-            # attach it
+        denormalized_treeview = VhostsTreeView.DenormalizedVhostsTreeView()
+        denormalized_treeview.load()
+        if ( denormalized_treeview.is_empty() == False ):           
+            self.denormalized_treeview = denormalized_treeview        
             self.xml.get_widget( 'vhost_container' ).add(denormalized_treeview)        
             self.xml.get_widget( 'vhost_container' ).reorder_child( denormalized_treeview, 2)
+            denormalized_treeview.set_sensitive( False )
+            denormalized_treeview.show()
             sw.show_all()
         else:
             sw.show_all()
             self.xml.get_widget( 'unnormalized_notice' ).hide_all()
         """
-            
-    """def _blacklisted ( self, fname ):
-        if re.match( '.*[~]\s*$', fname ) != None : return True
-        if re.match( '.*.swp$', fname ) != None : return True
-        return False"""
+        sw.show_all()
+          
+    
+       
     def _change_label ( self, button, new_label ):
         """Changes the label of a button"""
         button.show()

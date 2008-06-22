@@ -4,6 +4,7 @@ from CheckListView import *
 import os
 import re
 from RapacheCore.VirtualHost import *
+from RapacheCore import Module
 from RapacheCore import Configuration
 
 class ConfFilesTreeView( CheckListView ):
@@ -108,7 +109,7 @@ class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
         super (DenormalizedVhostsTreeView, self).__init__ (*args, **kwargs)
         print self.column_checkbox, self.column_description, self.column_icon
         self.column_checkbox.set_visible( False )
-        print self.column_icon.get_cell_renderers()[0].set_property( 'stock-id',  gtk.STOCK_DIALOG_WARNING )
+        self.column_icon.get_cell_renderers()[0].set_property( 'stock-id',  gtk.STOCK_DIALOG_WARNING )
     def load(self):    
         self.items = {}
         site_template = "<b><big>%s</big></b>"        
@@ -142,3 +143,65 @@ class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
         pass
 gobject.type_register (DenormalizedVhostsTreeView )
 
+class ModulesTreeView ( ConfFilesTreeView ):
+    def __init__ (self, *args, **kwargs):
+        super (ModulesTreeView, self).__init__ (*args, **kwargs)
+        self.column_icon.get_cell_renderers()[0].set_property( 'stock-id',  gtk.STOCK_EXECUTE )
+        self.toggled_callback = self.__fixed_toggled
+    def load(self):
+        self.items = {}
+        mod_template = "<b><big>%s</big></b>"
+        mod_unparsable_template = "<b><big>%s</big></b>\n<small><i>Further information not available</i></small>"
+        lstore = gtk.ListStore(
+            gobject.TYPE_BOOLEAN,
+            gobject.TYPE_STRING,
+            gobject.TYPE_STRING)
+        data = []  
+        
+        """dirList=os.listdir( Configuration.MODS_AVAILABLE_DIR )
+        dirList = [x for x in dirList if self._blacklisted( x ) == False ]            
+        for fname in  dirList :                        
+            mod = Module.ModuleModel( fname )
+            try:
+                mod.load()
+            except "VhostUnparsable":
+                pass
+            self.items[ fname ] = mod
+            mod = None
+        """
+        self.items = Module.module_list()
+
+        for idx in sorted( self.items ):
+            mod = self.items[ idx ]
+            if ( mod.parsable ):
+                markup = mod_template \
+                % ( mod.data['name'] ) #, mod.data[ 'target_folder' ] )
+                if len( mod.data[ 'dependancies' ] ) > 0:
+                    markup += "\n<small><b>%s</b></small>" % ( "Dependancies: " + \
+                    ", ".join( mod.data[ 'dependancies' ] ) )
+                else:
+                    markup += "\n<small><i>No dependancies</i></small>"
+            else:
+                markup = mod_unparsable_template % mod.data['name']
+            iter = lstore.append()
+            lstore.set(iter,
+                COLUMN_FIXED, mod.data['enabled'],
+                COLUMN_SEVERITY, mod.data['name'],
+                COLUMN_MARKUP, markup )
+            
+        self._post_load(lstore)
+    def __fixed_toggled(self, cell, path, treeview):        
+        # get toggled iter        
+        model = treeview.get_model()
+        iter = model.get_iter((int(path),))
+        fixed = model.get_value(iter, COLUMN_FIXED)
+        name = model.get_value(iter, COLUMN_SEVERITY)
+        fixed = not fixed        
+        # set new value        
+        mod = Module.ModuleModel( name )
+        mod.toggle( fixed )
+        model.set(iter, COLUMN_FIXED, mod.data['enabled'] )        
+        if ( mod.changed ):
+            #self.please_restart()
+            self.raise_event( 'please_restart_apache' ) 
+gobject.type_register ( ModulesTreeView )

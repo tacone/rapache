@@ -92,15 +92,15 @@ class VirtualHostModel:
         return found_value
  
     def load (self, name = False):
-       
+        print "Loading Vhosts list"
         try:
             #reset everything
-            print "Loading :\t",name
+            #print "Loading :\t",name
             if ( name == False ): name = self.data[ 'name' ]
             self.data = self.defaults   
             self.data['name'] = name
             
-            print "Loading(b) :\t",self.data[ 'name' ]            
+            #print "Loading(b) :\t",self.data[ 'name' ]            
             options = {}
             content = self.get_source()        
             #domain_name = self._get_domain_name(content)
@@ -111,18 +111,18 @@ class VirtualHostModel:
             www_regexp = r'^\s*ServerAlias\s*[^#]*\s+www\.'+domain_regexp+'(\s*|$)'
             folder_regexp = domain_regexp = r'^\s*DocumentRoot\s+(\S+\s*\S+)'
             
-            print "Domain Name :\t"+domain_name             
+            #print "Domain Name :\t"+domain_name             
             if self._search(content, www_regexp ) != None \
             and self._search(content, www_regexp ) != False  :
                 options[ 'has_www' ] = True
             else:
                 options[ 'has_www' ] = False 
     
-            print "Has www :\t"+str(options[ 'has_www' ])
+            #print "Has www :\t"+str(options[ 'has_www' ])
                 
             options[ 'target_folder' ] = self._get_conf_value(content, folder_regexp)
             
-            print "Document Root :\t"+str( options[ 'target_folder' ] )
+            #print "Document Root :\t"+str( options[ 'target_folder' ] )
             hosts = HostsManager()
             if ( hosts.find ( domain_name ) == False ):
                 options['hack_hosts'] = False
@@ -134,7 +134,7 @@ class VirtualHostModel:
             raise "VhostUnparsable"
             return False
         self.data.update( options )
-        print self.data
+        #print self.data
         return True
         
     def is_enabled ( self ):
@@ -142,8 +142,12 @@ class VirtualHostModel:
         dirList=os.listdir(  Configuration.SITES_ENABLED_DIR )
         for fname in dirList:
             try:                                
-                flink = os.readlink( Configuration.SITES_ENABLED_DIR +"/"+fname )
-                flink = os.path.join(os.path.dirname( Configuration.SITES_ENABLED_DIR ), flink)                
+                flink = os.readlink( Configuration.SITES_ENABLED_DIR +"/"+fname )               
+                flink = os.path.join(os.path.dirname( Configuration.SITES_ENABLED_DIR +"/" ), flink)
+                #please note debian brilliantly features a nice set of
+                # mixed absolute and relative links. FREAKS !
+                # the added "/" is also necessary
+                flink = os.path.normpath(flink)               
                 if ( flink == Configuration.SITES_AVAILABLE_DIR+"/"+orig ):
                     return True
             except:
