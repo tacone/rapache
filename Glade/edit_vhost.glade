@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Sat Jun 21 22:06:05 2008 -->
+<!--Generated with glade3 3.4.5 on Mon Jun 23 01:58:11 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="vhost_edit_window">
     <property name="visible">True</property>
@@ -114,10 +114,9 @@
                 <child>
                   <widget class="GtkLabel" id="create_hosts_label">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">To access your Virtual Host 
-you either need a registered
-domain name or an entry in
-&lt;b&gt;/etc/hosts&lt;/b&gt;.</property>
+                    <property name="label" translatable="yes">If you do not have a registered 
+domain you will need an entry in 
+your &lt;b&gt;/etc/hosts&lt;/b&gt; file.</property>
                     <property name="use_markup">True</property>
                     <property name="wrap">True</property>
                   </widget>
