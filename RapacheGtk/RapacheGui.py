@@ -73,6 +73,10 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def handle_event(self, event ):
         if event.name == 'please_restart_apache':
             self.please_restart()
+            return
+        if event.name == 'please_reload_lists':
+            self.load_lists()
+            return
     def browse_sites_available(self, widget):
         Shell.command ('gksudo "nautilus '+Configuration.SITES_AVAILABLE_DIR+' --no-desktop" & ' )
         return

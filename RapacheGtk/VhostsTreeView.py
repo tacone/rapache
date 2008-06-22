@@ -201,6 +201,7 @@ class ModulesTreeView ( ConfFilesTreeView ):
         mod = Module.ModuleModel( name )
         mod.toggle( fixed )
         model.set(iter, COLUMN_FIXED, mod.data['enabled'] )        
+        self.raise_event( 'please_reload_lists' ) 
         if ( mod.changed ):
             #self.please_restart()
             self.raise_event( 'please_restart_apache' ) 
