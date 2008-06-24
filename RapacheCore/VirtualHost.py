@@ -144,7 +144,7 @@ class VirtualHostModel:
             try:                                
                 flink = os.readlink( Configuration.SITES_ENABLED_DIR +"/"+fname )               
                 flink = os.path.join(os.path.dirname( Configuration.SITES_ENABLED_DIR +"/" ), flink)
-                #please note debian brilliantly features a nice set of
+                # please note debian features a nice set of
                 # mixed absolute and relative links. FREAKS !
                 # the added "/" is also necessary
                 flink = os.path.normpath(flink)               
