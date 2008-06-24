@@ -7,20 +7,6 @@ import re
 from RapacheCore import Configuration
 from RapacheCore import Shell
 
-VHOST_TEMPLATE = """#created for you by Rapache
-<VirtualHost *>
-	ServerAdmin webmaster@||example||
-	ServerName ||example||
-	#ServerAlias www.||example||
-	DocumentRoot ||target_folder||
-	Options Indexes FollowSymLinks MultiViews		
-	<Directory ||target_folder||>
-		AllowOverride All
-		Order allow,deny
-		allow from all
-	</Directory>
-</VirtualHost>"""
-
 def is_denormalized_module ( fname ):
     try:   
         flink = os.readlink( Configuration.MODS_ENABLED_DIR +"/"+fname )
@@ -48,6 +34,15 @@ def normalize_module( fname ):
     command = 'gksudo "mv \''+orig+'\' \''+dest+'\'"'
     return Shell.command( command )
     return  os.path.exists( dest )
+   
+def get_module_dependants ( name, mods_dict ):
+    dependants = []
+    for idx in mods_dict:
+        if idx != name:
+            mod = mods_dict[ idx ]
+            for dependancy in mod.data[ 'dependancies' ]:
+                if dependancy == name: dependants.append( mod.data['name' ] )
+    return dependants
 
 def module_list ():
     list = {}
@@ -84,7 +79,7 @@ class ModuleModel:
             self.data[ 'name' ] = name
             self.data[ 'enabled' ] = self.is_enabled()
 
-    def load (self, name = False):    	
+    def load (self, name = False):        
         try:
             #reset everything
             #print "Loading :\t",name
@@ -105,14 +100,14 @@ class ModuleModel:
         #print self.data
         return True
     def __get_dependecies(self, content):   
-    	content = content.split("\n")
-    	dependancies = []
-    	for line in content:
-    		match = re.match ( r'# Depends:(.*)', line )
-    		if match != None:     			    			
-    			dependancy = match.groups()[0].strip()
-    			if dependancy != "" : dependancies.append( dependancy )
-    	self.data[ 'dependancies' ] = dependancies
+        content = content.split("\n")
+        dependancies = []
+        for line in content:
+            match = re.match ( r'# Depends:(.*)', line )
+            if match != None:                                 
+                dependancy = match.groups()[0].strip()
+                if dependancy != "" : dependancies.append( dependancy )
+        self.data[ 'dependancies' ] = dependancies
     def is_enabled ( self ):
         orig = self.data[ 'name' ] + ".load"              
         dirList=os.listdir(  Configuration.MODS_ENABLED_DIR )        
@@ -130,13 +125,13 @@ class ModuleModel:
                 pass
           
         return False
-   
+    
     def toggle( self, status ):
         "status = True|False"
         if status:
-    	    command = "a2enmod"
+            command = "a2enmod"
         else :
-    	    command = "a2dismod"        
+            command = "a2dismod"        
         # set new value
         #tokens = self.data['name'].split('.')
         #del tokens[ len( tokens ) -1 ]

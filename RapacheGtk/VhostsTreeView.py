@@ -27,17 +27,16 @@ class VhostsTreeView ( ConfFilesTreeView ):
         super (VhostsTreeView, self).__init__ (*args, **kwargs)
         self.icon_callback = self.__get_row_icon  
         self.toggled_callback = self.__fixed_toggled
-            
+    
+    
     def load(self):
         self.items = {}
         site_template = "<b><big>%s</big></b>\n<small>DocumentRoot: %s</small>"
         site_unparsable_template = "<b><big>%s</big></b>\n<small><i>Further information not available</i></small>"
-        lstore = gtk.ListStore(
-            gobject.TYPE_BOOLEAN,
-            gobject.TYPE_STRING,
-            gobject.TYPE_STRING)
-        data = []  
-
+        
+        lstore = self._reset_model()
+            
+        data = []          
         dirList=os.listdir( Configuration.SITES_AVAILABLE_DIR )
         dirList = [x for x in dirList if self._blacklisted( x ) == False ]            
         for fname in  dirList :                        
@@ -61,12 +60,8 @@ class VhostsTreeView ( ConfFilesTreeView ):
                 COLUMN_FIXED, site.data['enabled'],
                 COLUMN_SEVERITY, site.data['name'],
                 COLUMN_MARKUP, markup )
-            
-        self._post_load(lstore)
-        
-        
 
-     #TODO: warning ! This function get's called even on mousehover
+    #TODO: warning ! This function get's called even on mousehover
     #      check for a way to optimize it
     def __get_row_icon (self, column, cell, model, iter):
         """ Provides the icon for a virtual host looking up it's favicon"""        
@@ -100,7 +95,6 @@ class VhostsTreeView ( ConfFilesTreeView ):
         site.toggle( fixed )
         model.set(iter, COLUMN_FIXED, site.data['enabled'] )        
         if ( site.changed ):
-            #self.please_restart()
             self.raise_event( 'please_restart_apache' )                
 gobject.type_register (VhostsTreeView)
 
@@ -110,13 +104,12 @@ class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
         print self.column_checkbox, self.column_description, self.column_icon
         self.column_checkbox.set_visible( False )
         self.column_icon.get_cell_renderers()[0].set_property( 'stock-id',  gtk.STOCK_DIALOG_WARNING )
+    
     def load(self):    
         self.items = {}
         site_template = "<b><big>%s</big></b>"        
-        lstore = gtk.ListStore(
-            gobject.TYPE_BOOLEAN,
-            gobject.TYPE_STRING,
-            gobject.TYPE_STRING)
+        lstore = self._reset_model()
+        
         data = []  
         dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
         dirList = [x for x in dirList if self._blacklisted( x ) == False ]
@@ -138,7 +131,6 @@ class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
                 COLUMN_SEVERITY, site.data['name'],
                 COLUMN_MARKUP, markup 
                 )
-        self._post_load(lstore)
     def toggled_callback(self, *args, **kwargs):
         pass
 gobject.type_register (DenormalizedVhostsTreeView )
@@ -148,14 +140,15 @@ class ModulesTreeView ( ConfFilesTreeView ):
         super (ModulesTreeView, self).__init__ (*args, **kwargs)
         self.column_icon.get_cell_renderers()[0].set_property( 'stock-id',  gtk.STOCK_EXECUTE )
         self.toggled_callback = self.__fixed_toggled
+        self.selected_callback = self.__selected
+    def __selected(self, *args, **kwargs ):
+        print "MODULE NAME:", self.get_selected_line()
+        print "DEPENDANTS: ", Module.get_module_dependants(self.get_selected_line(), self.items)
     def load(self):
         self.items = {}
         mod_template = "<b><big>%s</big></b>"
         mod_unparsable_template = "<b><big>%s</big></b>\n<small><i>Further information not available</i></small>"
-        lstore = gtk.ListStore(
-            gobject.TYPE_BOOLEAN,
-            gobject.TYPE_STRING,
-            gobject.TYPE_STRING)
+        lstore = self._reset_model()
         data = []  
         
         """dirList=os.listdir( Configuration.MODS_AVAILABLE_DIR )
@@ -189,7 +182,6 @@ class ModulesTreeView ( ConfFilesTreeView ):
                 COLUMN_SEVERITY, mod.data['name'],
                 COLUMN_MARKUP, markup )
             
-        self._post_load(lstore)
     def __fixed_toggled(self, cell, path, treeview):        
         # get toggled iter        
         model = treeview.get_model()
@@ -200,9 +192,9 @@ class ModulesTreeView ( ConfFilesTreeView ):
         # set new value        
         mod = Module.ModuleModel( name )
         mod.toggle( fixed )
-        model.set(iter, COLUMN_FIXED, mod.data['enabled'] )        
-        #self.raise_event( 'please_reload_lists' ) 
+        model.set(iter, COLUMN_FIXED, mod.data['enabled'] )
         if ( mod.changed ):
-            #self.please_restart()
             self.raise_event( 'please_restart_apache' ) 
+        self.raise_event( 'please_reload_lists', {}, True ) 
+        
 gobject.type_register ( ModulesTreeView )

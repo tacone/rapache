@@ -65,10 +65,16 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.xml.signal_autoconnect(dic)
         self._change_label ( self.xml.get_widget( 'restart_apache' ), "Restart\nApache" )
         self._change_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
-        self.load_lists()
+        #hereby we create lists
+        self.create_vhost_list()
+        self.create_modules_list()
+        #hereby we fill them
+        self.refresh_lists()
         
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )    
+    
+    
     
     def handle_event(self, event ):
         if event.name == 'please_restart_apache':
@@ -100,32 +106,25 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         if ( result != "Ok" ): return False
         site = VirtualHostModel( name )
         site.delete()
-        self.create_vhost_list()
+        self.vhosts_treeview.load()
+        print "========================================"
+        print "========================================"
+        print "========================================"                
         self.please_restart()
         
     def quit (self, widget):
         print 'quitting'
         gtk.main_quit()
         exit()
-    def load_lists(self):
-        self.create_vhost_list()
-        self.create_modules_list()
+  
+        
+    
     def create_vhost_list(self ):
         #print parent
         #sw = gtk.ScrolledWindow()
-        sw = self.xml.get_widget( 'vhosts_scroll_box' )
-        try:
-            self.vhosts_treeview.destroy()
-        except:
-            pass
-        try:
-            self.denormalized_treeview.destroy()
-        except:
-            pass
-        
+        sw = self.xml.get_widget( 'vhosts_scroll_box' )      
         # create virtualhosts treeview
         treeview = VhostsTreeView.VhostsTreeView()
-        treeview.load()        
         treeview.selected_callback = self.row_selected
         treeview.connect_after("row-activated", self.edit_button_clicked )
         self.vhosts_treeview = treeview        
@@ -144,34 +143,41 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         # from /etc/apache2/sites-enabled
         
         denormalized_treeview = VhostsTreeView.DenormalizedVhostsTreeView()
-        denormalized_treeview.load()
-        if ( denormalized_treeview.is_empty() == False ):           
-            self.denormalized_treeview = denormalized_treeview        
-            self.xml.get_widget( 'vhost_container' ).add(denormalized_treeview)        
-            self.xml.get_widget( 'vhost_container' ).reorder_child( denormalized_treeview, 2)
-            denormalized_treeview.set_sensitive( False )
-            denormalized_treeview.show()
-            sw.show_all()
-        else:
-            sw.show_all()
-            self.xml.get_widget( 'unnormalized_notice' ).hide_all()
-   
+        self.denormalized_treeview = denormalized_treeview        
+        self.xml.get_widget( 'vhost_container' ).add(denormalized_treeview)        
+        self.xml.get_widget( 'vhost_container' ).reorder_child( denormalized_treeview, 2)
+        denormalized_treeview.set_sensitive( False )
+        denormalized_treeview.show()
+        sw.show_all()
+        #hidden by default
+        self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+        
+
+        
+    
     def create_modules_list(self ):
         #print parent
         #sw = gtk.ScrolledWindow()
         sw = self.xml.get_widget( 'modules_scroll_box' )
+        """
         try:
-            self.modules_treeview.destroy()
+            try:
+                self.modules_treeview.unregister()
+            except:
+                pass
+            self.modules_treeview = None
+            #self.modules_treeview.destroy()
         except:
             pass
         try:
             pass#self.denormalized_treeview.destroy()
         except:
             pass
+        """
         
         # create virtualhosts treeview
         treeview = VhostsTreeView.ModulesTreeView()
-        treeview.load()        
+        #treeview.load()        
         #treeview.selected_callback = self.row_selected
         #treeview.connect_after("row-activated", self.edit_button_clicked )
         self.modules_treeview = treeview        
@@ -204,8 +210,6 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         """
         sw.show_all()
           
-    
-       
     def _change_label ( self, button, new_label ):
         """Changes the label of a button"""
         button.show()
@@ -246,11 +250,22 @@ class MainWindow( RapacheCore.Observer.Observable ) :
                 )
         return lstore"""
             
-    def reload_vhosts ( self ):
-        print "reloading vhosts.."
-        #recreate model
-        model = self.load_vhosts()            
-        self.vhosts_treeview.set_model ( model )
+    def refresh_vhosts ( self ):
+        print "reloading vhosts.."            
+        self.vhosts_treeview.load()
+    def refresh_denormalized_vhosts (self):
+        self.denormalized_treeview.load()
+        if ( len( self.denormalized_treeview.items ) > 0 ):
+            self.xml.get_widget( 'unnormalized_notice' ).show_all()
+        else:
+            self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+    def refresh_modules (self):    
+        print "reloading modules.."            
+        self.modules_treeview.load()
+    def refresh_lists (self):
+        self.refresh_vhosts()
+        self.refresh_modules()
+        self.refresh_denormalized_vhosts()
     def please_restart ( self ):
         self.xml.get_widget( 'restart_apache_notice' ).show()
     def restart_apache ( self, widget ):
@@ -258,6 +273,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         Shell.command( "gksudo /etc/init.d/apache2 stop" )
         Shell.command( "gksudo /etc/init.d/apache2 start" )
         self.xml.get_widget( 'restart_apache_notice' ).hide()
+        self.refresh_lists()
     def row_selected( self, widget ):
         name = self.vhosts_treeview.get_selected_line()
         if ( name == None ):
@@ -267,7 +283,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.xml.get_widget( 'delete_button' ).set_sensitive( True )
             self.xml.get_widget( 'edit_button' ).set_sensitive( True )
                 
-    def __add_denormalized_columns(self, treeview):
+    """def __add_denormalized_columns(self, treeview):
         model = treeview.get_model()
        
         column = gtk.TreeViewColumn()
@@ -280,7 +296,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
                                      markup=COLUMN_MARKUP)
         column.set_sort_column_id(COLUMN_MARKUP)
         treeview.append_column(column)               
-        
+    """    
     def fix_vhosts(self, widget):
         items = self.denormalized_treeview.get_items()
         for name in items:
@@ -289,4 +305,5 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         for name in items:
             site = VirtualHostModel( name )
             site.toggle(True)            
-        self.create_vhost_list()
+        self.refresh_vhosts()
+        self.refresh_denormalized_vhosts()

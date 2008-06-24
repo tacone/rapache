@@ -38,10 +38,23 @@ class CheckListView (gtk.TreeView ):
     def handle_event (self, *args, **kwargs): return self.Observable.handle_event(*args, **kwargs)
     def raise_event (self, *args, **kwargs): return self.Observable.raise_event(*args, **kwargs)
     
-    def __load (self):
-        self._post_load()
-    def _post_load(self, model = None):
-        if ( model != None ): self.set_model( model )
+    def load (self):
+        raise "AbstractMethod", "Please override this"
+    
+    def _reset_model (self):
+        lstore = self.get_model()
+        if ( lstore == None ):
+            lstore = self._default_model()
+            self.set_model( lstore )
+        else:
+            lstore.clear()
+        return lstore
+    def _default_model (self):
+        lstore = gtk.ListStore(
+                gobject.TYPE_BOOLEAN,
+                gobject.TYPE_STRING,
+                gobject.TYPE_STRING)
+        return lstore
     
     def __toggled(self, *args, **kwargs):
         if self.toggled_callback != None:

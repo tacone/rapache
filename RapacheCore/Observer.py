@@ -9,14 +9,20 @@ class Observable (object) :
         self.__observer = None
     def register (self, observer):
         self.__observer = observer
-    def unregister (self):    
-        self.__observer = None
+    def unregister (self):
+        if ( self.__observer != None):
+            self.__observer.unregister( self )
+            self.__observer = None
     def handle_event(self, event):
         """Override this function in subclasses to implement your 
         own event handling logic"""
         print self, "- now handling:", event.name, event.args, event
-    def raise_event (self, name, args = {} ):
-        event = Event( self, name, args )
+    def raise_event (self, name, args = {}, no_caller = False ):
+        if no_caller:
+            event = Event( None, name, args )
+        else:
+            event = Event( self, name, args )
+        print '---------------->',event.name , 'raised by' , self
         if self.__observer != None: self.__observer.notify( event )
 class PollyObserver:
     """Simple observer derivation. Observes and dispatches events
@@ -41,7 +47,7 @@ class PollyObserver:
         for idx, registered_obj in enumerate( self.__observed ):
             if obj == registered_obj: 
                 del self.__observed[ idx]
-                obj.unregister( self )
+                obj.unregister()
                 return True
         return False
     def get_observed(self):
@@ -49,7 +55,7 @@ class PollyObserver:
         return self.__observed
     def notify (self, event ):
         """dispatches an event all around"""
-        for registered_obj in self.__observed:
+        for registered_obj in self.__observed:            
             registered_obj.handle_event( event )
             
 class Event:

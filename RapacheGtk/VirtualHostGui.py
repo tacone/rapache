@@ -113,7 +113,7 @@ class VirtualHostWindow:
                 site = VirtualHostModel( self.name )
                 site.update( options, self.name )
             
-            self.father.create_vhost_list()        
+            self.father.refresh_vhosts()        
             self.father.please_restart()
             self.close()
         except "VhostExists":
