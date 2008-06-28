@@ -17,14 +17,18 @@ except:
 import os
 
 from RapacheGtk.RapacheGui import MainWindow
+from RapacheGtk.WarningWindow import WarningWindow
 from RapacheCore import Configuration
 
 if __name__ == "__main__":
-    current_path = os.path.abspath(os.path.dirname(__file__))
-    if ( os.path.exists( current_path+"/RapacheCore" ) ):
-        #self-contained mode
-        Configuration.APPPATH = os.path.abspath(os.path.dirname(__file__))
-        Configuration.GLADEPATH = Configuration.APPPATH + "/Glade"              
+	if(os.path.isdir( Configuration.SITES_AVAILABLE_DIR)):
+		current_path = os.path.abspath(os.path.dirname(__file__))
+		if ( os.path.exists( current_path+"/RapacheCore" ) ):
+		    #self-contained mode
+		    Configuration.APPPATH = os.path.abspath(os.path.dirname(__file__))
+		    Configuration.GLADEPATH = Configuration.APPPATH + "/Glade"              
 
-    hwg = MainWindow()
-    gtk.main()
+		hwg = MainWindow()
+		gtk.main()
+	else:
+		ww = WarningWindow("Apache isn't installed. Rapache has nothing to manage.")
