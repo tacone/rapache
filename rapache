@@ -27,7 +27,7 @@ if __name__ == "__main__":
 		    Configuration.APPPATH = os.path.abspath(os.path.dirname(__file__))
 		    Configuration.GLADEPATH = Configuration.APPPATH + "/Glade"    
 
-		if(os.path.isdir( Configuration.SITES_AVAILABLE_DIR)):
+		if(os.path.isdir( Configuration.SITES_AVAILABLE_DIR ) and os.path.isdir( Configuration.SITES_ENABLED_DIR )):
 	   		hwg = MainWindow()
 			gtk.main()
 		else: 
