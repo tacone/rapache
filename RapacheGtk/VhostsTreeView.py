@@ -103,8 +103,7 @@ class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
         super (DenormalizedVhostsTreeView, self).__init__ (*args, **kwargs)
         print self.column_checkbox, self.column_description, self.column_icon
         self.column_checkbox.set_visible( False )
-        self.column_icon.get_cell_renderers()[0].set_property( 'stock-id',  gtk.STOCK_DIALOG_WARNING )
-    
+        self.column_icon.get_cell_renderers()[0].set_property( 'stock-id',  gtk.STOCK_DIALOG_WARNING )        
     def load(self):    
         self.items = {}
         site_template = "<b><big>%s</big></b>"        
@@ -141,6 +140,8 @@ class ModulesTreeView ( ConfFilesTreeView ):
         self.column_icon.get_cell_renderers()[0].set_property( 'stock-id',  gtk.STOCK_EXECUTE )
         self.toggled_callback = self.__fixed_toggled
         self.selected_callback = self.__selected
+        self.column_description.get_cell_renderers()[0].set_property('wrap-mode', gtk.WRAP_WORD)
+        self.column_description.get_cell_renderers()[0].set_property('wrap-width', 400)
     def __selected(self, *args, **kwargs ):
         print "MODULE NAME:", self.get_selected_line()
         print "DEPENDANTS: ", Module.get_module_dependants(self.get_selected_line(), self.items)
