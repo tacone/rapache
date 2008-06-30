@@ -11,16 +11,9 @@ from RapacheCore import Shell
 
 VHOST_TEMPLATE = """#created for you by Rapache
 <VirtualHost *>
-	ServerAdmin webmaster@||example||
-	ServerName ||example||
-	#ServerAlias www.||example||
-	DocumentRoot ||target_folder||
-	Options Indexes FollowSymLinks MultiViews		
-	<Directory ||target_folder||>
-		AllowOverride All
-		Order allow,deny
-		allow from all
-	</Directory>
+	#ServerAdmin webmaster@example.com
+	ServerName example
+	DocumentRoot /var/www/examplepath
 </VirtualHost>"""
 
 
@@ -60,8 +53,7 @@ class VirtualHostModel:
             'enabled' : False
             , 'name' : None
             , 'domain_name': None
-            , 'changed' : False
-            , 'has_www' : False
+            , 'changed' : False            
             , 'hack_hosts' : False
             , 'target_folder' : None            
         }
@@ -90,8 +82,33 @@ class VirtualHostModel:
         found_entry = match.groups()                          
         found_value = found_entry[0]
         return found_value
- 
-    def load (self, name = False):
+    def load(self, name = False):
+    	if ( name == False ): name = self.data[ 'name' ]
+    	options = {}    	
+        parser = Parser()
+        parser.load(  Configuration.SITES_AVAILABLE_DIR+'/'+name )
+        try:
+            piece = VhostParser( parser )
+        except "VhostNotFound":
+         	self.parsable = False
+         	return False
+        domain_name = piece.get_value( 'ServerName' )
+        if domain_name == None:
+         	self.parsable = False
+         	return False
+        options[ 'domain_name' ] = domain_name
+        options[ 'ServerAlias' ] = piece.get_options( 'ServerAlias' )
+        print options[ 'ServerAlias' ]
+        options[ 'target_folder' ] = piece.get_value('DocumentRoot')
+        hosts = HostsManager()
+        if ( hosts.find ( domain_name ) == False ):
+            options['hack_hosts'] = False
+        else:
+            options['hack_hosts'] = True
+        self.parsable = True
+        self.data.update( options )
+        return True
+    def loaad (self, name = False):
         print "Loading Vhosts list"
         try:
             #reset everything
@@ -202,20 +219,15 @@ class VirtualHostModel:
         
         old_enabled = self.is_enabled()
         print "IS ENABLED", old_enabled
-        
-        parser = Parser()
         parser = Parser()
         parser.load(  Configuration.SITES_AVAILABLE_DIR+'/'+name )
         piece = VhostParser( parser )
         old_servername = piece.get_value( 'ServerName' )
-        old_www = "www."+old_servername
-        new_www = "www."+new_options['domain_name']
-        piece.remove_option( 'ServerAlias', old_www )        
-        if new_options['has_www'] == True:
-            print "WWW (ServerAlias) From",piece.has_option('old_www', old_www ),"to", new_www         
-            piece.add_option( 'ServerAlias', new_www)
-        else:            
-            print "WWW From",piece.has_option('old_www', old_www ),"to <Nothing>"                                    
+        
+        piece.set_value('ServerAlias',  '' )
+        for domain in new_options ['ServerAlias']:
+            piece.add_option('ServerAlias', domain )
+                                        
         print "DocumentRoot From",piece.get_value('DocumentRoot' ),"to",new_options['target_folder']
         piece.set_value('DocumentRoot', new_options['target_folder'] )
                 
@@ -233,6 +245,7 @@ class VirtualHostModel:
         old_name = Configuration.SITES_AVAILABLE_DIR + "/"+ old_servername
         print "old name", old_name
         print "new name", new_name
+        
         if old_name != new_name and os.path.exists( new_name ) == False:
             print "Server name changed, updating conf filename"
             self.toggle( False )     
@@ -289,13 +302,24 @@ class VirtualHostModel:
             raise "VhostExists", 'Virtual host already exists :('
             #self.error( 'Virtual host already exists :(' )
             return False        
-        
+        """
         template = VHOST_TEMPLATE.replace( '||example||', options['domain_name'] )
         template = template.replace( '||target_folder||', options['target_folder'] )
         if ( options[ 'has_www' ] ):
             template = template.replace( '#ServerAlias www', 'ServerAlias www' )        
-        
-        self._write( complete_path, template )
+        """
+        parser = Parser()
+        parser.set_content_from_string( VHOST_TEMPLATE )
+        piece = VhostParser( parser )
+        piece.set_value('ServerName',  options['domain_name'] ) 
+        piece.set_value('DocumentRoot',  options['target_folder'] ) 
+        #reset previous aliases
+        piece.set_value('ServerAlias',  '' )
+        for domain in options ['ServerAlias']:
+            piece.add_option('ServerAlias', domain )
+        print parser.get_content()
+            
+        self._write( complete_path, "\n".join(parser.get_content() ) )
           
         if ( options[ 'hack_hosts' ] ):
             Shell.command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a '+options['domain_name']+'"')

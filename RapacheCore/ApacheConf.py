@@ -6,6 +6,7 @@ ASSUMPTIONS
       the last one wins.
     - directives without options could be ok.
         - ServerAlias without any option works
+        
 GOALS:
     - change as little as possible when updating to reduce the risk 
       of breaking something
@@ -44,8 +45,14 @@ class Parser (Observable):
         return self.parser.get_value(line)
     def set_value (self, name, value):
         idx = self._get_last_directive_idx(name)
-        line = self.get_line( idx )
-        self.set_line( idx, self.parser.change_value(line, value) )
+        if idx == None:
+            idx = self._last_line_idx()
+            line = name+"\t"+self.parser.value_escape( value )+"\n"
+            self.insert_line( self._last_line_idx(), line )
+        else:
+            line = self.get_line( idx )
+            line = self.parser.change_value(line, value)
+            self.set_line( idx, line )
     def get_directive(self, name):
         idx = self._get_last_directive_idx(name)
         if ( idx == None ): return None
@@ -75,7 +82,13 @@ class Parser (Observable):
     def has_option (self, name, option ):
         line = self.get_directive(name)
         if ( line == False or line == None ): return False
-        return self.parser.has_option(line, option)        
+        return self.parser.has_option(line, option)  
+    def get_options (self, name):
+        value = self.get_value(name)
+        if value == None: return []
+        options = self.parser.parse_options( value )
+        print options
+        return options
     def add_option (self, name, option ):    
         line = self.get_directive(name)
         if ( line == False or line == None ): 
@@ -100,6 +113,8 @@ class Parser (Observable):
         return "".join( self.get_content() )
     def get_content(self):
         return self.content
+    def set_content_from_string(self, string):
+        self.content = string.split( "\n" )
     def get_line(self, idx):
         return self.get_content()[idx]
     def set_line(self, idx, line):
@@ -138,8 +153,9 @@ class VhostParser( PieceParser ):
     def load(self, args = {}): 
         content = self.father.get_content()
         self.min = self._find_min(content)
+        if self.min == None:  raise "VhostNotFound", "Beginning not found"
         self.max = self._find_max(content, self.min) +1
-        if ( self.min == None or self.max == None ): raise "VhostNotFound"
+        if ( self.max == None ): raise "VhostNotFound", "End not found"
 
     def _last_line_idx (self):
         return -1
@@ -215,6 +231,7 @@ class LineParser:
         for k, v in enumerate( tokens ):
             tokens[ k ] = v.replace( '&nbsp;', ' ' )
             tokens[ k ] = tokens[ k ].replace( '&quot;', '"' )
+        tokens = [x for x in tokens if x.strip() != '' ]
         return tokens;
 
     def remove_option ( self, line, option ):

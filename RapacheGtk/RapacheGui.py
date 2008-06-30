@@ -59,6 +59,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "browse_sites_available" : self.browse_sites_available,
             "fix_vhosts_clicked" : self.fix_vhosts,            
             "quit" : self.quit }
+        gtk.window_set_default_icon(self.xml.get_widget("MainWindow").get_icon())
         self.xml.signal_autoconnect(dic)
         self._change_label ( self.xml.get_widget( 'restart_apache' ), "Restart\nApache" )
         self._change_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
@@ -70,7 +71,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )    
-    
+        
     def handle_event(self, event ):
         if event.name == 'please_restart_apache':
             self.please_restart()
@@ -83,14 +84,15 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         return
     
     def new_button_clicked(self, widget):
-        VirtualHostWindow ( self )
-        
+        new_vhost_window = VirtualHostWindow ( self )
+        #new_vhost_window.load()
+        new_vhost_window.run()
     def edit_button_clicked(self, widget, notused = None, notused2 = None):        
         name = self.vhosts_treeview.get_selected_line()
         print "edit button clicked on:" + name          
         new_vhost_window = VirtualHostWindow ( self )
         new_vhost_window.load( name )
-            
+        new_vhost_window.run()    
     def delete_button_clicked( self, widget ):
         name = self.vhosts_treeview.get_selected_line()
         if ( name == None ): return False
