@@ -72,7 +72,6 @@ def module_list ():
     document = parseString(xml)
     for node in document.getElementsByTagName("module"):
         name = node.getAttribute( "name" )
-        print name
         if node.firstChild:
             description = node.firstChild.nodeValue
             module_descriptions[name] = description
