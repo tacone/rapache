@@ -169,6 +169,7 @@ class ModulesTreeView ( ConfFilesTreeView ):
             if ( mod.parsable ):
                 markup = mod_template \
                 % ( mod.data['name'] ) #, mod.data[ 'target_folder' ] )
+                markup += "\n<small>%s</small>" % mod.data[ 'description' ]
                 if len( mod.data[ 'dependancies' ] ) > 0:
                     markup += "\n<small><b>%s</b></small>" % ( "Dependancies: " + \
                     ", ".join( mod.data[ 'dependancies' ] ) )

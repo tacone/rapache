@@ -43,7 +43,7 @@ def get_module_dependants ( name, mods_dict ):
             for dependancy in mod.data[ 'dependancies' ]:
                 if dependancy == name: dependants.append( mod.data['name' ] )
     return dependants
-
+"""
 def module_list ():
     list = {}
     dirList=os.listdir( Configuration.MODS_AVAILABLE_DIR )
@@ -59,7 +59,46 @@ def module_list ():
             list[ fname ] = mod
             mod = None
     return list
-  
+"""
+def module_list ():
+    list = {}
+ 
+    #load module descriptions
+    module_descriptions = {}
+    from xml.dom.minidom import *
+    f = open( Configuration.GLADEPATH + "/modules.xml" , "r")
+    xml = f.read()
+    f.close()
+    document = parseString(xml)
+    for node in document.getElementsByTagName("module"):
+        name = node.getAttribute( "name" )
+        print name
+        if node.firstChild:
+            description = node.firstChild.nodeValue
+            module_descriptions[name] = description
+ 
+    dirList=os.listdir( Configuration.MODS_AVAILABLE_DIR )
+    dirList = [x for x in dirList if blacklisted( x ) == False ]
+    for fname in  dirList :
+        tokens = os.path.splitext( fname )
+        if tokens[1] == '.load':
+           description = None
+           # find a description
+ 
+           if module_descriptions.has_key(tokens[0]):
+               description = module_descriptions[tokens[0]]
+           elif module_descriptions.has_key("mod_" + tokens[0]):
+               description = module_descriptions["mod_" + tokens[0]]
+ 
+           mod = ModuleModel( tokens[0] )
+           mod.data[ 'description' ] = description
+           try:
+                mod.load(  )
+           except "VhostUnparsable":
+               pass
+           list[ fname ] = mod
+           mod = None
+    return list  
 class ModuleModel:
     
     def __init__(self, name = None):
