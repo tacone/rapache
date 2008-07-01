@@ -206,7 +206,8 @@ class VirtualHostWindow:
                 site = VirtualHostModel( name )
                 site.update( options, name )
             
-            self.parent.create_vhost_list()        
+            #self.parent.create_vhost_list()        
+            self.parent.refresh_vhosts()
             self.parent.please_restart()
             self.window.destroy()
         except "VhostExists":
