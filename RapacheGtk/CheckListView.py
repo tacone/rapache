@@ -93,10 +93,13 @@ class CheckListView (gtk.TreeView ):
         selection = self.get_selection()
         #print '==>', self.get_selected()
         #print selection.get_selected_rows()[1]
-        rows = selection.get_selected_rows()[1][0]
-        num_row = rows[0]
-        model = self.get_model()
-        name = model[ num_row ][1]
+        try:
+            rows = selection.get_selected_rows()[1][0]
+            num_row = rows[0]
+            model = self.get_model()
+            name = model[ num_row ][1]
+        except IndexError:
+            return None
         return name
         #except:
         #    return None

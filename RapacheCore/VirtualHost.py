@@ -95,13 +95,13 @@ class VirtualHostModel:
         domain_name = piece.get_value( 'ServerName' )
         if domain_name == None:
          	self.parsable = False
-         	return False
+         	#return False
         options[ 'domain_name' ] = domain_name
         options[ 'ServerAlias' ] = piece.get_options( 'ServerAlias' )
         print options[ 'ServerAlias' ]
         options[ 'target_folder' ] = piece.get_value('DocumentRoot')
         hosts = HostsManager()
-        if ( hosts.find ( domain_name ) == False ):
+        if ( domain_name == None or hosts.find ( domain_name ) == False ):
             options['hack_hosts'] = False
         else:
             options['hack_hosts'] = True

@@ -136,8 +136,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
         denormalized_treeview = VhostsTreeView.DenormalizedVhostsTreeView()
         self.denormalized_treeview = denormalized_treeview        
-        self.xml.get_widget( 'vhost_container' ).add(denormalized_treeview)        
-        self.xml.get_widget( 'vhost_container' ).reorder_child( denormalized_treeview, 2)
+        self.xml.get_widget( 'problems_area' ).add(denormalized_treeview)        
+        self.xml.get_widget( 'problems_area' ).reorder_child( denormalized_treeview, 2)
         denormalized_treeview.set_sensitive( False )
         denormalized_treeview.show()
         sw.show_all()
@@ -172,8 +172,10 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.denormalized_treeview.load()
         if ( len( self.denormalized_treeview.items ) > 0 ):
             self.xml.get_widget( 'unnormalized_notice' ).show_all()
+            self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).show()
         else:
             self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+            self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).hide()
     def refresh_modules (self):    
         print "reloading modules.."            
         self.modules_treeview.load()

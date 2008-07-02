@@ -95,11 +95,18 @@ class VirtualHostWindow:
         self.create_new = False
         try:
             self.vhost.load()
+            print self.vhost.data
             #self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
-            self.entry_domain.set_text( self.vhost.data[ 'domain_name' ] )
-            self.entry_location.set_text( self.vhost.data[ 'target_folder' ] )
-            for domain in self.vhost.data[ 'ServerAlias' ]:                
-                self.treeview_domain_store.append((domain, None))            
+            server_name = self.vhost.data[ 'domain_name' ] 
+            if ( server_name != None ):
+                self.entry_domain.set_text( server_name )
+            document_root = self.vhost.data[ 'target_folder' ] 
+            if ( document_root != None ):
+                self.entry_location.set_text( document_root )
+            server_alias = self.vhost.data[ 'ServerAlias' ]
+            if ( server_alias != None ): 
+                for domain in server_alias:
+                    self.treeview_domain_store.append((domain, None))            
             print self.vhost.data
         except "VhostUnparsable":            
             pass
