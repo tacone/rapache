@@ -229,6 +229,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         Shell.command ('gksudo "nautilus '+document_root+' --no-desktop" & ' )
         
         if ( server_name ): self.open_url( "http://" + server_name )
+        
     # Grabbed from Ubuntu's UpdateManager (ChangelogViewer.py)    
     #  Copyright (c) 2006 Sebastian Heinlein
     #                2007 Canonical    

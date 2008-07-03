@@ -55,6 +55,7 @@ class VirtualHostWindow:
         self.toolbutton_domain_edit = wtree.get_widget("toolbutton_domain_edit")
         self.toolbutton_domain_delete = wtree.get_widget("toolbutton_domain_delete")
         self.text_view_vhost_source = wtree.get_widget("text_view_vhost_source")
+        self.notebook = wtree.get_widget("notebook")
         self.button_save = wtree.get_widget("button_save")
         self.error_area = wtree.get_widget("error_area")
         signals = {
@@ -69,6 +70,9 @@ class VirtualHostWindow:
             "on_button_location_clear_clicked"    : self.on_button_location_clear_clicked
         }
         wtree.signal_autoconnect(signals)
+        
+        self.notebook.get_nth_page( 1 ).hide()
+        self.notebook.get_nth_page( 2 ).hide()
         
         # add on destroy to quit loop
         self.window.connect("destroy", self.on_destroy)
