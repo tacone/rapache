@@ -30,8 +30,13 @@ class Parser (Observable):
     def __init__ (self, *args, **kwargs):
         super (Parser, self).__init__ (*args, **kwargs)
         self.parser = LineParser()
-        parser_observer.register(self)
+        self.apply_observing_policy()
     
+    def apply_observing_policy(self):
+        """register the object with the observer"""
+        self.observer = PollyObserver()
+        self.observer.register(self)
+        
     def load(self, filename ):
         self.filename = filename
         file = open ( filename, 'r' )
@@ -134,6 +139,9 @@ class PieceParser ( Parser ):
     min = None
     max = None
     father = None
+    def apply_observing_policy(self):
+        """register the object with the observer"""
+        self.father.observer.register(self)
     def load (self, args = {}):
         print "Please override this method !"
         exit()
@@ -176,6 +184,7 @@ class VhostParser( PieceParser ):
         if idx >= 0: idx = idx + self.min
         return self.father.set_line( idx, line )
     def insert_line (self, idx, line ):
+        print "===========> INSERTING"
         if idx >= 0: idx = idx + self.min
         line = "\t"+line.lstrip() #ident
         return self.father.insert_line( idx, line )
@@ -183,6 +192,7 @@ class VhostParser( PieceParser ):
         if idx >= 0: idx = idx + self.min
         return self.father.remove_line( idx )
     def handle_event(self, event):
+        print self, "handling:", event.name, "raised by", event.caller
         if ( event.name == 'row_inserted' ):
             self.max = self.max + 1
         if ( event.name == 'row_removed' ):
@@ -288,7 +298,6 @@ class LineParser:
         line = line.rstrip() + "\n"
         return line
 
-parser_observer = PollyObserver()
 
 if __name__ == "__main__":  
     

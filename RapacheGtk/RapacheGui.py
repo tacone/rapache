@@ -105,7 +105,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         result = easygui.message_box(
             title='Delete '+name,
             message="You are about to delete the following domain: \n\n"+name+"\n\nData won't be recoverable. Proceed ?",
-            surf_thisbuttons=('Ok', 'Cancel'))
+            buttons=('Ok', 'Cancel'))
         if ( result != "Ok" ): return False
         site = VirtualHostModel( name )
         site.delete()

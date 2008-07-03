@@ -313,6 +313,8 @@ class VirtualHostModel:
         piece = VhostParser( parser )
         piece.set_value('ServerName',  options['domain_name'] ) 
         piece.set_value('DocumentRoot',  options['target_folder'] ) 
+
+        print "min", piece.min, "max", piece.max
         #reset previous aliases
         piece.set_value('ServerAlias',  '' )
         for domain in options ['ServerAlias']:

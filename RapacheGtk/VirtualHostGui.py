@@ -203,6 +203,9 @@ class VirtualHostWindow:
         return  
             
     def on_button_save_clicked(self, widget):
+        if self.entry_location.get_text() == "" and self.create_new:
+            self.set_default_values_from_domain( True )
+        
         options = {}
         options[ 'ServerAlias' ] =  []
         options[ 'domain_name' ] = self.entry_domain.get_text()
