@@ -215,7 +215,7 @@ class LineParser:
                 raise( 'BadQuoting', 'Bad quoting' )
                 return value;
             value = value[1:-1]
-            value = value.replace( '\\'.char, char )
+            value = value.replace( '\\'+char, char )
             
         #we don't need to unescape spaces as apparently
         #apache parser doesn't handle escaped spaces
