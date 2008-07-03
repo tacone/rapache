@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Jul  3 04:19:51 2008 -->
+<!--Generated with glade3 3.4.5 on Thu Jul  3 04:51:17 2008 -->
 <glade-interface>
   <requires lib="bonobo"/>
   <requires lib="gnome"/>
@@ -136,6 +136,7 @@
                             <property name="label" translatable="yes">gtk-about</property>
                             <property name="use_underline">True</property>
                             <property name="use_stock">True</property>
+                            <signal name="activate" handler="about_clicked"/>
                           </widget>
                         </child>
                       </widget>

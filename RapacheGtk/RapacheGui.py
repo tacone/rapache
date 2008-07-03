@@ -37,7 +37,7 @@ data = \
 [(False, "Loading", "please wait" )]
 
 APPNAME="Rapache"
-APPVERSION="0.1"
+APPVERSION="0.4"
 
 
 class MainWindow( RapacheCore.Observer.Observable ) :
@@ -61,6 +61,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "fix_vhosts_clicked" : self.fix_vhosts,
             "surf_this_button_clicked" : self.surf_this,
             "browse_button_clicked" : self.browse_this,
+            "about_clicked" : self.display_about,
             "quit" : self.quit }
         gtk.window_set_default_icon(self.xml.get_widget("MainWindow").get_icon())
         self.xml.signal_autoconnect(dic)
@@ -90,14 +91,16 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         new_vhost_window = VirtualHostWindow ( self )
         #new_vhost_window.load()
         new_vhost_window.run()
-    def edit_button_clicked(self, widget, notused = None, notused2 = None):        
+    def edit_button_clicked(self, widget, notused = None, notused2 = None):         
         name = self.vhosts_treeview.get_selected_line()
         print "edit button clicked on:" + name          
+        if ( self.is_vhost_editable( name ) == False ): return False
         new_vhost_window = VirtualHostWindow ( self )
         new_vhost_window.load( name )
         new_vhost_window.run()    
     def delete_button_clicked( self, widget ):
         name = self.vhosts_treeview.get_selected_line()
+        if ( self.is_vhost_editable( name ) == False ): return False
         if ( name == None ): return False
         result = easygui.message_box(
             title='Delete '+name,
@@ -194,6 +197,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         Shell.command( "gksudo /etc/init.d/apache2 start" )
         self.xml.get_widget( 'restart_apache_notice' ).hide()
         self.refresh_lists()
+    def is_vhost_editable (self, name):
+        return name != 'default'
     def row_selected( self, widget ):
         name = self.vhosts_treeview.get_selected_line()
         if ( name == None ):
@@ -201,8 +206,9 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.xml.get_widget( 'edit_button' ).set_sensitive( False )
             self.xml.get_widget( 'open_in_browser_button' ).set_sensitive( False )
         else:
-            self.xml.get_widget( 'delete_button' ).set_sensitive( True )
-            self.xml.get_widget( 'edit_button' ).set_sensitive( True )
+            editable = self.is_vhost_editable( name )
+            self.xml.get_widget( 'delete_button' ).set_sensitive( editable )
+            self.xml.get_widget( 'edit_button' ).set_sensitive( editable )
             surfable =  self.get_current_vhost_directive( 'domain_name' ) != None
             self.xml.get_widget( 'surf_this_button' ).set_sensitive( surfable )
             browsable =  self.get_current_vhost_directive( 'target_folder' ) != None
@@ -222,7 +228,11 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         if ( name == None ): return None
         return self.vhosts_treeview.items[ name ].data[ directive_name ]
     def surf_this(self, widget):
-        server_name = self.get_current_vhost_directive( 'domain_name' )
+        name = self.vhosts_treeview.get_selected_line()
+        if name == 'default':
+            server_name = 'localhost'
+        else:
+            server_name = self.get_current_vhost_directive( 'domain_name' )
         if ( server_name ): self.open_url( "http://" + server_name )
     def browse_this(self, widget):
         document_root = self.get_current_vhost_directive( 'target_folder' )
@@ -247,3 +257,12 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             command = ['sudo', '-u', os.environ['SUDO_USER']] + command
 
         subprocess.Popen(command)
+    def display_about (self, widget):
+        dialog = gtk.AboutDialog()
+        dialog.set_name( APPNAME )
+        dialog.set_version( APPVERSION )
+        dialog.set_authors( ["Rapache Developers\nhttps://launchpad.net/~rapache-devel"] )
+        dialog.set_comments('Rapache is an Apache configurator for Debian/Gnome systems')
+        dialog.set_website('http://launchpad.net/rapache')
+        dialog.run()
+        dialog.destroy()
