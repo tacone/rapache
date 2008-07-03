@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Jul  3 04:34:01 2008 -->
+<!--Generated with glade3 3.4.5 on Thu Jul  3 04:38:32 2008 -->
 <glade-interface>
   <widget class="GtkDialog" id="dialog_edit_domain_name">
     <property name="border_width">5</property>
@@ -80,6 +80,7 @@
                 <property name="use_stock">True</property>
                 <property name="response_id">0</property>
                 <signal name="clicked" handler="on_button_cancel_clicked"/>
+                <accelerator key="Escape" modifiers="" signal="clicked"/>
               </widget>
             </child>
             <child>
@@ -93,6 +94,7 @@
                 <property name="use_stock">True</property>
                 <property name="response_id">0</property>
                 <signal name="clicked" handler="on_button_ok_clicked"/>
+                <accelerator key="Return" modifiers="" signal="clicked"/>
               </widget>
               <packing>
                 <property name="position">1</property>
