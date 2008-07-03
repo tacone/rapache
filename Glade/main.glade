@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Jul  3 03:28:39 2008 -->
+<!--Generated with glade3 3.4.5 on Thu Jul  3 04:19:51 2008 -->
 <glade-interface>
   <requires lib="bonobo"/>
   <requires lib="gnome"/>
@@ -243,25 +243,30 @@
                               </widget>
                               <packing>
                                 <property name="expand">False</property>
+                                <property name="homogeneous">False</property>
                               </packing>
                             </child>
                             <child>
                               <widget class="GtkToolButton" id="browse_button">
                                 <property name="visible">True</property>
+                                <property name="sensitive">False</property>
                                 <property name="is_important">True</property>
                                 <property name="label" translatable="yes">Browse</property>
                                 <property name="stock_id">gtk-open</property>
+                                <signal name="clicked" handler="browse_button_clicked"/>
                               </widget>
                               <packing>
                                 <property name="expand">False</property>
                               </packing>
                             </child>
                             <child>
-                              <widget class="GtkToolButton" id="open_in_browser">
+                              <widget class="GtkToolButton" id="surf_this_button">
                                 <property name="visible">True</property>
+                                <property name="sensitive">False</property>
                                 <property name="is_important">True</property>
                                 <property name="label" translatable="yes">Open Site</property>
                                 <property name="icon">browser.png</property>
+                                <signal name="clicked" handler="surf_this_button_clicked"/>
                               </widget>
                               <packing>
                                 <property name="expand">False</property>

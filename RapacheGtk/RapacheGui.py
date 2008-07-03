@@ -31,6 +31,7 @@ from RapacheCore import Shell
 import VhostsTreeView
 import RapacheCore.Observer
 from RapacheGtk.EventDispatcher import Master
+import subprocess
 
 data = \
 [(False, "Loading", "please wait" )]
@@ -57,7 +58,9 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "on_delete" : self.delete_button_clicked,
             "edit_button_clicked" : self.edit_button_clicked,
             "browse_sites_available" : self.browse_sites_available,
-            "fix_vhosts_clicked" : self.fix_vhosts,            
+            "fix_vhosts_clicked" : self.fix_vhosts,
+            "surf_this_button_clicked" : self.surf_this,
+            "browse_button_clicked" : self.browse_this,
             "quit" : self.quit }
         gtk.window_set_default_icon(self.xml.get_widget("MainWindow").get_icon())
         self.xml.signal_autoconnect(dic)
@@ -99,7 +102,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         result = easygui.message_box(
             title='Delete '+name,
             message="You are about to delete the following domain: \n\n"+name+"\n\nData won't be recoverable. Proceed ?",
-            buttons=('Ok', 'Cancel'))
+            surf_thisbuttons=('Ok', 'Cancel'))
         if ( result != "Ok" ): return False
         site = VirtualHostModel( name )
         site.delete()
@@ -196,10 +199,14 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         if ( name == None ):
             self.xml.get_widget( 'delete_button' ).set_sensitive( False )
             self.xml.get_widget( 'edit_button' ).set_sensitive( False )
+            self.xml.get_widget( 'open_in_browser_button' ).set_sensitive( False )
         else:
             self.xml.get_widget( 'delete_button' ).set_sensitive( True )
             self.xml.get_widget( 'edit_button' ).set_sensitive( True )
-
+            surfable =  self.get_current_vhost_directive( 'domain_name' ) != None
+            self.xml.get_widget( 'surf_this_button' ).set_sensitive( surfable )
+            browsable =  self.get_current_vhost_directive( 'target_folder' ) != None
+            self.xml.get_widget( 'browse_button' ).set_sensitive( browsable )
     def fix_vhosts(self, widget):
         items = self.denormalized_treeview.get_items()
         for name in items:
@@ -210,3 +217,32 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             site.toggle(True)            
         self.refresh_vhosts()
         self.refresh_denormalized_vhosts()
+    def get_current_vhost_directive (self, directive_name ):
+        name = self.vhosts_treeview.get_selected_line()
+        if ( name == None ): return None
+        return self.vhosts_treeview.items[ name ].data[ directive_name ]
+    def surf_this(self, widget):
+        server_name = self.get_current_vhost_directive( 'domain_name' )
+        if ( server_name ): self.open_url( "http://" + server_name )
+    def browse_this(self, widget):
+        document_root = self.get_current_vhost_directive( 'target_folder' )
+        Shell.command ('gksudo "nautilus '+document_root+' --no-desktop" & ' )
+        
+        if ( server_name ): self.open_url( "http://" + server_name )
+    # Grabbed from Ubuntu's UpdateManager (ChangelogViewer.py)    
+    #  Copyright (c) 2006 Sebastian Heinlein
+    #                2007 Canonical    
+    # TODO: move this into an utility module
+    def open_url(self, url):
+        """Open the specified URL in a browser"""
+        # Find an appropiate browser
+        if os.path.exists('/usr/bin/gnome-open'):
+            command = ['gnome-open', url]
+        else:
+            command = ['x-www-browser', url]
+
+        # Avoid to run the browser as user root
+        if os.getuid() == 0 and os.environ.has_key('SUDO_USER'):
+            command = ['sudo', '-u', os.environ['SUDO_USER']] + command
+
+        subprocess.Popen(command)
