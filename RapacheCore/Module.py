@@ -6,6 +6,7 @@ import tempfile
 import re
 from RapacheCore import Configuration
 from RapacheCore import Shell
+from xml.dom.minidom import *
 
 def is_denormalized_module ( fname ):
     try:   
@@ -64,8 +65,7 @@ def module_list ():
     list = {}
  
     #load module descriptions
-    module_descriptions = {}
-    from xml.dom.minidom import *
+    module_descriptions = {}    
     f = open( Configuration.GLADEPATH + "/modules.xml" , "r")
     xml = f.read()
     f.close()
