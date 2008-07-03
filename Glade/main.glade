@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Jul  1 22:26:08 2008 -->
+<!--Generated with glade3 3.4.5 on Thu Jul  3 03:28:39 2008 -->
 <glade-interface>
   <requires lib="bonobo"/>
   <requires lib="gnome"/>
@@ -194,45 +194,83 @@
                   <widget class="GtkVBox" id="vbox4">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkToolbar" id="toolbar1">
+                      <widget class="GtkHBox" id="hbox4">
                         <property name="visible">True</property>
-                        <property name="toolbar_style">GTK_TOOLBAR_BOTH_HORIZ</property>
                         <child>
-                          <widget class="GtkToolButton" id="new">
+                          <widget class="GtkToolbar" id="toolbar1">
                             <property name="visible">True</property>
-                            <property name="is_important">True</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-new</property>
-                            <signal name="clicked" handler="new_button_clicked"/>
+                            <property name="toolbar_style">GTK_TOOLBAR_BOTH_HORIZ</property>
+                            <child>
+                              <widget class="GtkToolButton" id="new">
+                                <property name="visible">True</property>
+                                <property name="is_important">True</property>
+                                <property name="use_underline">True</property>
+                                <property name="stock_id">gtk-new</property>
+                                <signal name="clicked" handler="new_button_clicked"/>
+                              </widget>
+                              <packing>
+                                <property name="expand">False</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <widget class="GtkToolButton" id="edit_button">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="is_important">True</property>
+                                <property name="use_underline">True</property>
+                                <property name="stock_id">gtk-edit</property>
+                                <signal name="clicked" handler="edit_button_clicked"/>
+                              </widget>
+                              <packing>
+                                <property name="expand">False</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <widget class="GtkToolButton" id="delete_button">
+                                <property name="visible">True</property>
+                                <property name="sensitive">False</property>
+                                <property name="is_important">True</property>
+                                <property name="stock_id">gtk-delete</property>
+                                <signal name="clicked" handler="on_delete"/>
+                              </widget>
+                              <packing>
+                                <property name="expand">False</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <widget class="GtkSeparatorToolItem" id="toolbutton1">
+                                <property name="visible">True</property>
+                              </widget>
+                              <packing>
+                                <property name="expand">False</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <widget class="GtkToolButton" id="browse_button">
+                                <property name="visible">True</property>
+                                <property name="is_important">True</property>
+                                <property name="label" translatable="yes">Browse</property>
+                                <property name="stock_id">gtk-open</property>
+                              </widget>
+                              <packing>
+                                <property name="expand">False</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <widget class="GtkToolButton" id="open_in_browser">
+                                <property name="visible">True</property>
+                                <property name="is_important">True</property>
+                                <property name="label" translatable="yes">Open Site</property>
+                                <property name="icon">browser.png</property>
+                              </widget>
+                              <packing>
+                                <property name="expand">False</property>
+                              </packing>
+                            </child>
                           </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                          </packing>
                         </child>
                         <child>
-                          <widget class="GtkToolButton" id="edit_button">
-                            <property name="visible">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="is_important">True</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-edit</property>
-                            <signal name="clicked" handler="edit_button_clicked"/>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <widget class="GtkToolButton" id="delete_button">
-                            <property name="visible">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="is_important">True</property>
-                            <property name="stock_id">gtk-delete</property>
-                            <signal name="clicked" handler="on_delete"/>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                          </packing>
+                          <placeholder/>
                         </child>
                       </widget>
                       <packing>
@@ -279,7 +317,7 @@
                     <child>
                       <widget class="GtkImage" id="image3">
                         <property name="visible">True</property>
-                        <property name="stock">gtk-network</property>
+                        <property name="pixbuf">browser.png</property>
                       </widget>
                     </child>
                     <child>

@@ -114,8 +114,12 @@ class VirtualHostWindow:
         buf = self.text_view_vhost_source.get_buffer()
         buf.set_text( self.vhost.get_source() )
 
+    def get_domain (self):
+        return self.entry_domain.get_text().strip()
+        #url.lower().startswith('http://')
+        #url[7:]
     def set_default_values_from_domain(self, force_domain=False):
-        domain = self.entry_domain.get_text().strip()
+        domain = self.get_domain()
         
         # auto set the location
         if domain and (not self.entry_location.get_text() or force_domain):

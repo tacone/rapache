@@ -68,7 +68,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
         """node = model.get_value(iter, MODEL_FIELD_NODE)
         pixbuf = getPixbufForNode(node)
         cell.set_property('pixbuf', pixbuf)"""                
-        favicon = '/usr/share/icons/Human/24x24/filesystems/gnome-fs-web.png'
+        favicon = os.path.join( Configuration.GLADEPATH, 'browser.png' )
         fname = model.get_value(iter, COLUMN_SEVERITY )
         site = self.items[ fname ]
         if site.data['target_folder'] != None:
