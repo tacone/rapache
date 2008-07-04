@@ -172,10 +172,10 @@ class ModulesTreeView ( ConfFilesTreeView ):
                 % ( mod.data['name'] ) #, mod.data[ 'target_folder' ] )
                 markup += "\n<small>%s</small>" % mod.data[ 'description' ]
                 if len( mod.data[ 'dependancies' ] ) > 0:
-                    markup += "\n<small><b>%s</b></small>" % ( "Dependancies: " + \
+                    markup += "\n<small><b>%s</b></small>" % ( "Dependencies: " + \
                     ", ".join( mod.data[ 'dependancies' ] ) )
                 else:
-                    markup += "\n<small><i>No dependancies</i></small>"
+                    markup += "\n<small><i>No dependencies</i></small>"
             else:
                 markup = mod_unparsable_template % mod.data['name']
             iter = lstore.append()
