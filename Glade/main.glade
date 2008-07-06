@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Jul  3 04:51:17 2008 -->
+<!--Generated with glade3 3.4.5 on Sun Jul  6 09:28:41 2008 -->
 <glade-interface>
   <requires lib="bonobo"/>
   <requires lib="gnome"/>
@@ -460,7 +460,7 @@
                     <child>
                       <widget class="GtkImage" id="image4">
                         <property name="visible">True</property>
-                        <property name="stock">gtk-execute</property>
+                        <property name="pixbuf">modules.png</property>
                       </widget>
                     </child>
                     <child>
