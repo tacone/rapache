@@ -24,6 +24,7 @@ import re
 
 
 from RapacheGtk.VirtualHostGui import VirtualHostWindow
+from RapacheGtk.ModuleGui import ModuleWindow
 from RapacheCore.VirtualHost import *
 from RapacheGtk import easygui
 from RapacheGtk import GuiUtils
@@ -57,6 +58,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "please_restart" : self.restart_apache ,            
             "on_delete" : self.delete_button_clicked,
             "edit_button_clicked" : self.edit_button_clicked,
+            "edit_module_button_clicked" : self.edit_module_button_clicked,
             "browse_sites_available" : self.browse_sites_available,
             "fix_vhosts_clicked" : self.fix_vhosts,
             "surf_this_button_clicked" : self.surf_this,
@@ -111,7 +113,13 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         site.delete()
         self.vhosts_treeview.load()
         self.please_restart()
-        
+    def edit_module_button_clicked(self, widget, notused = None, notused2 = None):
+        name = self.modules_treeview.get_selected_line()
+        if ( self.is_module_editable( name ) == False ): return False
+        print "module edit button clicked on:", name          
+        module_window = ModuleWindow ( self )
+        module_window.load( name )
+        module_window.run()        
     def quit (self, widget):
         print 'quitting'
         gtk.main_quit()
@@ -154,6 +162,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         sw = self.xml.get_widget( 'modules_scroll_box' )
         # create virtualhosts treeview
         treeview = VhostsTreeView.ModulesTreeView()
+        treeview.connect_after("row-activated", self.edit_module_button_clicked )
+        treeview.selected_callback = self.module_row_selected
         self.modules_treeview = treeview        
         self.xml.get_widget( 'modules_container' ).add(treeview)        
         self.xml.get_widget( 'modules_container' ).reorder_child( treeview, 0)
@@ -199,6 +209,12 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.refresh_lists()
     def is_vhost_editable (self, name):
         return name != 'default'
+    def is_module_editable (self, name):
+        editable = False
+        if name:
+            mod = self.modules_treeview.items[ name+".load" ]
+            editable = mod.data[ 'configurable' ]
+        return editable
     def row_selected( self, widget ):
         name = self.vhosts_treeview.get_selected_line()
         if ( name == None ):
@@ -213,6 +229,10 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.xml.get_widget( 'surf_this_button' ).set_sensitive( surfable )
             browsable =  self.get_current_vhost_directive( 'target_folder' ) != None
             self.xml.get_widget( 'browse_button' ).set_sensitive( browsable )
+    def module_row_selected( self, widget):
+        name = self.modules_treeview.get_selected_line()
+        editable = self.is_module_editable(name)
+        self.xml.get_widget( 'edit_module_button' ).set_sensitive( editable )
     def fix_vhosts(self, widget):
         items = self.denormalized_treeview.get_items()
         for name in items:

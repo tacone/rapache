@@ -125,6 +125,7 @@ class ModuleModel:
             self.data = self.defaults   
             self.data['name'] = name
             
+            
             #print "Loading(b) :\t",self.data[ 'name' ]            
             options = {}
             content = self.get_source()                
@@ -134,6 +135,10 @@ class ModuleModel:
             #print "Unparsable by me - unsupported"
             raise "ModuleUnparsable"
             return False
+        self.data['configurable'] = \
+                os.path.exists( os.path.join ( Configuration.MODS_AVAILABLE_DIR, self.data['name']+".conf" ))
+            
+        
         self.data.update( options )
         #print self.data
         return True
@@ -191,4 +196,8 @@ class ModuleModel:
         content = file.read()
         file.close()
         return content
-
+    def get_configuration ( self ):
+        file = open( Configuration.MODS_AVAILABLE_DIR+'/'+self.data['name']+".conf", 'r' )
+        content = file.read()
+        file.close()
+        return content
