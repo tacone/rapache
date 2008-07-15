@@ -325,8 +325,8 @@ class VirtualHostModel:
           
         if ( options[ 'hack_hosts' ] ):
             Shell.command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a '+options['domain_name']+'"')
-            if ( options[ 'has_www' ] ):
-                Shell.command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a www.'+options['domain_name']+'"')
+            for alias_name in options[ 'ServerAlias' ]:
+            	Shell.command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a '+alias_name+'"')
         self.changed = True        
         self.toggle( True ) #activate by default 
             
