@@ -169,6 +169,16 @@ class ModuleModel:
           
         return False
     
+    def _write(self, complete_path, content ):    
+        tempfilename = tempfile.mktemp()
+        print "creating temporary file "+tempfilename
+        logfile = open( tempfilename , 'w')
+        logfile.write( content )
+        logfile.close()
+        command = "gksudo cp "+tempfilename+" "+complete_path
+        print "copying tempfile in the appropriate location: "+command
+        Shell.command( command )
+    
     def toggle( self, status ):
         "status = True|False"
         if status:
@@ -201,3 +211,6 @@ class ModuleModel:
         content = file.read()
         file.close()
         return content
+    def save_configuration (self, content):
+        complete_path = file = Configuration.MODS_AVAILABLE_DIR+'/'+self.data['name']+".conf"
+        self._write(complete_path, content)

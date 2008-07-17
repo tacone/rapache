@@ -77,9 +77,9 @@ class ModuleWindow:
         
         name = self.module.data['name']
         print "Current name:", name
-        
-        text = self.text_view_module_conf.get_buffer().get_text()
-        
+        buff = self.text_view_module_conf.get_buffer()
+        text = buff.get_text(buff.get_start_iter(), buff.get_end_iter())
+
         mod = ModuleModel( name )
         mod.save_configuration( text )
         
