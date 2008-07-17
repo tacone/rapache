@@ -38,7 +38,7 @@ data = \
 [(False, "Loading", "please wait" )]
 
 APPNAME="Rapache"
-APPVERSION="0.4"
+APPVERSION="0.5"
 
 
 class MainWindow( RapacheCore.Observer.Observable ) :
