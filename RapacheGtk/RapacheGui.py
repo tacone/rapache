@@ -64,6 +64,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "surf_this_button_clicked" : self.surf_this,
             "browse_button_clicked" : self.browse_this,
             "about_clicked" : self.display_about,
+            "open_doc_button_clicked" : self.open_doc_button_clicked,
             "quit" : self.quit }
         gtk.window_set_default_icon(self.xml.get_widget("MainWindow").get_icon())
         self.xml.signal_autoconnect(dic)
@@ -233,6 +234,14 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         name = self.modules_treeview.get_selected_line()
         editable = self.is_module_editable(name)
         self.xml.get_widget( 'edit_module_button' ).set_sensitive( editable )
+        if name != None: self.xml.get_widget( 'open_doc_button' ).set_sensitive( True )
+    # TODO: open doc only for apache2.2 own modules, not third-party (eg mod_php5)
+    # TODO: sniff apache version, don't hardcode it
+    def open_doc_button_clicked( self, widget ):
+        name = self.modules_treeview.get_selected_line()
+        if ( name == None ): return False
+        url = "http://httpd.apache.org/docs/2.2/mod/mod_%s.html" % name
+        self.open_url( url )
     def fix_vhosts(self, widget):
         items = self.denormalized_treeview.get_items()
         for name in items:
