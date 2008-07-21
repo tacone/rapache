@@ -229,7 +229,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.xml.get_widget( 'edit_button' ).set_sensitive( editable )
             surfable =  self.get_current_vhost_directive( 'domain_name' ) != None
             self.xml.get_widget( 'surf_this_button' ).set_sensitive( surfable )
-            browsable =  self.get_current_vhost_directive( 'target_folder' ) != None
+            browsable =  self.get_current_vhost_directive( 'DocumentRoot' ) != None
             self.xml.get_widget( 'browse_button' ).set_sensitive( browsable )
     def module_row_selected( self, widget):
         name = self.modules_treeview.get_selected_line()
@@ -265,7 +265,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             server_name = self.get_current_vhost_directive( 'domain_name' )
         if ( server_name ): Desktop.open_url( "http://" + server_name )
     def browse_this(self, widget):
-        document_root = self.get_current_vhost_directive( 'target_folder' )
+        document_root = self.get_current_vhost_directive( 'DocumentRoot' )
         Desktop.open_dir( document_root )
         
 

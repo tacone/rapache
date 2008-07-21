@@ -104,7 +104,7 @@ class VirtualHostWindow:
             server_name = self.vhost.data[ 'domain_name' ] 
             if ( server_name != None ):
                 self.entry_domain.set_text( server_name )
-            document_root = self.vhost.data[ 'target_folder' ] 
+            document_root = self.vhost.data[ 'DocumentRoot' ] 
             if ( document_root != None ):
                 self.entry_location.set_text( document_root )
             server_alias = self.vhost.data[ 'ServerAlias' ]
@@ -210,7 +210,7 @@ class VirtualHostWindow:
         options[ 'ServerAlias' ] =  []
         options[ 'domain_name' ] = self.entry_domain.get_text()
         options[ 'hack_hosts' ] = self.checkbutton_hosts.get_active()                
-        options[ 'target_folder' ] = self.entry_location.get_text()
+        options[ 'DocumentRoot' ] = self.entry_location.get_text()
         options[ 'ServerAlias' ] = self.get_server_aliases_list()
         print options
         
@@ -280,7 +280,7 @@ class VirtualHostWindowOLD:
             site.load()
             self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
             self._get( 'domain_name' ).set_text( site.data[ 'domain_name' ] )
-            self._get( 'default_folder' ).set_text( site.data[ 'target_folder' ] )
+            self._get( 'default_folder' ).set_text( site.data[ 'DocumentRoot' ] )
             self.xml.get_widget( 'ok_button' ).set_sensitive(True);
         except "VhostUnparsable":            
             self._get( 'notebook' ).get_nth_page( 0 ).hide()
@@ -324,10 +324,10 @@ class VirtualHostWindowOLD:
         options[ 'domain_name' ] = ( self.xml.get_widget( 'domain_name' ).get_text() )
         options[ 'hack_hosts' ] = self.xml.get_widget( 'create_hosts_entry' ).get_active()                
         if self.xml.get_widget( 'set_custom_folder' ).get_active():
-            target_folder =  self.xml.get_widget( 'custom_folder' ).get_filename ()     
+            DocumentRoot =  self.xml.get_widget( 'custom_folder' ).get_filename ()     
         else:
-            target_folder =  self.xml.get_widget( 'default_folder' ).get_text()
-        options[ 'target_folder' ] = target_folder
+            DocumentRoot =  self.xml.get_widget( 'default_folder' ).get_text()
+        options[ 'DocumentRoot' ] = DocumentRoot
                        
         
         try:

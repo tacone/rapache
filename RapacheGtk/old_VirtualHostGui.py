@@ -55,7 +55,7 @@ class VirtualHostWindow:
             site.load()
             self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
             self._get( 'domain_name' ).set_text( site.data[ 'domain_name' ] )
-            self._get( 'default_folder' ).set_text( site.data[ 'target_folder' ] )
+            self._get( 'default_folder' ).set_text( site.data[ 'DocumentRoot' ] )
             self.xml.get_widget( 'ok_button' ).set_sensitive(True);
         except "VhostUnparsable":            
             self._get( 'notebook' ).get_nth_page( 0 ).hide()
@@ -98,10 +98,10 @@ class VirtualHostWindow:
         options[ 'domain_name' ] = ( self.xml.get_widget( 'domain_name' ).get_text() )
         options[ 'hack_hosts' ] = self.xml.get_widget( 'create_hosts_entry' ).get_active()                
         if self.xml.get_widget( 'set_custom_folder' ).get_active():
-            target_folder =  self.xml.get_widget( 'custom_folder' ).get_filename ()     
+            DocumentRoot =  self.xml.get_widget( 'custom_folder' ).get_filename ()     
         else:
-            target_folder =  self.xml.get_widget( 'default_folder' ).get_text()
-        options[ 'target_folder' ] = target_folder
+            DocumentRoot =  self.xml.get_widget( 'default_folder' ).get_text()
+        options[ 'DocumentRoot' ] = DocumentRoot
                        
         
         try:
