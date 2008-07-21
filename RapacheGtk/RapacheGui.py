@@ -25,6 +25,7 @@ import re
 
 from RapacheGtk.VirtualHostGui import VirtualHostWindow
 from RapacheGtk.ModuleGui import ModuleWindow
+from RapacheGtk.ModuleGui import open_module_doc
 from RapacheCore.VirtualHost import *
 from RapacheGtk import easygui
 from RapacheGtk import GuiUtils
@@ -69,8 +70,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "quit" : self.quit }
         gtk.window_set_default_icon(self.xml.get_widget("MainWindow").get_icon())
         self.xml.signal_autoconnect(dic)
-        self._change_label ( self.xml.get_widget( 'restart_apache' ), "Restart\nApache" )
-        self._change_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
+        GuiUtils.change_button_label ( self.xml.get_widget( 'restart_apache' ), "Restart\nApache" )
+        GuiUtils.change_button_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
         #hereby we create lists
         self.create_vhost_list()
         self.create_modules_list()
@@ -174,15 +175,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         sw.set_shadow_type(gtk.SHADOW_NONE)
         sw.set_policy(gtk.POLICY_NEVER, gtk.POLICY_AUTOMATIC)
         sw.show_all()
-          
-    def _change_label ( self, button, new_label ):
-        """Changes the label of a button"""
-        button.show()
-        alignment = button.get_children()[0]
-        hbox = alignment.get_children()[0]
-        image, label = hbox.get_children()
-        label.set_text( new_label )
-            
+                      
     def refresh_vhosts ( self ):
         print "reloading vhosts.."            
         self.vhosts_treeview.load()
@@ -241,8 +234,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def open_doc_button_clicked( self, widget ):
         name = self.modules_treeview.get_selected_line()
         if ( name == None ): return False
-        url = "http://httpd.apache.org/docs/2.2/mod/mod_%s.html" % name
-        Desktop.open_url( url )
+        open_module_doc(name)
+        
     def fix_vhosts(self, widget):
         items = self.denormalized_treeview.get_items()
         for name in items:
