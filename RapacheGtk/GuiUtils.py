@@ -1,4 +1,6 @@
 import gtk
+import gtksourceview
+import pango
 
 def style_as_tooltip( obj ):
     pw = gtk.Window(gtk.WINDOW_POPUP)
@@ -17,3 +19,14 @@ def change_button_label ( button, new_label ):
         hbox = alignment.get_children()[0]
         image, label = hbox.get_children()
         label.set_text( new_label )
+
+def new_apache_sourceview():
+    bufferS = gtksourceview.SourceBuffer()
+    manager = gtksourceview.SourceLanguagesManager()
+    language = manager.get_language_from_mime_type("text/xml")
+    bufferS.set_language(language)
+    bufferS.set_highlight(True)
+    sourceview = gtksourceview.SourceView(bufferS)
+    sourceview.set_show_line_numbers(True)
+    sourceview.modify_font(pango.FontDescription("monospace 10"))
+    return sourceview

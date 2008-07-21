@@ -54,7 +54,6 @@ class VirtualHostWindow:
         self.toolbutton_domain_add = wtree.get_widget("toolbutton_domain_add")
         self.toolbutton_domain_edit = wtree.get_widget("toolbutton_domain_edit")
         self.toolbutton_domain_delete = wtree.get_widget("toolbutton_domain_delete")
-        self.text_view_vhost_source = wtree.get_widget("text_view_vhost_source")
         self.notebook = wtree.get_widget("notebook")
         self.button_save = wtree.get_widget("button_save")
         self.error_area = wtree.get_widget("error_area")
@@ -71,6 +70,11 @@ class VirtualHostWindow:
         }
         wtree.signal_autoconnect(signals)
         
+        self.text_view_vhost_source = GuiUtils.new_apache_sourceview()
+        wtree.get_widget( 'text_view_vhost_source_area' ).add( self.text_view_vhost_source )
+        self.text_view_vhost_source.set_editable( False )
+        self.text_view_vhost_source.show()
+                
         self.notebook.get_nth_page( 1 ).hide()
         self.notebook.get_nth_page( 2 ).hide()
         
