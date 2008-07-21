@@ -65,9 +65,13 @@ class MonoPlugin:
 		buf = view.get_buffer()
        	        buf.set_text( config )
        	        view.show()
+       	        
+		scrolledwindow_mono_config.remove(textview_mono_config)
+		scrolledwindow_mono_config.add(view)
+
 
 		# make sure to show items
-		notebook.insert_page(view, label)
+		notebook.insert_page(scrolledwindow_mono_config, label)
 		label.show()
 		scrolledwindow_mono_config.show()
 		return
@@ -78,7 +82,7 @@ class MonoPlugin:
 		return
 	
 	# Customise the vhost properties window
-	def load_vhost_properties(self, notebook, vhost):
+	def load_vhost_properties(self, notebook, vhost_data):
 		label = gtk.Label("Mono (asp.net)")
 		
 		# Remember you will need to recreate tree everytime the window loads
@@ -86,8 +90,12 @@ class MonoPlugin:
 		vbox_mono_plugin = wtree.get_widget("vbox_mono_plugin")	
 
 		self.comboboxentry_vhost_mono_version = wtree.get_widget("comboboxentry_vhost_mono_version")
-		self.comboboxentry_vhost_mono_version.set_active(0)
-
+		if not vhost_data["MonoServerPath"]:
+			self.comboboxentry_vhost_mono_version.set_active(0)
+		elif vhost_data["MonoServerPath"].endswith("mod-mono-server1"):
+			self.comboboxentry_vhost_mono_version.set_active(1)
+		elif vhost_data["MonoServerPath"].endswith("mod-mono-server2"):
+			self.comboboxentry_vhost_mono_version.set_active(2) 
 		notebook.insert_page(vbox_mono_plugin, label)
 		
 		# make sure to show items
@@ -96,7 +104,17 @@ class MonoPlugin:
 		return
 		
 	# Perform action on vhost properties save
-	def save_vhost_properties(self, vhost):
+	def save_vhost_properties(self, vhost_data):
+		
+		selected_option = self.comboboxentry_vhost_mono_version.get_active()
+		
+		if selected_option == 0:
+			vhost_data["MonoServerPath"] = ""
+		elif selected_option == 1:
+			vhost_data["MonoServerPath"] = "/usr/bin/mod-mono-server1"
+		elif selected_option == 2:
+			vhost_data["MonoServerPath"] = "/usr/bin/mod-mono-server2"
+	
 		return
 
 def register( path ):

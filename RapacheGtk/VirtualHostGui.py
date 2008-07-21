@@ -124,7 +124,7 @@ class VirtualHostWindow:
         # Load UI Plugins
         for plugin in self.parent.plugin_manager.plugins:
         	#try:
-	        	plugin.load_vhost_properties(self.notebook, self.vhost)
+	        	plugin.load_vhost_properties(self.notebook, self.vhost.data)
         	#except Exception:
         	#	print Exception
         	#	pass
@@ -223,6 +223,15 @@ class VirtualHostWindow:
         options[ 'hack_hosts' ] = self.checkbutton_hosts.get_active()                
         options[ 'DocumentRoot' ] = self.entry_location.get_text()
         options[ 'ServerAlias' ] = self.get_server_aliases_list()
+
+	# Save plugins
+	for plugin in self.parent.plugin_manager.plugins:
+	#try:
+		plugin.save_vhost_properties(options)
+	#except Exception:
+	#	print Exception
+	#	pass
+            
         print options
         
         try:
@@ -234,6 +243,7 @@ class VirtualHostWindow:
                 print "Current name:", name
                 site = VirtualHostModel( name )
                 site.update( options, name )
+
             
             #self.parent.create_vhost_list()        
             self.parent.refresh_vhosts()
