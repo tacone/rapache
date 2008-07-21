@@ -34,6 +34,7 @@ import VhostsTreeView
 import RapacheCore.Observer
 from RapacheGtk.EventDispatcher import Master
 import subprocess
+import RapacheGtk.DesktopEnvironment as Desktop
 
 data = \
 [(False, "Loading", "please wait" )]
@@ -66,6 +67,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "surf_this_button_clicked" : self.surf_this,
             "browse_button_clicked" : self.browse_this,
             "about_clicked" : self.display_about,
+            "open_doc_button_clicked" : self.open_doc_button_clicked,
             "quit" : self.quit }
         gtk.window_set_default_icon(self.xml.get_widget("MainWindow").get_icon())
         self.xml.signal_autoconnect(dic)
@@ -88,7 +90,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.load_lists()
             return
     def browse_sites_available(self, widget):
-        Shell.command ('gksudo "nautilus '+Configuration.SITES_AVAILABLE_DIR+' --no-desktop" & ' )
+        Desktop.open_dir( Configuration.SITES_AVAILABLE_DIR )
         return
     
     def new_button_clicked(self, widget):
@@ -229,12 +231,20 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.xml.get_widget( 'edit_button' ).set_sensitive( editable )
             surfable =  self.get_current_vhost_directive( 'domain_name' ) != None
             self.xml.get_widget( 'surf_this_button' ).set_sensitive( surfable )
-            browsable =  self.get_current_vhost_directive( 'target_folder' ) != None
+            browsable =  self.get_current_vhost_directive( 'DocumentRoot' ) != None
             self.xml.get_widget( 'browse_button' ).set_sensitive( browsable )
     def module_row_selected( self, widget):
         name = self.modules_treeview.get_selected_line()
         editable = self.is_module_editable(name)
         self.xml.get_widget( 'edit_module_button' ).set_sensitive( editable )
+        if name != None: self.xml.get_widget( 'open_doc_button' ).set_sensitive( True )
+    # TODO: open doc only for apache2.2 own modules, not third-party (eg mod_php5)
+    # TODO: sniff apache version, don't hardcode it
+    def open_doc_button_clicked( self, widget ):
+        name = self.modules_treeview.get_selected_line()
+        if ( name == None ): return False
+        url = "http://httpd.apache.org/docs/2.2/mod/mod_%s.html" % name
+        Desktop.open_url( url )
     def fix_vhosts(self, widget):
         items = self.denormalized_treeview.get_items()
         for name in items:
@@ -255,30 +265,12 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             server_name = 'localhost'
         else:
             server_name = self.get_current_vhost_directive( 'domain_name' )
-        if ( server_name ): self.open_url( "http://" + server_name )
+        if ( server_name ): Desktop.open_url( "http://" + server_name )
     def browse_this(self, widget):
-        document_root = self.get_current_vhost_directive( 'target_folder' )
-        Shell.command ('gksudo "nautilus '+document_root+' --no-desktop" & ' )
+        document_root = self.get_current_vhost_directive( 'DocumentRoot' )
+        Desktop.open_dir( document_root )
         
-        if ( server_name ): self.open_url( "http://" + server_name )
-        
-    # Grabbed from Ubuntu's UpdateManager (ChangelogViewer.py)    
-    #  Copyright (c) 2006 Sebastian Heinlein
-    #                2007 Canonical    
-    # TODO: move this into an utility module
-    def open_url(self, url):
-        """Open the specified URL in a browser"""
-        # Find an appropiate browser
-        if os.path.exists('/usr/bin/gnome-open'):
-            command = ['gnome-open', url]
-        else:
-            command = ['x-www-browser', url]
 
-        # Avoid to run the browser as user root
-        if os.getuid() == 0 and os.environ.has_key('SUDO_USER'):
-            command = ['sudo', '-u', os.environ['SUDO_USER']] + command
-
-        subprocess.Popen(command)
     def display_about (self, widget):
         dialog = gtk.AboutDialog()
         dialog.set_name( APPNAME )

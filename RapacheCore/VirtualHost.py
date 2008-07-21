@@ -55,7 +55,7 @@ class VirtualHostModel:
             , 'domain_name': None
             , 'changed' : False            
             , 'hack_hosts' : False
-            , 'target_folder' : None            
+            , 'DocumentRoot' : None            
         }
         self.data = {}
         self.parsable = False
@@ -99,7 +99,7 @@ class VirtualHostModel:
         options[ 'domain_name' ] = domain_name
         options[ 'ServerAlias' ] = piece.get_options( 'ServerAlias' )
         print options[ 'ServerAlias' ]
-        options[ 'target_folder' ] = piece.get_value('DocumentRoot')
+        options[ 'DocumentRoot' ] = piece.get_value('DocumentRoot')
         hosts = HostsManager()
         if ( domain_name == None or hosts.find ( domain_name ) == False ):
             options['hack_hosts'] = False
@@ -137,9 +137,9 @@ class VirtualHostModel:
     
             #print "Has www :\t"+str(options[ 'has_www' ])
                 
-            options[ 'target_folder' ] = self._get_conf_value(content, folder_regexp)
+            options[ 'DocumentRoot' ] = self._get_conf_value(content, folder_regexp)
             
-            #print "Document Root :\t"+str( options[ 'target_folder' ] )
+            #print "Document Root :\t"+str( options[ 'DocumentRoot' ] )
             hosts = HostsManager()
             if ( hosts.find ( domain_name ) == False ):
                 options['hack_hosts'] = False
@@ -238,8 +238,8 @@ class VirtualHostModel:
         #for domain in new_options ['ServerAlias']:
         #    piece.add_option('ServerAlias', domain )
                                         
-        print "DocumentRoot From",piece.get_value('DocumentRoot' ),"to",new_options['target_folder']
-        piece.set_value('DocumentRoot', new_options['target_folder'] )
+        print "DocumentRoot From",piece.get_value('DocumentRoot' ),"to",new_options['DocumentRoot']
+        piece.set_value('DocumentRoot', new_options['DocumentRoot'] )
                 
         print "ServerName From",piece.get_value('ServerName' ),"to",new_options['domain_name']
         piece.set_value('ServerName', new_options['domain_name'] )                
@@ -294,13 +294,13 @@ class VirtualHostModel:
         
         print options               
         print "Creating virtualhost: "+options['name']
-        print "Folder: "+options['target_folder']
+        print "Folder: "+options['DocumentRoot']
         
-        if ( os.path.exists( options['target_folder'] ) == False ): 
-            print "Folder "+options['target_folder']+" does not exist"        
-            self._create_complete_path( options['target_folder'] )
+        if ( os.path.exists( options['DocumentRoot'] ) == False ): 
+            print "Folder "+options['DocumentRoot']+" does not exist"        
+            self._create_complete_path( options['DocumentRoot'] )
             
-        if ( os.path.exists( options['target_folder'] ) == False ):
+        if ( os.path.exists( options['DocumentRoot'] ) == False ):
             self.error( "Could not create target folder" ) #TODO fix this
             return False
                        
@@ -314,7 +314,7 @@ class VirtualHostModel:
             return False        
         """
         template = VHOST_TEMPLATE.replace( '||example||', options['domain_name'] )
-        template = template.replace( '||target_folder||', options['target_folder'] )
+        template = template.replace( '||DocumentRoot||', options['DocumentRoot'] )
         if ( options[ 'has_www' ] ):
             template = template.replace( '#ServerAlias www', 'ServerAlias www' )        
         """
@@ -322,7 +322,7 @@ class VirtualHostModel:
         parser.set_content_from_string( VHOST_TEMPLATE )
         piece = VhostParser( parser )
         piece.set_value('ServerName',  options['domain_name'] ) 
-        piece.set_value('DocumentRoot',  options['target_folder'] ) 
+        piece.set_value('DocumentRoot',  options['DocumentRoot'] ) 
 
         print "min", piece.min, "max", piece.max
         #reset previous aliases

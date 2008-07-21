@@ -52,7 +52,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
             site = self.items[ idx ]
             if ( site.parsable ):
                 markup = site_template \
-                % ( site.data['name'] , site.data[ 'target_folder' ] )
+                % ( site.data['name'] , site.data[ 'DocumentRoot' ] )
             else:
                 markup = site_unparsable_template % site.data['name']
             iter = lstore.append()
@@ -71,8 +71,8 @@ class VhostsTreeView ( ConfFilesTreeView ):
         favicon = os.path.join( Configuration.GLADEPATH, 'browser.png' )
         fname = model.get_value(iter, COLUMN_SEVERITY )
         site = self.items[ fname ]
-        if site.data['target_folder'] != None:
-            custom_favicon = os.path.join(os.path.dirname( site.data['target_folder']+"/" ), "favicon.ico")                                                    
+        if site.data['DocumentRoot'] != None:
+            custom_favicon = os.path.join(os.path.dirname( site.data['DocumentRoot']+"/" ), "favicon.ico")                                                    
             if ( os.path.exists( custom_favicon ) ): favicon = custom_favicon
             
         pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
@@ -173,7 +173,7 @@ class ModulesTreeView ( ConfFilesTreeView ):
             mod = self.items[ idx ]
             if ( mod.parsable ):
                 markup = mod_template \
-                % ( mod.data['name'] ) #, mod.data[ 'target_folder' ] )
+                % ( mod.data['name'] ) #, mod.data[ 'DocumentRoot' ] )
                 markup += "\n<small>%s</small>" % mod.data[ 'description' ]
                 if len( mod.data[ 'dependancies' ] ) > 0:
                     markup += "\n<small><b>%s</b></small>" % ( "Dependencies: " + \
@@ -212,8 +212,8 @@ class ModulesTreeView ( ConfFilesTreeView ):
         favicon = os.path.join( Configuration.GLADEPATH, 'browser.png' )
         fname = model.get_value(iter, COLUMN_SEVERITY )
         site = self.items[ fname ]
-        if site.data['target_folder'] != None:
-            custom_favicon = os.path.join(os.path.dirname( site.data['target_folder']+"/" ), "favicon.ico")                                                    
+        if site.data['DocumentRoot'] != None:
+            custom_favicon = os.path.join(os.path.dirname( site.data['DocumentRoot']+"/" ), "favicon.ico")                                                    
             if ( os.path.exists( custom_favicon ) ): favicon = custom_favicon
             
         pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
