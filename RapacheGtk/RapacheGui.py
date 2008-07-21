@@ -33,6 +33,7 @@ import VhostsTreeView
 import RapacheCore.Observer
 from RapacheGtk.EventDispatcher import Master
 import subprocess
+import RapacheGtk.DesktopEnvironment as Desktop
 
 data = \
 [(False, "Loading", "please wait" )]
@@ -87,7 +88,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.load_lists()
             return
     def browse_sites_available(self, widget):
-        Shell.command ('gksudo "nautilus '+Configuration.SITES_AVAILABLE_DIR+' --no-desktop" & ' )
+        Desktop.open_dir( Configuration.SITES_AVAILABLE_DIR )
         return
     
     def new_button_clicked(self, widget):
@@ -241,7 +242,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         name = self.modules_treeview.get_selected_line()
         if ( name == None ): return False
         url = "http://httpd.apache.org/docs/2.2/mod/mod_%s.html" % name
-        self.open_url( url )
+        Desktop.open_url( url )
     def fix_vhosts(self, widget):
         items = self.denormalized_treeview.get_items()
         for name in items:
@@ -262,30 +263,12 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             server_name = 'localhost'
         else:
             server_name = self.get_current_vhost_directive( 'domain_name' )
-        if ( server_name ): self.open_url( "http://" + server_name )
+        if ( server_name ): Desktop.open_url( "http://" + server_name )
     def browse_this(self, widget):
         document_root = self.get_current_vhost_directive( 'target_folder' )
-        Shell.command ('gksudo "nautilus '+document_root+' --no-desktop" & ' )
+        Desktop.open_dir( document_root )
         
-        if ( server_name ): self.open_url( "http://" + server_name )
-        
-    # Grabbed from Ubuntu's UpdateManager (ChangelogViewer.py)    
-    #  Copyright (c) 2006 Sebastian Heinlein
-    #                2007 Canonical    
-    # TODO: move this into an utility module
-    def open_url(self, url):
-        """Open the specified URL in a browser"""
-        # Find an appropiate browser
-        if os.path.exists('/usr/bin/gnome-open'):
-            command = ['gnome-open', url]
-        else:
-            command = ['x-www-browser', url]
 
-        # Avoid to run the browser as user root
-        if os.getuid() == 0 and os.environ.has_key('SUDO_USER'):
-            command = ['sudo', '-u', os.environ['SUDO_USER']] + command
-
-        subprocess.Popen(command)
     def display_about (self, widget):
         dialog = gtk.AboutDialog()
         dialog.set_name( APPNAME )
