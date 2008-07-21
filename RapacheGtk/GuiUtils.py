@@ -28,5 +28,6 @@ def new_apache_sourceview():
     bufferS.set_highlight(True)
     sourceview = gtksourceview.SourceView(bufferS)
     sourceview.set_show_line_numbers(True)
+    #TODO sniff gnome default monospace font
     sourceview.modify_font(pango.FontDescription("monospace 10"))
     return sourceview
