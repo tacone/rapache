@@ -29,6 +29,7 @@ except:
 import os
 import pango
 import tempfile
+import traceback
 import RapacheGtk.GuiUtils
 from RapacheCore.Module import *
 from RapacheGtk import GuiUtils
@@ -87,11 +88,11 @@ class ModuleWindow:
          # Load UI Plugins
         for plugin in self.parent.plugin_manager.plugins:
         	if plugin.module == name:
-			#try:
+			try:
+				print "Loading plugin " + name
 				plugin.load_module_properties(self.notebook, self.module)
-			#except Exception:
-			#	print Exception
-			#	pass
+			except Exception:
+				traceback.print_exc(file=sys.stdout)
 
     def on_destroy(self, widget, data=None):
         gtk.main_quit()

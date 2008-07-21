@@ -1,5 +1,5 @@
 import os
-import gtksourceview2
+import RapacheGtk.GuiUtils
 
 try:
      import pygtk
@@ -49,31 +49,24 @@ class MonoPlugin:
 		f = open("/etc/mono-server2/mono-server2-hosts.conf", "r")
 		config = f.read()
 		f.close()
-		
-		buf = textview_mono_config.get_buffer()
-       	        buf.set_text( config )
+      	        
+       	        self.text_view_vhost_source = RapacheGtk.GuiUtils.new_apache_sourceview()
+		self.text_view_vhost_source.set_editable( False )
+		self.text_view_vhost_source.show()
 
-		bufferS = gtksourceview.SourceBuffer()
-		manager = gtksourceview.SourceLanguagesManager()
-		language = manager.get_language_from_mime_type("text/xml")
-		#langS.set_mime_types(["text/x-python"])
-		bufferS.set_language(language)
-		bufferS.set_highlight(True)
-		view = gtksourceview.SourceView(bufferS)
-		view.set_show_line_numbers(True)
-
-		buf = view.get_buffer()
+		buf = self.text_view_vhost_source.get_buffer()
        	        buf.set_text( config )
-       	        view.show()
+       	       
        	        
 		scrolledwindow_mono_config.remove(textview_mono_config)
-		scrolledwindow_mono_config.add(view)
+		scrolledwindow_mono_config.add(self.text_view_vhost_source)
 
 
 		# make sure to show items
 		notebook.insert_page(scrolledwindow_mono_config, label)
 		label.show()
 		scrolledwindow_mono_config.show()
+		self.text_view_vhost_source.show()
 		return
 
 	# Perform action on module properties save
