@@ -101,10 +101,10 @@ class VirtualHostWindow:
         self.vhost = VirtualHostModel( name )
         self.create_new = False
         try:
-            self.vhost.load()
+            self.vhost.load(False, self.parent.plugin_manager)
             print self.vhost.data
             #self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
-            server_name = self.vhost.data[ 'domain_name' ] 
+            server_name = self.vhost.data[ 'ServerName' ] 
             if ( server_name != None ):
                 self.entry_domain.set_text( server_name )
             document_root = self.vhost.data[ 'DocumentRoot' ] 
@@ -219,7 +219,7 @@ class VirtualHostWindow:
         
         options = {}
         options[ 'ServerAlias' ] =  []
-        options[ 'domain_name' ] = self.entry_domain.get_text()
+        options[ 'ServerName' ] = self.entry_domain.get_text()
         options[ 'hack_hosts' ] = self.checkbutton_hosts.get_active()                
         options[ 'DocumentRoot' ] = self.entry_location.get_text()
         options[ 'ServerAlias' ] = self.get_server_aliases_list()
@@ -227,7 +227,7 @@ class VirtualHostWindow:
         
         try:
             if ( self.create_new ):
-                site = VirtualHostModel( options[ 'domain_name' ] )
+                site = VirtualHostModel( options[ 'ServerName' ] )
                 site.create ( options )
             else:
                 name = self.vhost.data['name']
@@ -290,7 +290,7 @@ class VirtualHostWindowOLD:
         try:
             site.load()
             self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
-            self._get( 'domain_name' ).set_text( site.data[ 'domain_name' ] )
+            self._get( 'domain_name' ).set_text( site.data[ 'ServerName' ] )
             self._get( 'default_folder' ).set_text( site.data[ 'DocumentRoot' ] )
             self.xml.get_widget( 'ok_button' ).set_sensitive(True);
         except "VhostUnparsable":            
@@ -332,7 +332,7 @@ class VirtualHostWindowOLD:
         options = {}
         
         options[ 'has_www' ] = self.xml.get_widget( 'has_www' ).get_active()     
-        options[ 'domain_name' ] = ( self.xml.get_widget( 'domain_name' ).get_text() )
+        options[ 'ServerName' ] = ( self.xml.get_widget( 'domain_name' ).get_text() )
         options[ 'hack_hosts' ] = self.xml.get_widget( 'create_hosts_entry' ).get_active()                
         if self.xml.get_widget( 'set_custom_folder' ).get_active():
             DocumentRoot =  self.xml.get_widget( 'custom_folder' ).get_filename ()     
@@ -343,7 +343,7 @@ class VirtualHostWindowOLD:
         
         try:
             if ( self.create_new ):
-                site = VirtualHostModel( options[ 'domain_name' ] )
+                site = VirtualHostModel( options[ 'ServerName' ] )
                 site.create ( options )
             else:
                 print "Current name:", self.name

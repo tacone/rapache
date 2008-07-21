@@ -54,7 +54,7 @@ class VirtualHostWindow:
         try:
             site.load()
             self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
-            self._get( 'domain_name' ).set_text( site.data[ 'domain_name' ] )
+            self._get( 'domain_name' ).set_text( site.data[ 'ServerName' ] )
             self._get( 'default_folder' ).set_text( site.data[ 'DocumentRoot' ] )
             self.xml.get_widget( 'ok_button' ).set_sensitive(True);
         except "VhostUnparsable":            

@@ -1,4 +1,5 @@
 import os
+import gtksourceview
 
 try:
      import pygtk
@@ -22,7 +23,7 @@ class MonoPlugin:
 		self.module = "mod_mono"
 		
 		# Define what additional config should be read from vhost file
-		self.vhosts_config = { "MonoServerPath" : 1 } # 0 value | 1 options
+		self.vhosts_config = { "MonoServerPath" : 0 } # 0 value | 1 options
 		
 		# Get glade file XML
 		f = open( os.path.join(self.path, "mono_vhost.glade") ,"r")
@@ -33,30 +34,40 @@ class MonoPlugin:
 		self.glade_module_xml =  f.read()
 		f.close()
 		
-		
 		# Controls
 		self.comboboxentry_vhost_mono_version = None
 	
 	# Customise the module properties window
 	def load_module_properties(self, notebook, module):
-		label = gtk.Label("Mono Config")
+		label = gtk.Label("Mono Default Config")
 		
 		# Remember you will need to recreate tree everytime the window loads
 		wtree = gtk.glade.xml_new_from_buffer(self.glade_module_xml, len(self.glade_module_xml), "scrolledwindow_mono_config")
 		scrolledwindow_mono_config = wtree.get_widget("scrolledwindow_mono_config")	
-		self.textview_mono_config = wtree.get_widget("textview_mono_config")	
+		textview_mono_config = wtree.get_widget("textview_mono_config")	
 
 		f = open("/etc/mono-server2/mono-server2-hosts.conf", "r")
 		config = f.read()
 		f.close()
 		
-		buf = self.textview_mono_config.get_buffer()
+		buf = textview_mono_config.get_buffer()
        	        buf.set_text( config )
 
+		bufferS = gtksourceview.SourceBuffer()
+		manager = gtksourceview.SourceLanguagesManager()
+		language = manager.get_language_from_mime_type("text/xml")
+		#langS.set_mime_types(["text/x-python"])
+		bufferS.set_language(language)
+		bufferS.set_highlight(True)
+		view = gtksourceview.SourceView(bufferS)
+		view.set_show_line_numbers(True)
 
-		notebook.insert_page(scrolledwindow_mono_config, label)
-		
+		buf = view.get_buffer()
+       	        buf.set_text( config )
+       	        view.show()
+
 		# make sure to show items
+		notebook.insert_page(view, label)
 		label.show()
 		scrolledwindow_mono_config.show()
 		return

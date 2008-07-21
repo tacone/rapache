@@ -32,6 +32,12 @@ import tempfile
 import RapacheGtk.GuiUtils
 from RapacheCore.Module import *
 from RapacheGtk import GuiUtils
+import RapacheGtk.DesktopEnvironment as Desktop
+
+def open_module_doc( name ):
+        if ( name == None ): return False
+        url = "http://httpd.apache.org/docs/2.2/mod/mod_%s.html" % name
+        Desktop.open_url( url )
         
 class ModuleWindow:
     
@@ -49,9 +55,12 @@ class ModuleWindow:
         self.notebook = wtree.get_widget("notebook")
         self.button_save = wtree.get_widget("button_save")
         self.error_area = wtree.get_widget("error_area")
+        self.module_doc_button = wtree.get_widget("module_doc_button")
+        
         signals = {
             "on_button_save_clicked"            : self.on_button_save_clicked,
-            "on_button_cancel_clicked"          : self.on_button_cancel_clicked
+            "on_button_cancel_clicked"          : self.on_button_cancel_clicked,
+            "on_module_doc_button_clicked"      : self.on_module_doc_button_clicked
         }
         wtree.signal_autoconnect(signals)
         
@@ -59,6 +68,7 @@ class ModuleWindow:
         # add on destroy to quit loop
         self.window.connect("destroy", self.on_destroy)
         
+        GuiUtils.change_button_label( self.module_doc_button, 'Documentation' )
         GuiUtils.style_as_tooltip( self.error_area )
     def run(self):
         self.window.show()           
@@ -96,13 +106,14 @@ class ModuleWindow:
         #self.parent.refresh_vhosts()
         self.parent.please_restart()
         self.window.destroy()
-        
-                         
+                               
     def on_button_cancel_clicked(self, widget):
         self.window.destroy()
         return    
+    def on_module_doc_button_clicked (self, widget ):
+        name = self.module.data['name']
+        open_module_doc(name)
     def show_error ( self, message ):
         
         self.xml.get_widget( 'message_text' ).set_label( '<b>'+message+'</b>' )
-        self.xml.get_widget( 'message_container' ).show()                 
-
+        self.xml.get_widget( 'message_container' ).show()

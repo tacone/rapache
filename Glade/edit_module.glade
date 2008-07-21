@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Jul 17 20:56:01 2008 -->
+<!--Generated with glade3 3.4.5 on Mon Jul 21 03:15:55 2008 -->
 <glade-interface>
   <widget class="GtkDialog" id="dialog_edit_module">
     <property name="width_request">600</property>
@@ -93,6 +93,17 @@
             <property name="visible">True</property>
             <property name="layout_style">GTK_BUTTONBOX_END</property>
             <child>
+              <widget class="GtkButton" id="module_doc_button">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="label" translatable="yes">gtk-help</property>
+                <property name="use_stock">True</property>
+                <property name="response_id">0</property>
+                <signal name="clicked" handler="on_module_doc_button_clicked"/>
+              </widget>
+            </child>
+            <child>
               <widget class="GtkButton" id="button_cancel">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -103,6 +114,9 @@
                 <signal name="clicked" handler="on_button_cancel_clicked"/>
                 <accelerator key="Escape" modifiers="" signal="activate"/>
               </widget>
+              <packing>
+                <property name="position">1</property>
+              </packing>
             </child>
             <child>
               <widget class="GtkButton" id="button_save">
@@ -119,7 +133,7 @@
                 <accelerator key="Return" modifiers="" signal="clicked"/>
               </widget>
               <packing>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </widget>

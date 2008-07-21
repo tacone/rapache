@@ -52,7 +52,7 @@ class VirtualHostModel:
         self.defaults = {
             'enabled' : False
             , 'name' : None
-            , 'domain_name': None
+            , 'ServerName': None
             , 'changed' : False            
             , 'hack_hosts' : False
             , 'DocumentRoot' : None            
@@ -82,11 +82,11 @@ class VirtualHostModel:
         found_entry = match.groups()                          
         found_value = found_entry[0]
         return found_value
-    def load(self, name = False):
+    def load(self, name = False, plugin_manager = None):
     	if ( name == False ): name = self.data[ 'name' ]
     	options = {}    	
         parser = Parser()
-        parser.load(  Configuration.SITES_AVAILABLE_DIR+'/'+name )
+        parser.load(  os.path.join(Configuration.SITES_AVAILABLE_DIR, name) )
         try:
             piece = VhostParser( parser )
         except "VhostNotFound":
@@ -96,7 +96,7 @@ class VirtualHostModel:
         if domain_name == None:
          	self.parsable = False
          	#return False
-        options[ 'domain_name' ] = domain_name
+        options[ 'ServerName' ] = domain_name
         options[ 'ServerAlias' ] = piece.get_options( 'ServerAlias' )
         print options[ 'ServerAlias' ]
         options[ 'DocumentRoot' ] = piece.get_value('DocumentRoot')
@@ -106,8 +106,20 @@ class VirtualHostModel:
         else:
             options['hack_hosts'] = True
         self.parsable = True
+        
+        # Load plugin values
+        if plugin_manager:
+        	for plugin in plugin_manager.plugins:
+        		for key in plugin.vhosts_config.keys():
+        			if plugin.vhosts_config[key] == 1:
+        				options[ key ] = piece.get_options( key )
+        			else:
+        				options[ key ] = piece.get_value( key )
+        
         self.data.update( options )
         return True
+            
+        
     def loaad (self, name = False):
         print "Loading Vhosts list"
         try:
@@ -123,7 +135,7 @@ class VirtualHostModel:
             #domain_name = self._get_domain_name(content)
             domain_regexp = r'^\s*ServerName\s+([A-Za-z0-9.\-_]*)'
             domain_name = self._get_conf_value(content, domain_regexp)
-            options[ 'domain_name' ] = domain_name
+            options[ 'ServerName' ] = domain_name
             domain_regexp = domain_name.replace( '.', '\\.' ) #quote for regexp
             www_regexp = r'^\s*ServerAlias\s*[^#]*\s+www\.'+domain_regexp+'(\s*|$)'
             folder_regexp = domain_regexp = r'^\s*DocumentRoot\s+(\S+\s*\S+)'
@@ -241,8 +253,8 @@ class VirtualHostModel:
         print "DocumentRoot From",piece.get_value('DocumentRoot' ),"to",new_options['DocumentRoot']
         piece.set_value('DocumentRoot', new_options['DocumentRoot'] )
                 
-        print "ServerName From",piece.get_value('ServerName' ),"to",new_options['domain_name']
-        piece.set_value('ServerName', new_options['domain_name'] )                
+        print "ServerName From",piece.get_value('ServerName' ),"to",new_options['ServerName']
+        piece.set_value('ServerName', new_options['ServerName'] )                
         complete_path = Configuration.SITES_AVAILABLE_DIR+'/'+ name 
         
         print "Writing.."
@@ -251,7 +263,7 @@ class VirtualHostModel:
         
         #if the servername coincides with the configuration filename
         #we try to stick with the convention
-        new_name = Configuration.SITES_AVAILABLE_DIR + "/"+ new_options['domain_name']
+        new_name = Configuration.SITES_AVAILABLE_DIR + "/"+ new_options['ServerName']
         old_name = Configuration.SITES_AVAILABLE_DIR + "/"+ old_servername
         print "old name", old_name
         print "new name", new_name
@@ -262,7 +274,7 @@ class VirtualHostModel:
             Shell.command( 'gksudo mv "'+old_name+'" "'+new_name+'"' )
             if os.path.exists( new_name ) == True:
                 #success ! we need to reload vhost with the new name
-                self.load( new_options['domain_name'] )
+                self.load( new_options['ServerName'] )
                 #...so we can toogle it on again
                 if old_enabled == True: 
                     print "Re-activating"
@@ -289,7 +301,7 @@ class VirtualHostModel:
         options.update( new_options )        
         
         #as of creation-time name is not expected to be in options
-        options['name'] = options[ 'domain_name' ]
+        options['name'] = options[ 'ServerName' ]
         complete_path = Configuration.SITES_AVAILABLE_DIR+'/'+options['name']
         
         print options               
@@ -304,8 +316,8 @@ class VirtualHostModel:
             self.error( "Could not create target folder" ) #TODO fix this
             return False
                        
-        if ( valid_domain_name( options['domain_name'] ) == False ):
-            self.error ( 'Bad domain name: '+options['domain_name'] )
+        if ( valid_domain_name( options['ServerName'] ) == False ):
+            self.error ( 'Bad domain name: '+options['ServerName'] )
             return False
         
         if os.path.exists( complete_path ):
@@ -313,7 +325,7 @@ class VirtualHostModel:
             #self.error( 'Virtual host already exists :(' )
             return False        
         """
-        template = VHOST_TEMPLATE.replace( '||example||', options['domain_name'] )
+        template = VHOST_TEMPLATE.replace( '||example||', options['ServerName'] )
         template = template.replace( '||DocumentRoot||', options['DocumentRoot'] )
         if ( options[ 'has_www' ] ):
             template = template.replace( '#ServerAlias www', 'ServerAlias www' )        
@@ -321,7 +333,7 @@ class VirtualHostModel:
         parser = Parser()
         parser.set_content_from_string( VHOST_TEMPLATE )
         piece = VhostParser( parser )
-        piece.set_value('ServerName',  options['domain_name'] ) 
+        piece.set_value('ServerName',  options['ServerName'] ) 
         piece.set_value('DocumentRoot',  options['DocumentRoot'] ) 
 
         print "min", piece.min, "max", piece.max
@@ -334,7 +346,7 @@ class VirtualHostModel:
         self._write( complete_path, "\n".join(parser.get_content() ) )
           
         if ( options[ 'hack_hosts' ] ):
-            Shell.command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a '+options['domain_name']+'"')
+            Shell.command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a '+options['ServerName']+'"')
             for alias_name in options[ 'ServerAlias' ]:
             	Shell.command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a '+alias_name+'"')
         self.changed = True        
