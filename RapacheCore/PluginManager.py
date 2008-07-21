@@ -2,7 +2,7 @@ import os
 import os.path
 import imp
 import sys
-
+import traceback
 class PluginManager():
 
 	def __init__(self):
@@ -31,5 +31,6 @@ class PluginManager():
 						print "loaded plugin : " + folder
 					except:
 						print "error loading plugin " + folder
+						traceback.print_exc(file=sys.stdout)
 		
 		

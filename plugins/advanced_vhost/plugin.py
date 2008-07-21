@@ -1,5 +1,4 @@
 import os
-import gtksourceview
 
 try:
      import pygtk
