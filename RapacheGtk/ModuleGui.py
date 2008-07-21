@@ -34,6 +34,7 @@ from RapacheCore.Module import *
 from RapacheGtk import GuiUtils
 import RapacheGtk.DesktopEnvironment as Desktop
 
+
 def open_module_doc( name ):
         if ( name == None ): return False
         url = "http://httpd.apache.org/docs/2.2/mod/mod_%s.html" % name
@@ -51,7 +52,7 @@ class ModuleWindow:
         wtree = gtk.glade.XML(gladefile)
         
         self.window = wtree.get_widget("dialog_edit_module")
-        self.text_view_module_conf = wtree.get_widget("text_view_module_conf")
+        #self.text_view_module_conf = wtree.get_widget("text_view_module_conf")
         self.notebook = wtree.get_widget("notebook")
         self.button_save = wtree.get_widget("button_save")
         self.error_area = wtree.get_widget("error_area")
@@ -62,11 +63,13 @@ class ModuleWindow:
             "on_button_cancel_clicked"          : self.on_button_cancel_clicked,
             "on_module_doc_button_clicked"      : self.on_module_doc_button_clicked
         }
-        wtree.signal_autoconnect(signals)
-        
-        
+        wtree.signal_autoconnect(signals)            
         # add on destroy to quit loop
         self.window.connect("destroy", self.on_destroy)
+        
+        self.text_view_module_conf = GuiUtils.new_apache_sourceview()        
+        self.text_view_module_conf.show()
+        wtree.get_widget("text_view_module_conf_area").add(self.text_view_module_conf)
         
         GuiUtils.change_button_label( self.module_doc_button, 'Documentation' )
         GuiUtils.style_as_tooltip( self.error_area )
