@@ -25,6 +25,7 @@ import re
 
 from RapacheGtk.VirtualHostGui import VirtualHostWindow
 from RapacheGtk.ModuleGui import ModuleWindow
+from RapacheCore.PluginManager import PluginManager
 from RapacheCore.VirtualHost import *
 from RapacheGtk import easygui
 from RapacheGtk import GuiUtils
@@ -49,6 +50,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         Master.register(self)
 
         self.denormalized_virtual_hosts = {}
+        self.plugin_manager = PluginManager()
         gnome.init(APPNAME, APPVERSION)
         self.gladefile = Configuration.GLADEPATH + "/" + "main.glade"  
         self.xml = gtk.glade.XML(self.gladefile)         

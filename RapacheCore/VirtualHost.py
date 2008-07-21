@@ -224,9 +224,19 @@ class VirtualHostModel:
         piece = VhostParser( parser )
         old_servername = piece.get_value( 'ServerName' )
         
-        piece.set_value('ServerAlias',  '' )
-        for domain in new_options ['ServerAlias']:
-            piece.add_option('ServerAlias', domain )
+        # Get a bit more dynamic with it
+        for key in new_options.keys():
+        	obj = new_options[key]
+        	if isinstance(obj, list):
+        		piece.set_value(key, '')
+			for opt in obj:
+            			piece.add_option(key, opt )
+		elif isinstance(obj, str):
+        		 piece.set_value(key, obj)
+        
+        #piece.set_value('ServerAlias',  '' )
+        #for domain in new_options ['ServerAlias']:
+        #    piece.add_option('ServerAlias', domain )
                                         
         print "DocumentRoot From",piece.get_value('DocumentRoot' ),"to",new_options['target_folder']
         piece.set_value('DocumentRoot', new_options['target_folder'] )

@@ -65,10 +65,20 @@ class ModuleWindow:
         gtk.main()
 
     def load (self, name ):
+        self.window.set_title(name)
         self.module = ModuleModel ( name )
         #self.module.load()
         buf = self.text_view_module_conf.get_buffer()
         buf.set_text( self.module.get_configuration() )
+        
+         # Load UI Plugins
+        for plugin in self.parent.plugin_manager.plugins:
+        	if plugin.module == name:
+			try:
+				plugin.load_module_properties(self.notebook, self.module)
+			except Exception:
+				print Exception
+				pass
 
     def on_destroy(self, widget, data=None):
         gtk.main_quit()

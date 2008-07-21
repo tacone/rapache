@@ -90,6 +90,9 @@ class VirtualHostWindow:
 
         GuiUtils.style_as_tooltip( self.error_area )
         self.on_entry_domain_changed()
+        
+
+        
     def run(self):
         self.window.show()           
         gtk.main()
@@ -117,6 +120,14 @@ class VirtualHostWindow:
         
         buf = self.text_view_vhost_source.get_buffer()
         buf.set_text( self.vhost.get_source() )
+        
+        # Load UI Plugins
+        for plugin in self.parent.plugin_manager.plugins:
+        	try:
+	        	plugin.load_vhost_properties(self.notebook, self.vhost)
+        	except Exception:
+        		print Exception
+        		pass
 
     def get_domain (self):
         return self.entry_domain.get_text().strip()
