@@ -74,11 +74,11 @@ class ModuleWindow:
          # Load UI Plugins
         for plugin in self.parent.plugin_manager.plugins:
         	if plugin.module == name:
-			try:
+			#try:
 				plugin.load_module_properties(self.notebook, self.module)
-			except Exception:
-				print Exception
-				pass
+			#except Exception:
+			#	print Exception
+			#	pass
 
     def on_destroy(self, widget, data=None):
         gtk.main_quit()

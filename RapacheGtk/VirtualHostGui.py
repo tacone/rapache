@@ -123,11 +123,11 @@ class VirtualHostWindow:
         
         # Load UI Plugins
         for plugin in self.parent.plugin_manager.plugins:
-        	try:
+        	#try:
 	        	plugin.load_vhost_properties(self.notebook, self.vhost)
-        	except Exception:
-        		print Exception
-        		pass
+        	#except Exception:
+        	#	print Exception
+        	#	pass
 
     def get_domain (self):
         return self.entry_domain.get_text().strip()

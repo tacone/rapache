@@ -18,10 +18,11 @@ class PluginManager():
 			sys.path.insert(0, pluginpath)
 
 		for folder in os.listdir(pluginpath):
-			if os.path.isdir(os.path.join(pluginpath,folder)):				
+			path = os.path.join(pluginpath,folder)
+			if os.path.isdir(path):				
 				try:
 					module = __import__(folder + ".plugin")
-					obj = module.plugin.register()
+					obj = module.plugin.register(path)
 					self.plugins.append(obj)
 					print "loaded plugin : " + folder
 				except:
