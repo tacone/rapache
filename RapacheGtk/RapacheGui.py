@@ -220,7 +220,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             editable = self.is_vhost_editable( name )
             self.xml.get_widget( 'delete_button' ).set_sensitive( editable )
             self.xml.get_widget( 'edit_button' ).set_sensitive( editable )
-            surfable =  self.get_current_vhost_directive( 'domain_name' ) != None
+            surfable =  self.get_current_vhost_directive( 'ServerName' ) != None
             self.xml.get_widget( 'surf_this_button' ).set_sensitive( surfable )
             browsable =  self.get_current_vhost_directive( 'DocumentRoot' ) != None
             self.xml.get_widget( 'browse_button' ).set_sensitive( browsable )
@@ -255,7 +255,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         if name == 'default':
             server_name = 'localhost'
         else:
-            server_name = self.get_current_vhost_directive( 'domain_name' )
+            server_name = self.get_current_vhost_directive( 'ServerName' )
         if ( server_name ): Desktop.open_url( "http://" + server_name )
     def browse_this(self, widget):
         document_root = self.get_current_vhost_directive( 'DocumentRoot' )
