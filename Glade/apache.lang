@@ -37,7 +37,8 @@
     <style id="non-standard-key" _name="Data Type" map-to="def:type"/>
     <style id="boolean-value" _name="Boolean value" map-to="def:boolean"/>
   </styles>
-
+  <default-regex-options case-sensitive="false" />
+  
   <definitions>
     <context id="line-comment" style-ref="comment" end-at-line-end="true">
       <start>#</start>
@@ -65,15 +66,12 @@
       <match>\[[a-zA-Z_]+\]</match>
     </context>
     <context id="variable" style-ref="variable">
-      <match>^[a-zA-Z_][a-zA-Z0-9_.]*</match>
+      <match>^\s*[a-zA-Z_][a-zA-Z0-9_.]*</match>
     </context>
     <context id="boolean-value" style-ref="boolean-value">
-      <keyword>true</keyword>
-      <keyword>false</keyword>
       <keyword>on</keyword>
       <keyword>off</keyword>
-      <keyword>yes</keyword>
-      <keyword>no</keyword>
+      
     </context>
     <context id="single-quoted-string" style-ref="string">
       <start>'</start>
