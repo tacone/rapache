@@ -29,4 +29,3 @@ class PluginManager():
 		
 		print ""
 		print ""
-				

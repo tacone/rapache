@@ -68,6 +68,13 @@ class Parser (Observable):
         idx = self._get_last_directive_idx(name)
         self.set_line( idx, line )
     """
+    
+    def get_all_values(self):
+    	options = {}
+    	for key, line in enumerate(self.get_content() ):
+    		options[ key ] = self.get_line( key )
+    	return options
+    
     # idx starts from 0 !! it's not a line number    
     def _get_last_directive_idx (self, name ):
         last_found = None
