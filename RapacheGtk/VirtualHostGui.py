@@ -42,6 +42,7 @@ class VirtualHostWindow:
         self.vhost = None
         self.create_new = True
         self.parent = parent
+        self.plugins = None
         
         gladefile = os.path.join(Configuration.GLADEPATH, "edit_vhost.glade")
         wtree = gtk.glade.XML(gladefile)
@@ -232,13 +233,14 @@ class VirtualHostWindow:
         options[ 'ServerAlias' ] = self.get_server_aliases_list()
 
 	# Save plugins
-        for plugin in self.plugins:
-            try:
-                if plugin.is_enabled():
-                    plugin.save_vhost_properties(options)
-            except Exception:
-                traceback.print_exc(file=sys.stdout)
-                
+        if self.plugins:
+            for plugin in self.plugins:
+                try:
+                    if plugin.is_enabled():
+                        plugin.save_vhost_properties(options)
+                except Exception:
+                    traceback.print_exc(file=sys.stdout)
+                    
         print options
         
         try:
