@@ -42,6 +42,7 @@ class VirtualHostWindow:
         self.vhost = None
         self.create_new = True
         self.parent = parent
+        self.plugins = []
         
         gladefile = os.path.join(Configuration.GLADEPATH, "edit_vhost.glade")
         wtree = gtk.glade.XML(gladefile)
@@ -96,9 +97,23 @@ class VirtualHostWindow:
         GuiUtils.style_as_tooltip( self.error_area )
         self.on_entry_domain_changed()
         
-
-        
     def run(self):
+
+        # Load UI Plugins
+        if self.vhost:
+            site = self.vhost
+        else:
+            # load default  
+            site = VirtualHostModel( "", self.parent.plugin_manager)
+            
+        for plugin in self.parent.plugin_manager.plugins:
+        	try:
+        	    if plugin.is_enabled():      	        
+        	        plugin.load_vhost_properties(self.notebook, site.data)
+    	        	self.plugins.append(plugin)
+        	except Exception:
+        		traceback.print_exc(file=sys.stdout)
+
         self.window.show()           
         gtk.main()
 
@@ -126,15 +141,7 @@ class VirtualHostWindow:
         buf = self.text_view_vhost_source.get_buffer()
         buf.set_text( self.vhost.get_source() )
         
-        # Load UI Plugins
-        self.plugins = []
-        for plugin in self.parent.plugin_manager.plugins:
-        	try:
-        	    if plugin.is_enabled():
-    	        	plugin.load_vhost_properties(self.notebook, self.vhost.data)
-    	        	self.plugins.append(plugin)
-        	except Exception:
-        		traceback.print_exc(file=sys.stdout)
+
 
     def get_domain (self):
         return self.entry_domain.get_text().strip()
@@ -231,7 +238,7 @@ class VirtualHostWindow:
         options[ 'DocumentRoot' ] = self.entry_location.get_text()
         options[ 'ServerAlias' ] = self.get_server_aliases_list()
 
-	# Save plugins
+	    # Save plugins
         for plugin in self.plugins:
             try:
                 if plugin.is_enabled():

@@ -48,7 +48,7 @@ def normalize_vhost( fname ):
     
 class VirtualHostModel:
     
-    def __init__(self, name = None):
+    def __init__(self, name = None, plugin_manager = None):
         self.defaults = {
             'enabled' : False
             , 'name' : None
@@ -66,6 +66,12 @@ class VirtualHostModel:
         if ( name != None ):
             self.data[ 'name' ] = name
             self.data[ 'enabled' ] = self.is_enabled()
+            
+        # Init plugin values so the keys exist
+        if plugin_manager:
+        	for plugin in plugin_manager.plugins:
+        		for key in plugin.vhosts_config.keys():
+        				self.data[ key ] = None
 
     def _search(self, content, regexp ): 
         content = content.split( "\n" )           
