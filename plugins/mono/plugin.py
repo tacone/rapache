@@ -45,34 +45,37 @@ class MonoPlugin:
 	
 	# Customise the module properties window
 	def load_module_properties(self, notebook, module):
-		label = gtk.Label("Mono Default Config")
+	
+		config_file = "/etc/mono-server2/mono-server2-hosts.conf"
+		if os.path.exists(config_file):
+			label = gtk.Label("Mono Default Config")
 		
-		# Remember you will need to recreate tree everytime the window loads
-		wtree = gtk.glade.xml_new_from_buffer(self.glade_module_xml, len(self.glade_module_xml), "scrolledwindow_mono_config")
-		scrolledwindow_mono_config = wtree.get_widget("scrolledwindow_mono_config")	
-		textview_mono_config = wtree.get_widget("textview_mono_config")	
+			# Remember you will need to recreate tree everytime the window loads
+			wtree = gtk.glade.xml_new_from_buffer(self.glade_module_xml, len(self.glade_module_xml), "scrolledwindow_mono_config")
+			scrolledwindow_mono_config = wtree.get_widget("scrolledwindow_mono_config")	
+			textview_mono_config = wtree.get_widget("textview_mono_config")	
 
-		f = open("/etc/mono-server2/mono-server2-hosts.conf", "r")
-		config = f.read()
-		f.close()
-      	        
-       	        self.text_view_vhost_source = RapacheGtk.GuiUtils.new_apache_sourceview()
-		self.text_view_vhost_source.set_editable( False )
-		self.text_view_vhost_source.show()
+			f = open("", "r")
+			config = f.read()
+			f.close()
+	      	        
+	       	        self.text_view_vhost_source = RapacheGtk.GuiUtils.new_apache_sourceview()
+			self.text_view_vhost_source.set_editable( False )
+			self.text_view_vhost_source.show()
 
-		buf = self.text_view_vhost_source.get_buffer()
-       	        buf.set_text( config )
-       	       
-       	        
-		scrolledwindow_mono_config.remove(textview_mono_config)
-		scrolledwindow_mono_config.add(self.text_view_vhost_source)
+			buf = self.text_view_vhost_source.get_buffer()
+	       	        buf.set_text( config )
+	       	       
+	       	        
+			scrolledwindow_mono_config.remove(textview_mono_config)
+			scrolledwindow_mono_config.add(self.text_view_vhost_source)
 
 
-		# make sure to show items
-		notebook.insert_page(scrolledwindow_mono_config, label)
-		label.show()
-		scrolledwindow_mono_config.show()
-		self.text_view_vhost_source.show()
+			# make sure to show items
+			notebook.insert_page(scrolledwindow_mono_config, label)
+			label.show()
+			scrolledwindow_mono_config.show()
+			self.text_view_vhost_source.show()
 		return
 
 	# Perform action on module properties save
