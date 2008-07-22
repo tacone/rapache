@@ -127,9 +127,12 @@ class VirtualHostWindow:
         buf.set_text( self.vhost.get_source() )
         
         # Load UI Plugins
+        self.plugins = []
         for plugin in self.parent.plugin_manager.plugins:
         	try:
-	        	plugin.load_vhost_properties(self.notebook, self.vhost.data)
+        	    if plugin.is_enabled():
+    	        	plugin.load_vhost_properties(self.notebook, self.vhost.data)
+    	        	self.plugins.append(plugin)
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
 
@@ -229,13 +232,13 @@ class VirtualHostWindow:
         options[ 'ServerAlias' ] = self.get_server_aliases_list()
 
 	# Save plugins
-	for plugin in self.parent.plugin_manager.plugins:
-	#try:
-		plugin.save_vhost_properties(options)
-	#except Exception:
-	#	print Exception
-	#	pass
-            
+        for plugin in self.plugins:
+            try:
+                if plugin.is_enabled():
+                    plugin.save_vhost_properties(options)
+            except Exception:
+                traceback.print_exc(file=sys.stdout)
+                
         print options
         
         try:

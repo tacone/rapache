@@ -1,5 +1,5 @@
 import os
-
+from RapacheCore.PluginBase import PluginBaseObject
 try:
      import pygtk
      pygtk.require("2.0")
@@ -11,7 +11,9 @@ try:
 except:
     sys.exit(1)
 
-class AdvancedVhostPlugin:
+
+
+class AdvancedVhostPlugin(PluginBaseObject):
 
 	def __init__(self, path):
 		

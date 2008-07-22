@@ -238,13 +238,16 @@ class VirtualHostModel:
         
         # Get a bit more dynamic with it
         for key in new_options.keys():
-        	obj = new_options[key]
-        	if isinstance(obj, list):
-        		piece.set_value(key, '')
-			for opt in obj:
-            			piece.add_option(key, opt )
-		elif isinstance(obj, str):
-        		 piece.set_value(key, obj)
+            obj = new_options[key]
+            if isinstance(obj, list):
+                piece.set_value(key, '')
+                for opt in obj:
+                    piece.add_option(key, opt )
+            elif isinstance(obj, str):
+                if obj:
+                    piece.set_value(key, obj)
+                else:
+                    piece.remove_value(key)
         
         #piece.set_value('ServerAlias',  '' )
         #for domain in new_options ['ServerAlias']:
