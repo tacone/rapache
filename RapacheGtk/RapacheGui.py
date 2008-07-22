@@ -69,10 +69,11 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "browse_button_clicked" : self.browse_this,
             "about_clicked" : self.display_about,
             "open_doc_button_clicked" : self.open_doc_button_clicked,
+            "on_button_hide_warning_clicked" : self.on_button_hide_warning_clicked,
             "quit" : self.quit }
         gtk.window_set_default_icon(self.xml.get_widget("MainWindow").get_icon())
         self.xml.signal_autoconnect(dic)
-        GuiUtils.change_button_label ( self.xml.get_widget( 'restart_apache' ), "Restart\nApache" )
+        GuiUtils.change_button_label ( self.xml.get_widget( 'restart_apache' ), "Restart Apache" )
         GuiUtils.change_button_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
         #hereby we create lists
         self.create_vhost_list()
@@ -82,6 +83,9 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )    
+        
+    def on_button_hide_warning_clicked(self, widget):
+        self.xml.get_widget( 'restart_apache_notice' ).hide()
         
     def handle_event(self, event ):
         if event.name == 'please_restart_apache':
