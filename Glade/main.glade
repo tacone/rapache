@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Jul 17 23:39:23 2008 -->
+<!--Generated with glade3 3.4.5 on Tue Jul 22 17:27:06 2008 -->
 <glade-interface>
   <requires lib="bonobo"/>
   <requires lib="gnome"/>
@@ -10,6 +10,7 @@
     <property name="visible">True</property>
     <property name="title" translatable="yes">Rapache</property>
     <property name="window_position">GTK_WIN_POS_MOUSE</property>
+    <property name="default_width">650</property>
     <property name="icon">icon_cadsoft_eagle.svg</property>
     <property name="gravity">GDK_GRAVITY_CENTER</property>
     <signal name="destroy" handler="on_MainWindow_destroy"/>
@@ -161,30 +162,74 @@
             <child>
               <widget class="GtkHBox" id="restart_apache_notice">
                 <child>
+                  <widget class="GtkVBox" id="vbox5">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkButton" id="restart_apache">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="label" translatable="yes">gtk-refresh</property>
+                        <property name="use_stock">True</property>
+                        <property name="response_id">0</property>
+                        <signal name="clicked" handler="please_restart"/>
+                      </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="padding">7</property>
+                      </packing>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="padding">7</property>
+                  </packing>
+                </child>
+                <child>
                   <widget class="GtkLabel" id="label1">
                     <property name="visible">True</property>
                     <property name="label" translatable="yes">Applied changes will not take effect until web server is restarted</property>
                     <property name="justify">GTK_JUSTIFY_CENTER</property>
                     <property name="wrap">True</property>
+                    <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
                     <property name="width_chars">0</property>
                   </widget>
                   <packing>
-                    <property name="padding">5</property>
+                    <property name="padding">4</property>
+                    <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkButton" id="restart_apache">
+                  <widget class="GtkVBox" id="vbox6">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="label" translatable="yes">gtk-refresh</property>
-                    <property name="use_stock">True</property>
-                    <property name="response_id">0</property>
-                    <signal name="clicked" handler="please_restart"/>
+                    <property name="homogeneous">True</property>
+                    <child>
+                      <widget class="GtkButton" id="button_hide_warning">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="relief">GTK_RELIEF_NONE</property>
+                        <property name="focus_on_click">False</property>
+                        <property name="response_id">0</property>
+                        <signal name="clicked" handler="on_button_hide_warning_clicked"/>
+                        <child>
+                          <widget class="GtkImage" id="image2">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-close</property>
+                          </widget>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                      </packing>
+                    </child>
                   </widget>
                   <packing>
                     <property name="expand">False</property>
-                    <property name="position">1</property>
+                    <property name="fill">False</property>
+                    <property name="padding">8</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </widget>
@@ -271,7 +316,7 @@
                                 <property name="sensitive">False</property>
                                 <property name="is_important">True</property>
                                 <property name="label" translatable="yes">Open Site</property>
-                                <property name="icon">browser.png</property>
+                                <property name="icon_name">applications-internet</property>
                                 <signal name="clicked" handler="surf_this_button_clicked"/>
                               </widget>
                               <packing>
@@ -328,7 +373,7 @@
                     <child>
                       <widget class="GtkImage" id="image3">
                         <property name="visible">True</property>
-                        <property name="pixbuf">browser.png</property>
+                        <property name="icon_name">applications-internet</property>
                       </widget>
                     </child>
                     <child>
