@@ -20,6 +20,7 @@ from RapacheGtk.RapacheGui import MainWindow
 from RapacheGtk.WarningWindow import WarningWindow
 from RapacheCore import Configuration
 
+
 if __name__ == "__main__":
 		current_path = os.path.abspath(os.path.dirname(__file__))
 		if ( os.path.exists( current_path+"/RapacheCore" ) ):

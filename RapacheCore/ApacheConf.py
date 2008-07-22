@@ -78,6 +78,7 @@ class Parser (Observable):
         idx = self._get_last_directive_idx(name)
         self.set_line( idx, line )
     """
+   
     # idx starts from 0 !! it's not a line number    
     def _get_last_directive_idx (self, name ):
         last_found = None

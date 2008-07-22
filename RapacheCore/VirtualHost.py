@@ -82,11 +82,11 @@ class VirtualHostModel:
         found_entry = match.groups()                          
         found_value = found_entry[0]
         return found_value
-    def load(self, name = False):
+    def load(self, name = False, plugin_manager = None):
     	if ( name == False ): name = self.data[ 'name' ]
     	options = {}    	
         parser = Parser()
-        parser.load(  Configuration.SITES_AVAILABLE_DIR+'/'+name )
+        parser.load(  os.path.join(Configuration.SITES_AVAILABLE_DIR, name) )
         try:
             piece = VhostParser( parser )
         except "VhostNotFound":
@@ -106,8 +106,20 @@ class VirtualHostModel:
         else:
             options['hack_hosts'] = True
         self.parsable = True
+        
+        # Load plugin values
+        if plugin_manager:
+        	for plugin in plugin_manager.plugins:
+        		for key in plugin.vhosts_config.keys():
+        			if plugin.vhosts_config[key] == 1:
+        				options[ key ] = piece.get_options( key )
+        			else:
+        				options[ key ] = piece.get_value( key )
+        
         self.data.update( options )
         return True
+            
+        
     def loaad (self, name = False):
         print "Loading Vhosts list"
         try:
@@ -224,9 +236,22 @@ class VirtualHostModel:
         piece = VhostParser( parser )
         old_servername = piece.get_value( 'ServerName' )
         
-        piece.set_value('ServerAlias',  '' )
-        for domain in new_options ['ServerAlias']:
-            piece.add_option('ServerAlias', domain )
+        # Get a bit more dynamic with it
+        for key in new_options.keys():
+            obj = new_options[key]
+            if isinstance(obj, list):
+                piece.set_value(key, '')
+                for opt in obj:
+                    piece.add_option(key, opt )
+            elif isinstance(obj, str):
+                if obj:
+                    piece.set_value(key, obj)
+                else:
+                    piece.remove_value(key)
+        
+        #piece.set_value('ServerAlias',  '' )
+        #for domain in new_options ['ServerAlias']:
+        #    piece.add_option('ServerAlias', domain )
                                         
         print "DocumentRoot From",piece.get_value('DocumentRoot' ),"to",new_options['DocumentRoot']
         piece.set_value('DocumentRoot', new_options['DocumentRoot'] )

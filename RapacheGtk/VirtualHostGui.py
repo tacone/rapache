@@ -29,6 +29,7 @@ except:
 import os
 import pango
 import tempfile
+import traceback
 import RapacheGtk.GuiUtils
 from RapacheCore.VirtualHost import *
 from RapacheGtk import GuiUtils
@@ -94,6 +95,9 @@ class VirtualHostWindow:
 
         GuiUtils.style_as_tooltip( self.error_area )
         self.on_entry_domain_changed()
+        
+
+        
     def run(self):
         self.window.show()           
         gtk.main()
@@ -102,7 +106,7 @@ class VirtualHostWindow:
         self.vhost = VirtualHostModel( name )
         self.create_new = False
         try:
-            self.vhost.load()
+            self.vhost.load(False, self.parent.plugin_manager)
             print self.vhost.data
             #self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
             server_name = self.vhost.data[ 'ServerName' ] 
@@ -121,6 +125,16 @@ class VirtualHostWindow:
         
         buf = self.text_view_vhost_source.get_buffer()
         buf.set_text( self.vhost.get_source() )
+        
+        # Load UI Plugins
+        self.plugins = []
+        for plugin in self.parent.plugin_manager.plugins:
+        	try:
+        	    if plugin.is_enabled():
+    	        	plugin.load_vhost_properties(self.notebook, self.vhost.data)
+    	        	self.plugins.append(plugin)
+        	except Exception:
+        		traceback.print_exc(file=sys.stdout)
 
     def get_domain (self):
         return self.entry_domain.get_text().strip()
@@ -216,6 +230,15 @@ class VirtualHostWindow:
         options[ 'hack_hosts' ] = self.checkbutton_hosts.get_active()                
         options[ 'DocumentRoot' ] = self.entry_location.get_text()
         options[ 'ServerAlias' ] = self.get_server_aliases_list()
+
+	# Save plugins
+        for plugin in self.plugins:
+            try:
+                if plugin.is_enabled():
+                    plugin.save_vhost_properties(options)
+            except Exception:
+                traceback.print_exc(file=sys.stdout)
+                
         print options
         
         try:
@@ -227,6 +250,7 @@ class VirtualHostWindow:
                 print "Current name:", name
                 site = VirtualHostModel( name )
                 site.update( options, name )
+
             
             #self.parent.create_vhost_list()        
             self.parent.refresh_vhosts()
