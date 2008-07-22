@@ -25,6 +25,12 @@ class MonoPlugin:
 		# Define what additional config should be read from vhost file
 		self.vhosts_config = { "MonoServerPath" : 0 } # 0 value | 1 options
 		
+		
+		# config
+		self.mono1_1_path = "/usr/bin/mod-mono-server"
+		self.mono2_0_path = "/usr/bin/mod-mono-server2"
+		
+		
 		# Get glade file XML
 		f = open( os.path.join(self.path, "mono_vhost.glade") ,"r")
 		self.glade_vhost_xml =  f.read()
@@ -83,13 +89,23 @@ class MonoPlugin:
 		vbox_mono_plugin = wtree.get_widget("vbox_mono_plugin")	
 
 		self.comboboxentry_vhost_mono_version = wtree.get_widget("comboboxentry_vhost_mono_version")
+		
+		mono1_1 = os.path.exists(self.mono1_1_path)
+		mono2_0 = os.path.exists(self.mono2_0_path)
+			
 		if not vhost_data["MonoServerPath"]:
 			self.comboboxentry_vhost_mono_version.set_active(0)
-		elif vhost_data["MonoServerPath"].endswith("mod-mono-server1"):
+		elif mono1_1 and vhost_data["MonoServerPath"] == self.mono1_1_path:
 			self.comboboxentry_vhost_mono_version.set_active(1)
-		elif vhost_data["MonoServerPath"].endswith("mod-mono-server2"):
+		elif mono2_0 and vhost_data["MonoServerPath"] == self.mono2_0_path:
 			self.comboboxentry_vhost_mono_version.set_active(2) 
 		notebook.insert_page(vbox_mono_plugin, label)
+		
+		# remove version if not present in system
+		if not mono2_0:
+			self.comboboxentry_vhost_mono_version.remove_text(2)
+		if not mono1_1:
+			self.comboboxentry_vhost_mono_version.remove_text(1)
 		
 		# make sure to show items
 		label.show()
@@ -99,14 +115,14 @@ class MonoPlugin:
 	# Perform action on vhost properties save
 	def save_vhost_properties(self, vhost_data):
 		
-		selected_option = self.comboboxentry_vhost_mono_version.get_active()
+		selected = self.comboboxentry_vhost_mono_version.get_active_text()
 		
-		if selected_option == 0:
-			vhost_data["MonoServerPath"] = ""
-		elif selected_option == 1:
-			vhost_data["MonoServerPath"] = "/usr/bin/mod-mono-server1"
-		elif selected_option == 2:
-			vhost_data["MonoServerPath"] = "/usr/bin/mod-mono-server2"
+		if selected.count("1.1") > 0:
+			vhost_data["MonoServerPath"] = self.mono1_1_path
+		elif selected.count("2.0") > 0:
+			vhost_data["MonoServerPath"] = self.mono2_0_path
+		else:
+			vhost_data["MonoServerPath"] = ''
 	
 		return
 
