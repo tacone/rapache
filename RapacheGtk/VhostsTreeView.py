@@ -84,12 +84,12 @@ class VhostsTreeView ( ConfFilesTreeView ):
         iter = model.get_iter((int(path),))
         fixed = model.get_value(iter, COLUMN_FIXED)
         name = model.get_value(iter, COLUMN_SEVERITY)
-        
+
         fixed = not fixed        
         if fixed:
-            Shell.command ('gksudo '+Configuration.APPPATH+'"/hosts-manager -a '+name+'"')
+            Shell.command.sudo_execute ( [Configuration.APPPATH+'/hosts-manager', '-a',name])
         else :
-            Shell.command ('gksudo '+Configuration.APPPATH+'"/hosts-manager -r '+name+'"')
+            Shell.command.sudo_execute ( [Configuration.APPPATH+'/hosts-manager', '-r',name])
         # set new value        
         site = VirtualHostModel( name )
         site.toggle( fixed )

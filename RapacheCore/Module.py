@@ -32,8 +32,8 @@ def normalize_module( fname ):
     if ( os.path.exists( dest ) == True ):
         print fname, "already exists in available dir. not even trying"
         return False
-    command = 'gksudo "mv \''+orig+'\' \''+dest+'\'"'
-    return Shell.command( command )
+    command = [ 'mv', orig, dest ]
+    return Shell.command.sudo_execute( command )
     return  os.path.exists( dest )
    
 def get_module_dependants ( name, mods_dict ):
@@ -175,31 +175,24 @@ class ModuleModel:
         logfile = open( tempfilename , 'w')
         logfile.write( content )
         logfile.close()
-        command = "gksudo cp "+tempfilename+" "+complete_path
-        print "copying tempfile in the appropriate location: "+command
-        Shell.command( command )
+        command = ["cp",tempfilename, complete_path]
+        print "copying tempfile in the appropriate location: ",command
+        Shell.command.sudo_execute( command )
     
     def toggle( self, status ):
         "status = True|False"
         if status:
-            command = "a2enmod"
+            command_name = "a2enmod"
         else :
-            command = "a2dismod"        
+            command_name = "a2dismod"        
         # set new value
         #tokens = self.data['name'].split('.')
         #del tokens[ len( tokens ) -1 ]
         #name = ".".join(tokens)
         name = self.data['name']
-        command = "gksudo "+command+" "+name
-        Shell.command( command )
+        Shell.command.sudo_execute( [command_name, name] )
         self.data['enabled'] = self.is_enabled()
         self.changed = True
-    """ NOT FOR NOW    
-    def delete( self ):
-        "Deletes a VirtualHost configuration file"
-        if ( self.is_enabled() ): self.toggle( False )
-        Shell.command( 'gksudo rm '+Configuration.MODS_AVAILABLE_DIR+'/'+self.data['name'] )
-    """
      
     def get_source ( self ):
         file = open( Configuration.MODS_AVAILABLE_DIR+'/'+self.data['name']+".load", 'r' )

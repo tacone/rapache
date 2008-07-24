@@ -42,8 +42,9 @@ def normalize_vhost( fname ):
     if ( os.path.exists( dest ) == True ):
         print fname, "already exists in available dir. not even trying"
         return False
-    command = 'gksudo "mv \''+orig+'\' \''+dest+'\'"'
-    return Shell.command( command )
+    command = ['mv',orig,dest]
+    code, output, error = Shell.command.sudo_execute( command )
+    return ( code == 0 )
     return  os.path.exists( dest )
     
 class VirtualHostModel:
@@ -197,19 +198,18 @@ class VirtualHostModel:
         else :
     	    command = "a2dissite"        
         # set new value
-        command = "gksudo "+command+" "+self.data['name']
         if self.simulation:
-            print "SIMULATED "+command
+            print "SIMULATED ",[ command, self.data['name'] ]
             self.data['enabled'] = status
         else:
-            Shell.command( command )
+            Shell.command.sudo_execute( [ command, self.data['name'] ] )
             self.data['enabled'] = self.is_enabled()
         self.changed = True
         
     def delete( self ):
         "Deletes a VirtualHost configuration file"
         if ( self.is_enabled() ): self.toggle( False )
-        Shell.command( 'gksudo rm '+Configuration.SITES_AVAILABLE_DIR+'/'+self.data['name'] )
+        Shell.command.sudo_execute( [ 'rm ', Configuration.SITES_AVAILABLE_DIR+'/'+self.data['name'] ])
     def _create_complete_path ( self, complete_path ):
         print "Attempting to create: " + complete_path
         tokens = complete_path.split( '/' )
@@ -219,7 +219,7 @@ class VirtualHostModel:
             path = path + '/' + piece
             if ( os.path.exists( path ) == False ):
                 try:
-                    Shell.command( 'gksudo "mkdir '+path+'"' )
+                    Shell.command.sudo_execute( ["mkdir", path] )
                 except:
                     print "error on creating path"+path
                     return False                   
@@ -280,7 +280,7 @@ class VirtualHostModel:
         if old_name != new_name and os.path.exists( new_name ) == False:
             print "Server name changed, updating conf filename"
             self.toggle( False )     
-            Shell.command( 'gksudo mv "'+old_name+'" "'+new_name+'"' )
+            Shell.command.sudo_execute( [mv, old_name, new_name] )
             if os.path.exists( new_name ) == True:
                 #success ! we need to reload vhost with the new name
                 self.load( new_options['ServerName'] )
@@ -299,11 +299,10 @@ class VirtualHostModel:
         logfile = open( tempfilename , 'w')
         logfile.write( content )
         logfile.close()
-        command = "gksudo cp "+tempfilename+" "+complete_path
-        print "copying tempfile in the appropriate location: "+command
-        Shell.command( command )
-        
-        
+        command = ['cp', tempfilename, complete_path ]
+        print "copying tempfile in the appropriate location: ",command
+        Shell.command.sudo_execute( command )
+                
     def create ( self, new_options ):                
         
         options = self.data
@@ -355,9 +354,9 @@ class VirtualHostModel:
         self._write( complete_path, "\n".join(parser.get_content() ) )
           
         if ( options[ 'hack_hosts' ] ):
-            Shell.command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a '+options['ServerName']+'"')
+            Shell.command.sudo_execute ( [Configuration.APPPATH+'/hosts-manager', '-a', options['ServerName'] ] )
             for alias_name in options[ 'ServerAlias' ]:
-            	Shell.command ('gksudo "'+Configuration.APPPATH+'/hosts-manager -a '+alias_name+'"')
+            	Shell.command.sudo_execute ( [Configuration.APPPATH+'/hosts-manager', '-a',alias_name ])
         self.changed = True        
         self.toggle( True ) #activate by default 
             

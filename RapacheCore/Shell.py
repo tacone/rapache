@@ -1,19 +1,19 @@
 import os
 
-
-def command( command ):        
-    print "COMMAND: "+command
-    return os.system( command )
-    """
-    try:
-        retcode = call("mycmd" + " myarg", shell=True)
-        if retcode < 0:
-            print >>sys.stderr, "Child was terminated by signal", -retcode
-        else:
-            print >>sys.stderr, "Child returned", retcode
-    except OSError, e:
-        print >>sys.stderr, "Execution failed:", e
-    """
+# <--- shit
+#def command( command ):        
+#    print "COMMAND: "+command
+#    return os.system( command )
+#    """
+#    try:
+#        retcode = call("mycmd" + " myarg", shell=True)
+#        if retcode < 0:
+#            print >>sys.stderr, "Child was terminated by signal", -retcode
+#        else:
+#            print >>sys.stderr, "Child returned", retcode
+#    except OSError, e:
+#        print >>sys.stderr, "Execution failed:", e
+#    """ 
     
 import sys   
 import gksu2
@@ -125,7 +125,7 @@ class CommandHandler:
         returncode = p.returncode
         self.__output(command, returncode, output, error)
         
-    def sudo_execute(self, command, description):
+    def sudo_execute(self, command, description = "Super user priviledges are required to perform this operation"):
         #log = CommandLogEntry(command)
         #self.command_log.append( log )
        
@@ -171,6 +171,9 @@ class CommandHandler:
         #log.error = error
         
         return (returncode, output, error)
+
+# Look ma'! A singleton !
+command = CommandHandler()    
     
 if __name__ == "__main__":
     c = CommandHandler()

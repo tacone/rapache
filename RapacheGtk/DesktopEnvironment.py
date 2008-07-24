@@ -13,7 +13,7 @@ from RapacheCore import Shell
 #                2007 Canonical    
 # TODO: move this into an utility module        
 def open_url(url):
-    """Open the specified URL in a browser"""
+    """Opens the specified URL in a browser"""
     # Find an appropiate browser
     if os.path.exists('/usr/bin/gnome-open'):
         command = ['gnome-open', url]
@@ -23,5 +23,6 @@ def open_url(url):
     if os.getuid() == 0 and os.environ.has_key('SUDO_USER'):
         command = ['sudo', '-u', os.environ['SUDO_USER']] + command
     subprocess.Popen(command)
+# TODO: find out how to open nautilus in background
 def open_dir( path):
-    Shell.command ('gksudo "nautilus '+path+' --no-desktop" & ' )
+    Shell.command.sudo_execute ( ['nautilus',path, '--no-desktop']  )
