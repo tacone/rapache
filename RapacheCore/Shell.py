@@ -71,7 +71,8 @@ class CommandHandler:
         except:
             #don't enable the following line as you password
             #will be printed out
-            traceback.print_exc()
+            #traceback.print_exc() #<-- CAUTION !
+            
             print "ERROR: in __sudo_popen()"
             pass
         return p
@@ -127,7 +128,6 @@ class CommandHandler:
     def sudo_execute(self, command, description):
         #log = CommandLogEntry(command)
         #self.command_log.append( log )
-        
        
         returncode = 0
         output = None
@@ -176,29 +176,8 @@ if __name__ == "__main__":
     c = CommandHandler()
     c.verbose = 2
     #print c.is_auth_needed()
-    print c.sudo_reset()
     
-    """
-    p = Popen(['sudo', '-v' ], stdout=PIPE, stderr=PIPE) 
-    output, error = p.communicate()
-    returncode = p.returncode
-    print "PRINT CHECKING FOR SUDO", returncode
-    """
-    
+    print c.sudo_reset()       
     code, out, err = c.sudo_execute(["head", "/var/log/syslog"], "Pwd FTW !")
     code, out, err = c.sudo_execute(["head", "/var/log/syslog"], "Pwd FTW !")
-    #print c.is_auth_needed()
-    #print c.sudo_reset()
-    #print c.is_auth_needed()
-    
-    """
-    code, out, err = c.sudo_execute(["head", "/var/log/syslog"], "Pwd fTW")
-    print 'code:',code
-    print 'out:',out
-    print 'err:',err    
-    code, out, err = c.execute(["ls", "/home"], "Pwd fTW")
-    
-    print 'code:',code
-    print 'out:',out
-    print 'err:',err
-    """
+   
