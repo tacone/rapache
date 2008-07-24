@@ -17,7 +17,6 @@ import os
     
 import sys   
 import gksu2
-import gobject
 import getpass
 import subprocess
 import StringIO
