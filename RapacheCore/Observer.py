@@ -33,7 +33,7 @@ class PollyObserver:
     def register(self, obj):
         """adds an Observable instance to the poll of observed objects
         and register itself to it."""
-        print "checking for same obj"
+        #print "checking for same obj"
         for registered_obj in self.__observed:
             #print obj, ' == ', registered_obj, '??'
             if obj == registered_obj: return False
