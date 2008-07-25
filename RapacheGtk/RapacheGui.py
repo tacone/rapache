@@ -289,7 +289,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         dialog.set_name( APPNAME )
         dialog.set_version( APPVERSION )
         dialog.set_authors( ["Rapache Developers\nhttps://launchpad.net/~rapache-devel"] )
-        dialog.set_comments('Rapache is an Apache configurator for Debian/Gnome systems')
+        dialog.set_comments('Rapache is an Apache configurator for Ubuntu/Gnome systems')
         dialog.set_website('http://launchpad.net/rapache')
         dialog.run()
         dialog.destroy()
