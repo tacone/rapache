@@ -10,7 +10,7 @@ from xml.dom.minidom import *
 
 def is_denormalized_module ( fname ):
     try:   
-        flink = os.readlink( Configuration.MODS_ENABLED_DIR +"/"+fname )
+        flink = Shell.command.readlink( os.path.join(Configuration.MODS_ENABLED_DIR, fname) )
         flink = os.path.join(os.path.dirname( Configuration.MODS_AVAILABLE_DIR ), flink)                        
         #no exceptions ? Means it's a link
         return True
@@ -18,8 +18,8 @@ def is_denormalized_module ( fname ):
         return False
     return False
 def is_not_normalizable( fname):
-     dest = Configuration.MODS_AVAILABLE_DIR + "/" + fname
-     return os.path.exists( dest )
+     dest = os.path.join(Configuration.MODS_AVAILABLE_DIR, fname)
+     return Shell.command.exists( dest )
 
 def blacklisted ( fname ):
     if re.match( '.*[~]\s*$', fname ) != None : return True
@@ -27,14 +27,13 @@ def blacklisted ( fname ):
     return False 
 def normalize_module( fname ):
     print "Normalizing:", fname
-    orig = Configuration.MODS_ENABLED_DIR + "/" + fname
-    dest = Configuration.MODS_AVAILABLE_DIR + "/" + fname    
-    if ( os.path.exists( dest ) == True ):
+    orig = os.path.join(Configuration.MODS_ENABLED_DIR, fname)
+    dest = os.path.join(Configuration.MODS_AVAILABLE_DIR, fname) 
+    if ( Shell.command.exists( dest ) == True ):
         print fname, "already exists in available dir. not even trying"
         return False
-    command = 'gksudo "mv \''+orig+'\' \''+dest+'\'"'
-    return Shell.command( command )
-    return  os.path.exists( dest )
+    Shell.command.move(orig, dest)
+    return os.path.exists( dest )
    
 def get_module_dependants ( name, mods_dict ):
     dependants = []
@@ -66,7 +65,7 @@ def module_list ():
  
     #load module descriptions
     module_descriptions = {}    
-    f = open( Configuration.GLADEPATH + "/modules.xml" , "r")
+    f = open( os.path.join(Configuration.GLADEPATH, "modules.xml") , "r")
     xml = f.read()
     f.close()
     document = parseString(xml)
@@ -76,7 +75,7 @@ def module_list ():
             description = node.firstChild.nodeValue
             module_descriptions[name] = description
  
-    dirList=os.listdir( Configuration.MODS_AVAILABLE_DIR )
+    dirList = os.listdir( Configuration.MODS_AVAILABLE_DIR )
     dirList = [x for x in dirList if blacklisted( x ) == False ]
     for fname in  dirList :
         tokens = os.path.splitext( fname )
@@ -153,64 +152,46 @@ class ModuleModel:
         self.data[ 'dependancies' ] = dependancies
     def is_enabled ( self ):
         orig = self.data[ 'name' ] + ".load"              
-        dirList=os.listdir(  Configuration.MODS_ENABLED_DIR )        
+        dirList = Shell.command.listdir( Configuration.MODS_ENABLED_DIR )        
         for fname in dirList:
             try:                                
-                flink = os.readlink( Configuration.MODS_ENABLED_DIR +"/"+fname )               
+                flink = Shell.command.readlink( os.path.join(Configuration.MODS_ENABLED_DIR, fname) )               
                 flink = os.path.join(os.path.dirname( Configuration.MODS_ENABLED_DIR +"/" ), flink)
                 #please note debian brilliantly features a nice set of
                 # mixed absolute and relative links. FREAKS !
                 # the added "/" is also necessary
                 flink = os.path.normpath(flink)               
-                if ( flink == Configuration.MODS_AVAILABLE_DIR+"/"+orig ):
+                if ( flink == os.path.join(Configuration.MODS_AVAILABLE_DIR, orig )):
                     return True
             except:
                 pass
           
         return False
     
-    def _write(self, complete_path, content ):    
-        tempfilename = tempfile.mktemp()
-        print "creating temporary file "+tempfilename
-        logfile = open( tempfilename , 'w')
-        logfile.write( content )
-        logfile.close()
-        command = "gksudo cp "+tempfilename+" "+complete_path
-        print "copying tempfile in the appropriate location: "+command
-        Shell.command( command )
+    def _write(self, complete_path, content ):  
+        Shell.command.write_file( complete_path, content )
     
-    def toggle( self, status ):
+    def toggle(self, status ):
         "status = True|False"
         if status:
-            command = "a2enmod"
+            command_name = "a2enmod"
         else :
-            command = "a2dismod"        
+            command_name = "a2dismod"        
         # set new value
         #tokens = self.data['name'].split('.')
         #del tokens[ len( tokens ) -1 ]
         #name = ".".join(tokens)
         name = self.data['name']
-        command = "gksudo "+command+" "+name
-        Shell.command( command )
+        Shell.command.sudo_execute( [command_name, name] )
         self.data['enabled'] = self.is_enabled()
         self.changed = True
-    """ NOT FOR NOW    
-    def delete( self ):
-        "Deletes a VirtualHost configuration file"
-        if ( self.is_enabled() ): self.toggle( False )
-        Shell.command( 'gksudo rm '+Configuration.MODS_AVAILABLE_DIR+'/'+self.data['name'] )
-    """
      
     def get_source ( self ):
-        file = open( Configuration.MODS_AVAILABLE_DIR+'/'+self.data['name']+".load", 'r' )
-        content = file.read()
-        file.close()
-        return content
+        return Shell.command.read_file( os.path.join(Configuration.MODS_AVAILABLE_DIR, self.data['name']+".load"))
+
     def get_configuration ( self ):
-        file = open( Configuration.MODS_AVAILABLE_DIR+'/'+self.data['name']+".conf", 'r' )
-        content = file.read()
-        file.close()
-        return content
+        return Shell.command.read_file( os.path.join(Configuration.MODS_AVAILABLE_DIR, self.data['name']+".conf"))
+
     def save_configuration (self, content):
-        complete_path = file = Configuration.MODS_AVAILABLE_DIR+'/'+self.data['name']+".conf"
+        complete_path = os.path.join(Configuration.MODS_AVAILABLE_DIR, self.data['name']+".conf")
         self._write(complete_path, content)

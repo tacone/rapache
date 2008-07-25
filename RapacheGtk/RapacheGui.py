@@ -204,8 +204,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.xml.get_widget( 'restart_apache_notice' ).show()
     def restart_apache ( self, widget ):
         print "Restarting apache on user's request"
-        Shell.command( "gksudo /etc/init.d/apache2 stop" )
-        Shell.command( "gksudo /etc/init.d/apache2 start" )
+        Shell.command.sudo_execute( ['/etc/init.d/apache2', 'stop'] )
+        Shell.command.sudo_execute( ['/etc/init.d/apache2', 'start'] )
         self.xml.get_widget( 'restart_apache_notice' ).hide()
         self.refresh_lists()
     def is_vhost_editable (self, name):

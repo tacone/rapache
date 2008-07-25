@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Jul 22 17:27:06 2008 -->
+<!--Generated with glade3 3.4.5 on Wed Jul 23 00:55:33 2008 -->
 <glade-interface>
   <requires lib="bonobo"/>
   <requires lib="gnome"/>
@@ -10,7 +10,6 @@
     <property name="visible">True</property>
     <property name="title" translatable="yes">Rapache</property>
     <property name="window_position">GTK_WIN_POS_MOUSE</property>
-    <property name="default_width">650</property>
     <property name="icon">icon_cadsoft_eagle.svg</property>
     <property name="gravity">GDK_GRAVITY_CENTER</property>
     <signal name="destroy" handler="on_MainWindow_destroy"/>
@@ -188,7 +187,8 @@
                 <child>
                   <widget class="GtkLabel" id="label1">
                     <property name="visible">True</property>
-                    <property name="label" translatable="yes">Applied changes will not take effect until web server is restarted</property>
+                    <property name="label" translatable="yes">Applied changes will not take effect until 
+web server is restarted</property>
                     <property name="justify">GTK_JUSTIFY_CENTER</property>
                     <property name="wrap">True</property>
                     <property name="ellipsize">PANGO_ELLIPSIZE_END</property>
