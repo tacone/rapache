@@ -60,11 +60,12 @@ def module_list ():
             mod = None
     return list
 """
-def module_list ():
-    list = {}
- 
+
+def get_module_descriptions():
     #load module descriptions
-    module_descriptions = {}    
+      
+
+    module_descriptions = {}  
     f = open( os.path.join(Configuration.GLADEPATH, "modules.xml") , "r")
     xml = f.read()
     f.close()
@@ -74,6 +75,13 @@ def module_list ():
         if node.firstChild:
             description = node.firstChild.nodeValue
             module_descriptions[name] = description
+
+    return module_descriptions
+    
+def module_list ():
+    list = {}
+ 
+    module_descriptions = get_module_descriptions()
  
     dirList = os.listdir( Configuration.MODS_AVAILABLE_DIR )
     dirList = [x for x in dirList if blacklisted( x ) == False ]
@@ -186,6 +194,23 @@ class ModuleModel:
         self.data['enabled'] = self.is_enabled()
         self.changed = True
      
+     
+    def get_description(self):
+        name = self.data['name']
+        if not self.data.has_key('description'):
+            module_descriptions = get_module_descriptions()
+            if module_descriptions.has_key(name):
+               self.data[ 'description' ] = module_descriptions[name]
+               return self.data[ 'description' ]
+            elif module_descriptions.has_key("mod_" +name):
+               self.data[ 'description' ] = module_descriptions["mod_" +name]
+               return self.data[ 'description' ]
+
+        return ""
+    
+    def get_backup_files(self):
+        return Shell.command.get_backup_files(  os.path.join(Configuration.MODS_AVAILABLE_DIR, self.data['name']+".conf"))
+    
     def get_source ( self ):
         return Shell.command.read_file( os.path.join(Configuration.MODS_AVAILABLE_DIR, self.data['name']+".load"))
 

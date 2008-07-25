@@ -34,7 +34,7 @@ import RapacheGtk.GuiUtils
 from RapacheCore.Module import *
 from RapacheGtk import GuiUtils
 import RapacheGtk.DesktopEnvironment as Desktop
-
+import RapacheCore.Shell
 
 def open_module_doc( name ):
         if ( name == None ): return False
@@ -58,11 +58,17 @@ class ModuleWindow:
         self.button_save = wtree.get_widget("button_save")
         self.error_area = wtree.get_widget("error_area")
         self.module_doc_button = wtree.get_widget("module_doc_button")
+        self.label_module = wtree.get_widget("label_module")
+        self.label_module_description = wtree.get_widget("label_module_description")
+        self.combobox_module_backups = wtree.get_widget("combobox_module_backups")
         
+        self.combobox_module_backups.set_active(0)
+
         signals = {
             "on_button_save_clicked"            : self.on_button_save_clicked,
             "on_button_cancel_clicked"          : self.on_button_cancel_clicked,
-            "on_module_doc_button_clicked"      : self.on_module_doc_button_clicked
+            "on_module_doc_button_clicked"      : self.on_module_doc_button_clicked,
+            "on_combobox_module_backups_changed" : self.on_combobox_module_backups_changed
         }
         wtree.signal_autoconnect(signals)            
         # add on destroy to quit loop
@@ -74,16 +80,28 @@ class ModuleWindow:
         
         GuiUtils.change_button_label( self.module_doc_button, 'Documentation' )
         GuiUtils.style_as_tooltip( self.error_area )
+
     def run(self):
         self.window.show()           
         gtk.main()
 
+    def on_combobox_module_backups_changed(self, widget):
+        print "changed"
+
+
     def load (self, name ):
-        self.window.set_title(name)
+       # self.window.set_title(name)
         self.module = ModuleModel ( name )
         #self.module.load()
         buf = self.text_view_module_conf.get_buffer()
         buf.set_text( self.module.get_configuration() )
+        
+        self.label_module.set_markup("<b><big>Apache2 Module : " + name + "</big></b>")
+        self.label_module_description.set_markup("<i>" + self.module.get_description() + "</i>")
+        
+        for file in self.module.get_backup_files():
+            self.combobox_module_backups.append_text("Backup " + file[0][-21:-4])
+        self.combobox_module_backups.append_text("Original version")
         
          # Load UI Plugins
         for plugin in self.parent.plugin_manager.plugins:
@@ -93,6 +111,11 @@ class ModuleWindow:
 				plugin.load_module_properties(self.notebook, self.module)
 			except Exception:
 				traceback.print_exc(file=sys.stdout)
+				
+				
+
+
+        
 
     def on_destroy(self, widget, data=None):
         gtk.main_quit()
