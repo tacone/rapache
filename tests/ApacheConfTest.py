@@ -213,7 +213,7 @@ class LineParserTest( unittest.TestCase ):
             self.assertEqual( result.rstrip(), expected.rstrip())
 
 class ParserTest ( unittest.TestCase ):
-    
+    pass
           
 if __name__ == "__main__":
     unittest.main()
