@@ -44,7 +44,7 @@ from RapacheGtk.ModuleGui import ModuleWindow
 from RapacheCore.PluginManager import PluginManager
 from RapacheGtk.ModuleGui import open_module_doc
 from RapacheCore.VirtualHost import *
-from RapacheGtk import easygui
+from RapacheGtk import ConfirmationWindow
 from RapacheGtk import GuiUtils
 from RapacheCore import Shell
 import VhostsTreeView
@@ -129,11 +129,10 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         name = self.vhosts_treeview.get_selected_line()
         if ( self.is_vhost_editable( name ) == False ): return False
         if ( name == None ): return False
-        result = easygui.message_box(
-            title='Delete '+name,
-            message="You are about to delete the following domain: \n\n"+name+"\n\nData won't be recoverable. Proceed ?",
-            buttons=('Ok', 'Cancel'))
-        if ( result != "Ok" ): return False
+        result = ConfirmationWindow.ask_confirmation(           
+            "You are about to delete the following domain: \n\n"+name+"\n\nData won't be recoverable. Proceed ?"
+            ,'VirtualHost deletion' )
+        if ( result != True ): return False
         site = VirtualHostModel( name )
         site.delete()
         self.vhosts_treeview.load()
