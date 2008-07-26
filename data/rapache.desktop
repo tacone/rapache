@@ -1,10 +1,9 @@
 [Desktop Entry]
-Encoding=UTF-8
 Name=rapache
 Comment=Simple tool for managing and configuring an apache2 instance
 TryExec=rapache
 Exec=rapache
 Icon=/usr/share/rapache/Glade/icon_cadsoft_eagle.svg
 Type=Application
-Categories=Application;System;
+Categories=System;
 
