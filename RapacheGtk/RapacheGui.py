@@ -27,7 +27,7 @@
 
 #TODO refuse to edit complex vhosts ( done ? )
 
-import gnome.ui
+#import gnome.ui
 import gobject
 import gtk
 import os
@@ -69,7 +69,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
 
         self.denormalized_virtual_hosts = {}
         self.plugin_manager = PluginManager()
-        gnome.init(APPNAME, APPVERSION)
+        #gnome.init(APPNAME, APPVERSION)
         self.gladefile = Configuration.GLADEPATH + "/" + "main.glade"  
         self.xml = gtk.glade.XML(self.gladefile)         
         #Create our dictionary and connect it
