@@ -147,10 +147,12 @@ class CommandHandler:
         if self.verbose >= 1:
             print "READING : " + path
         # TODO: add ssh handler
-        f = open(path, "r")
-        result = f.read()
-        f.close()
-        return result
+        if os.path.exists(path):
+            f = open(path, "r")
+            result = f.read()
+            f.close()
+            return result
+        return ""
     
     def write_file(self, path, content):
 
