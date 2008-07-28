@@ -33,12 +33,19 @@ import os
     
 import sys   
 import gksu2
+import gobject
+import md5
+import tempfile
 import getpass
 import subprocess
 import StringIO
 import sys
+import urllib
 from subprocess import *
 import traceback
+import time
+import glob
+import operator
 
 class CommandLogEntry:
 
@@ -51,17 +58,130 @@ class CommandLogEntry:
 
 class CommandHandler:
 
-    def __init__(self):
+    def __init__(self, ssh_server="localhost", ssh_port=None, ssh_username=None, ssh_password=None):
+       
         # Verboseness
         # 0 = No output
         # 1 = prints the command and its return code
         # 2 = Command output
+        self.auto_backup = False
         self.verbose = 0
         self.command_log = []
         # let's make the object stateful, no duplicate password
         # typing needed for our users
         self.__password = None
         
+        # SSH connection details     
+        self.ssh_server = ssh_server
+        self.ssh_port = ssh_port
+        self.ssh_username = ssh_username
+        self.ssh_password = ssh_password
+
+    def __get_backup_path(self, path):
+        # ~/.rapache/backup/server/file_path/datestamp.bak
+        backup_path = os.path.expanduser(os.path.join("~/.rapache/backup", self.ssh_server, path[1:]))
+        if not os.path.exists( os.path.dirname(backup_path) ):
+            os.makedirs(os.path.dirname(backup_path))
+        return backup_path
+    
+    # returns an array of [[path, file creation time]]
+    def get_backup_files(self, path):
+        backup_path = self.__get_backup_path(path)
+        flist = glob.glob(backup_path + " *.bak")
+        for i in range(len(flist)):
+            statinfo = os.stat(flist[i])
+            flist[i] = flist[i], statinfo.st_ctime
+        flist.sort(key=operator.itemgetter(1))
+        print len(flist)
+        return flist
+
+
+    def read_file_version(self, path, date_stamp):
+        backup_path = self.__get_backup_path(path)
+        path = backup_path + " " + date_stamp + ".bak"
+        if self.verbose >= 1:
+            print "READ BACKUP VERSION : " + path
+        f = open(path, "r")
+        content = f.read()
+        f.close()
+        return content
+
+    def create_backup(self, path, new_content):
+        existing_content = self.read_file(path)
+        backup_path = self.__get_backup_path(path)
+        backup_file = backup_path + " " +time.strftime("%y-%m-%d %H:%M:%S.bak", time.localtime() )
+
+        if existing_content:
+            new_content_md5 = md5.new(new_content).digest()
+            existing_content_md5 = md5.new(existing_content).digest()
+
+            if new_content_md5 != existing_content_md5:
+                # back up the file has changed
+
+                if self.verbose >= 1:
+                    print "CREATE BACKUP : " + backup_file
+                
+                f = open(backup_file, "w")
+                f.write(existing_content)
+                f.close()
+
+                # cleanup backups keep last N
+                N = 10
+                flist = self.get_backup_files(path)
+                # delete older entries                    
+                for i in range(0, len(flist) - N):
+                    if self.verbose >= 1:
+                        print "REMOVE BACKUP : " + flist[i][0]
+                    os.remove( flist[i][0] )
+                
+                return True # file existed and changed backup made
+                
+            return False # no change in file content
+        
+        if new_content:
+            return True # file dosnt exist but there is new content
+            
+        return False # file dosnt exist and no new content
+       
+    def read_file(self, path):
+        if self.verbose >= 1:
+            print "READING : " + path
+        # TODO: add ssh handler
+        if os.path.exists(path):
+            f = open(path, "r")
+            result = f.read()
+            f.close()
+            return result
+        return ""
+    
+    def write_file(self, path, content):
+
+        if self.create_backup(path, content):
+            
+            if self.verbose >= 1:
+                print "WRITING : " + path
+            
+            # Update local backup copy
+            local_path = self.__get_backup_path(path)
+            f = open(local_path, "w")
+            f.write(content)
+            f.close()
+
+            # copy file now using sudo
+            self.sudo_execute( ["cp", local_path, path] )
+
+    def listdir(self, path):
+        return os.listdir( path )
+       
+    def exists(self, path):
+        return os.path.exists(path)
+        
+    def readlink(self, path):
+        return os.readlink(path)
+           
+    def move(self, source, destination):
+        self.sudo_execute( ["mv", source, destination] )
+   
     def __get_password(self, description, prompt="Password: "):
         
         ctx = gksu2.Context()
@@ -189,7 +309,8 @@ class CommandHandler:
 
 # Look ma'! A singleton !
 command = CommandHandler()    
-    
+command.verbose = 1
+
 if __name__ == "__main__":
     c = CommandHandler()
     c.verbose = 2

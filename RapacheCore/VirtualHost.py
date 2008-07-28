@@ -18,7 +18,6 @@
 
 import sys
 import os
-import tempfile
 import re
 from RapacheCore import Configuration
 from RapacheCore.ApacheConf import *
@@ -40,7 +39,7 @@ def valid_domain_name ( name ):
 
 def is_denormalized_vhost ( fname ):
     try:   
-        flink = os.readlink( Configuration.SITES_ENABLED_DIR +"/"+fname )
+        flink = Shell.command.readlink( os.path.join(Configuration.SITES_ENABLED_DIR, fname))
         flink = os.path.join(os.path.dirname( Configuration.SITES_AVAILABLE_DIR ), flink)                        
         #no exceptions ? Means it's a link
         return True
@@ -48,20 +47,20 @@ def is_denormalized_vhost ( fname ):
         return False
     return False
 def is_not_normalizable( fname):
-     dest = Configuration.SITES_AVAILABLE_DIR + "/" + fname
-     return os.path.exists( dest )
+     dest = os.path.join(Configuration.SITES_AVAILABLE_DIR, fname)
+     return Shell.command.exists( dest )
  
 def normalize_vhost( fname ):
     print "Normalizing:", fname
-    orig = Configuration.SITES_ENABLED_DIR + "/" + fname
-    dest = Configuration.SITES_AVAILABLE_DIR + "/" + fname    
-    if ( os.path.exists( dest ) == True ):
+    orig = os.path.join(Configuration.SITES_ENABLED_DIR, fname)
+    dest = os.path.join(Configuration.SITES_AVAILABLE_DIR, fname)
+    if ( Shell.command.exists( dest ) == True ):
         print fname, "already exists in available dir. not even trying"
         return False
     command = ['mv',orig,dest]
     code, output, error = Shell.command.sudo_execute( command )
     return ( code == 0 )
-    return  os.path.exists( dest )
+    return  Shell.command.exists( dest )
     
 class VirtualHostModel:
     
@@ -191,16 +190,16 @@ class VirtualHostModel:
         
     def is_enabled ( self ):
         orig = self.data[ 'name' ]        
-        dirList=os.listdir(  Configuration.SITES_ENABLED_DIR )
+        dirList=Shell.command.listdir(  Configuration.SITES_ENABLED_DIR )
         for fname in dirList:
             try:                                
-                flink = os.readlink( Configuration.SITES_ENABLED_DIR +"/"+fname )               
+                flink = Shell.command.readlink( os.path.join(Configuration.SITES_ENABLED_DIR, fname) )               
                 flink = os.path.join(os.path.dirname( Configuration.SITES_ENABLED_DIR +"/" ), flink)
                 # please note debian features a nice set of
                 # mixed absolute and relative links. FREAKS !
                 # the added "/" is also necessary
                 flink = os.path.normpath(flink)               
-                if ( flink == Configuration.SITES_AVAILABLE_DIR+"/"+orig ):
+                if ( flink == os.path.join(Configuration.SITES_AVAILABLE_DIR, orig) ):
                     return True
             except:
                 pass
@@ -225,15 +224,17 @@ class VirtualHostModel:
     def delete( self ):
         "Deletes a VirtualHost configuration file"
         if ( self.is_enabled() ): self.toggle( False )
-        Shell.command.sudo_execute( [ 'rm', Configuration.SITES_AVAILABLE_DIR+'/'+self.data['name'] ])
+        Shell.command.sudo_execute( [ 'rm', os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['name']) ])
+
     def _create_complete_path ( self, complete_path ):
         print "Attempting to create: " + complete_path
         tokens = complete_path.split( '/' )
         del tokens[ 0 ]        
-        path = ''
+        path = '/'
         for piece in tokens:
-            path = path + '/' + piece
-            if ( os.path.exists( path ) == False ):
+            path = os.path.join(path, piece)
+            print path
+            if not Shell.command.exists( path ):
                 try:
                     Shell.command.sudo_execute( ["mkdir", path] )
                 except:
@@ -243,10 +244,9 @@ class VirtualHostModel:
         return True    
      
     def get_source ( self ):
-        file = open( Configuration.SITES_AVAILABLE_DIR+'/'+self.data['name'], 'r' )
-        content = file.read()
-        file.close()
-        return content
+        return Shell.command.read_file(os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['name']))
+        
+
     def update ( self, new_options, name ):
         print "updating virtual host", name
         #print new_options        
@@ -254,7 +254,7 @@ class VirtualHostModel:
         old_enabled = self.is_enabled()
         print "IS ENABLED", old_enabled
         parser = Parser()
-        parser.load(  Configuration.SITES_AVAILABLE_DIR+'/'+name )
+        parser.load( os.path.join(Configuration.SITES_AVAILABLE_DIR, name) )
         piece = VhostParser( parser )
         old_servername = piece.get_value( 'ServerName' )
         
@@ -280,7 +280,7 @@ class VirtualHostModel:
                 
         print "ServerName From",piece.get_value('ServerName' ),"to",new_options['ServerName']
         piece.set_value('ServerName', new_options['ServerName'] )                
-        complete_path = Configuration.SITES_AVAILABLE_DIR+'/'+ name 
+        complete_path = os.path.join(Configuration.SITES_AVAILABLE_DIR, name) 
         
         print "Writing.."
         print parser.get_source()
@@ -288,16 +288,16 @@ class VirtualHostModel:
         
         #if the servername coincides with the configuration filename
         #we try to stick with the convention
-        new_name = Configuration.SITES_AVAILABLE_DIR + "/"+ new_options['ServerName']
-        old_name = Configuration.SITES_AVAILABLE_DIR + "/"+ old_servername
+        new_name = os.path.join(Configuration.SITES_AVAILABLE_DIR, new_options['ServerName'])
+        old_name = os.path.join(Configuration.SITES_AVAILABLE_DIR, old_servername)
         print "old name", old_name
         print "new name", new_name
         
-        if old_name != new_name and os.path.exists( new_name ) == False:
+        if old_name != new_name and Shell.command.exists( new_name ) == False:
             print "Server name changed, updating conf filename"
             self.toggle( False )     
-            Shell.command.sudo_execute( [mv, old_name, new_name] )
-            if os.path.exists( new_name ) == True:
+            Shell.command.move( old_name, new_name )
+            if Shell.command.exists( new_name ) == True:
                 #success ! we need to reload vhost with the new name
                 self.load( new_options['ServerName'] )
                 #...so we can toogle it on again
@@ -309,16 +309,11 @@ class VirtualHostModel:
             else:
                 print "error! not created:", new_name
         return True
+        
     def _write(self, complete_path, content ):    
-        tempfilename = tempfile.mktemp()
-        print "creating temporary file "+tempfilename
-        logfile = open( tempfilename , 'w')
-        logfile.write( content )
-        logfile.close()
-        command = ['cp', tempfilename, complete_path ]
-        print "copying tempfile in the appropriate location: ",command
-        Shell.command.sudo_execute( command )
-                
+        print "copying tempfile in the appropriate location: " + complete_path
+        Shell.command.write_file(complete_path, content)
+         
     def create ( self, new_options ):                
         
         options = self.data
@@ -326,17 +321,17 @@ class VirtualHostModel:
         
         #as of creation-time name is not expected to be in options
         options['name'] = options[ 'ServerName' ]
-        complete_path = Configuration.SITES_AVAILABLE_DIR+'/'+options['name']
+        complete_path = os.path.join(Configuration.SITES_AVAILABLE_DIR, options['name'])
         
         print options               
         print "Creating virtualhost: "+options['name']
         print "Folder: "+options['DocumentRoot']
         
-        if ( os.path.exists( options['DocumentRoot'] ) == False ): 
+        if ( Shell.command.exists( options['DocumentRoot'] ) == False ): 
             print "Folder "+options['DocumentRoot']+" does not exist"        
             self._create_complete_path( options['DocumentRoot'] )
             
-        if ( os.path.exists( options['DocumentRoot'] ) == False ):
+        if ( Shell.command.exists( options['DocumentRoot'] ) == False ):
             self.error( "Could not create target folder" ) #TODO fix this
             return False
                        
@@ -344,7 +339,7 @@ class VirtualHostModel:
             self.error ( 'Bad domain name: '+options['ServerName'] )
             return False
         
-        if os.path.exists( complete_path ):
+        if Shell.command.exists( complete_path ):
             raise "VhostExists", 'Virtual host already exists :('
             #self.error( 'Virtual host already exists :(' )
             return False        
@@ -370,9 +365,9 @@ class VirtualHostModel:
         self._write( complete_path, "\n".join(parser.get_content() ) )
           
         if ( options[ 'hack_hosts' ] ):
-            Shell.command.sudo_execute ( [Configuration.APPPATH+'/hosts-manager', '-a', options['ServerName'] ] )
+            Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, "hosts-manager"), '-a', options['ServerName'] ] )
             for alias_name in options[ 'ServerAlias' ]:
-            	Shell.command.sudo_execute ( [Configuration.APPPATH+'/hosts-manager', '-a',alias_name ])
+            	Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, 'hosts-manager'), '-a',alias_name ])
         self.changed = True        
         self.toggle( True ) #activate by default 
             
