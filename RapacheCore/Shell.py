@@ -79,6 +79,17 @@ class CommandHandler:
         print len(flist)
         return flist
 
+
+    def read_file_version(self, path, date_stamp):
+        backup_path = self.__get_backup_path(path)
+        path = backup_path + " " + date_stamp + ".bak"
+        if self.verbose >= 1:
+            print "READ BACKUP VERSION : " + path
+        f = open(path, "r")
+        content = f.read()
+        f.close()
+        return content
+
     def create_backup(self, path, new_content):
         existing_content = self.read_file(path)
         backup_path = self.__get_backup_path(path)

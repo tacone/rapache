@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Fri Jul 25 16:35:36 2008 -->
+<!--Generated with glade3 3.4.5 on Mon Jul 28 15:01:27 2008 -->
 <glade-interface>
   <widget class="GtkDialog" id="dialog_edit_module">
     <property name="width_request">600</property>
@@ -16,95 +16,37 @@
         <property name="visible">True</property>
         <property name="spacing">2</property>
         <child>
-          <widget class="GtkHBox" id="hbox2">
+          <widget class="GtkVBox" id="vbox2">
             <property name="visible">True</property>
             <child>
-              <widget class="GtkVBox" id="vbox2">
+              <widget class="GtkHBox" id="hbox5">
                 <property name="visible">True</property>
                 <child>
-                  <widget class="GtkHBox" id="hbox5">
+                  <widget class="GtkLabel" id="label_module">
                     <property name="visible">True</property>
-                    <child>
-                      <widget class="GtkLabel" id="label_module">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">&lt;b&gt;module name&lt;/b&gt;</property>
-                        <property name="use_markup">True</property>
-                      </widget>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
+                    <property name="label" translatable="yes">&lt;b&gt;module name&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
+                    <property name="justify">GTK_JUSTIFY_FILL</property>
+                    <property name="selectable">True</property>
                   </widget>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">False</property>
-                  </packing>
                 </child>
                 <child>
-                  <widget class="GtkHBox" id="hbox3">
+                  <widget class="GtkLabel" id="label_module_description">
                     <property name="visible">True</property>
-                    <child>
-                      <widget class="GtkLabel" id="label_module_description">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">&lt;i&gt;module description&lt;/i&gt;</property>
-                        <property name="use_markup">True</property>
-                        <property name="wrap">True</property>
-                      </widget>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
+                    <property name="label" translatable="yes">&lt;i&gt;module description&lt;/i&gt;module descriptionmodule descriptionmodule description</property>
+                    <property name="use_markup">True</property>
+                    <property name="wrap">True</property>
+                    <property name="selectable">True</property>
                   </widget>
                   <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">False</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
               </widget>
             </child>
-            <child>
-              <widget class="GtkVBox" id="vbox3">
-                <property name="visible">True</property>
-                <child>
-                  <widget class="GtkButton" id="module_doc_button">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="label" translatable="yes">gtk-help</property>
-                    <property name="use_stock">True</property>
-                    <property name="response_id">0</property>
-                    <signal name="clicked" handler="on_module_doc_button_clicked"/>
-                  </widget>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-              </widget>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="padding">8</property>
-                <property name="pack_type">GTK_PACK_END</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
           </widget>
           <packing>
             <property name="expand">False</property>
-            <property name="fill">False</property>
             <property name="position">1</property>
           </packing>
         </child>
@@ -162,8 +104,49 @@
                         <signal name="changed" handler="on_combobox_module_backups_changed"/>
                       </widget>
                       <packing>
-                        <property name="padding">8</property>
                         <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkButton" id="button_restore_version">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="response_id">0</property>
+                        <signal name="clicked" handler="on_button_restore_version_clicked"/>
+                        <child>
+                          <widget class="GtkHBox" id="hbox6">
+                            <property name="visible">True</property>
+                            <child>
+                              <widget class="GtkImage" id="image3">
+                                <property name="visible">True</property>
+                                <property name="stock">gtk-clear</property>
+                              </widget>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">False</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <widget class="GtkLabel" id="label3">
+                                <property name="visible">True</property>
+                                <property name="label" translatable="yes">Restore</property>
+                              </widget>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">False</property>
+                                <property name="padding">8</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </widget>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="padding">8</property>
+                        <property name="position">2</property>
                       </packing>
                     </child>
                   </widget>
@@ -220,6 +203,37 @@
             <property name="position">3</property>
           </packing>
         </child>
+        <child>
+          <widget class="GtkHBox" id="hbox7">
+            <property name="visible">True</property>
+            <child>
+              <widget class="GtkLabel" id="label4">
+                <property name="visible">True</property>
+              </widget>
+            </child>
+            <child>
+              <widget class="GtkLinkButton" id="linkbutton1">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="label" translatable="yes">module documentation</property>
+                <property name="relief">GTK_RELIEF_NONE</property>
+                <property name="response_id">0</property>
+                <property name="uri">http://glade.gnome.org</property>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">4</property>
+          </packing>
+        </child>
         <child internal-child="action_area">
           <widget class="GtkHButtonBox" id="dialog-action_area1">
             <property name="visible">True</property>
@@ -235,6 +249,10 @@
                 <signal name="clicked" handler="on_button_cancel_clicked"/>
                 <accelerator key="Escape" modifiers="" signal="activate"/>
               </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+              </packing>
             </child>
             <child>
               <widget class="GtkButton" id="button_save">
@@ -250,6 +268,8 @@
                 <signal name="clicked" handler="on_button_save_clicked"/>
               </widget>
               <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
                 <property name="position">1</property>
               </packing>
             </child>

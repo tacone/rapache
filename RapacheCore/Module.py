@@ -217,6 +217,10 @@ class ModuleModel:
     def get_configuration ( self ):
         return Shell.command.read_file( os.path.join(Configuration.MODS_AVAILABLE_DIR, self.data['name']+".conf"))
 
+    def get_configuration_version( self, date_stamp):
+        return Shell.command.read_file_version( os.path.join(Configuration.MODS_AVAILABLE_DIR, self.data['name']+".conf"), date_stamp)
+
+
     def save_configuration (self, content):
         complete_path = os.path.join(Configuration.MODS_AVAILABLE_DIR, self.data['name']+".conf")
         self._write(complete_path, content)

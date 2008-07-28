@@ -68,7 +68,8 @@ class ModuleWindow:
             "on_button_save_clicked"            : self.on_button_save_clicked,
             "on_button_cancel_clicked"          : self.on_button_cancel_clicked,
             "on_module_doc_button_clicked"      : self.on_module_doc_button_clicked,
-            "on_combobox_module_backups_changed" : self.on_combobox_module_backups_changed
+            "on_combobox_module_backups_changed" : self.on_combobox_module_backups_changed,
+            "on_button_restore_version_clicked" : self.on_button_restore_version_clicked
         }
         wtree.signal_autoconnect(signals)            
         # add on destroy to quit loop
@@ -78,7 +79,7 @@ class ModuleWindow:
         self.text_view_module_conf.show()
         wtree.get_widget("text_view_module_conf_area").add(self.text_view_module_conf)
         
-        GuiUtils.change_button_label( self.module_doc_button, 'Documentation' )
+        #GuiUtils.change_button_label( self.module_doc_button, 'Documentation' )
         GuiUtils.style_as_tooltip( self.error_area )
 
     def run(self):
@@ -86,22 +87,43 @@ class ModuleWindow:
         gtk.main()
 
     def on_combobox_module_backups_changed(self, widget):
-        print "changed"
+        return
 
+    def on_button_restore_version_clicked(self, widget):
+        
+        if self.text_view_module_conf.get_buffer().get_modified():
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_OK_CANCEL, message_format="Are you sure, you will lose all your current changes")
+            result = md.run()
+            md.destroy()
+            if result != gtk.RESPONSE_OK:
+                return
+        
+        selected = self.combobox_module_backups.get_active()
+        
+        if selected == 0:
+            self.__set_module_conf( self.module.get_configuration() )
+        else:
+            value = self.combobox_module_backups.get_active_text()[7:]
+            self.__set_module_conf( self.module.get_configuration_version(value) )
+       
+    def __set_module_conf(self, text):
+        buf = self.text_view_module_conf.get_buffer()
+        buf.set_text( text )
+        buf.set_modified(False)
+        
 
     def load (self, name ):
        # self.window.set_title(name)
         self.module = ModuleModel ( name )
         #self.module.load()
-        buf = self.text_view_module_conf.get_buffer()
-        buf.set_text( self.module.get_configuration() )
+        self.__set_module_conf( self.module.get_configuration() )
         
         self.label_module.set_markup("<b><big>Apache2 Module : " + name + "</big></b>")
         self.label_module_description.set_markup("<i>" + self.module.get_description() + "</i>")
         
         for file in self.module.get_backup_files():
             self.combobox_module_backups.append_text("Backup " + file[0][-21:-4])
-        self.combobox_module_backups.append_text("Original version")
+        #self.combobox_module_backups.append_text("Original version")
         
          # Load UI Plugins
         for plugin in self.parent.plugin_manager.plugins:
@@ -112,10 +134,6 @@ class ModuleWindow:
 			except Exception:
 				traceback.print_exc(file=sys.stdout)
 				
-				
-
-
-        
 
     def on_destroy(self, widget, data=None):
         gtk.main_quit()
