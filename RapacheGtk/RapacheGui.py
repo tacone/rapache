@@ -1,5 +1,21 @@
 #!/usr/bin/env python
 
+# Rapache - Apache Configuration Tool
+# Copyright (C) 2008 Stefano Forenza,  Jason Taylor, Emanuele Gentili
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #TODO throw appropriate exceptions (bug: vhost already exist displays only 
 # after actually trying to create it's dir. check before )
 
@@ -11,7 +27,7 @@
 
 #TODO refuse to edit complex vhosts ( done ? )
 
-import gnome.ui
+#import gnome.ui
 import gobject
 import gtk
 import os
@@ -28,7 +44,7 @@ from RapacheGtk.ModuleGui import ModuleWindow
 from RapacheCore.PluginManager import PluginManager
 from RapacheGtk.ModuleGui import open_module_doc
 from RapacheCore.VirtualHost import *
-from RapacheGtk import easygui
+from RapacheGtk import ConfirmationWindow
 from RapacheGtk import GuiUtils
 from RapacheCore import Shell
 import VhostsTreeView
@@ -41,7 +57,7 @@ data = \
 [(False, "Loading", "please wait" )]
 
 APPNAME="Rapache"
-APPVERSION="0.5"
+APPVERSION="0.6"
 
 
 class MainWindow( RapacheCore.Observer.Observable ) :
@@ -53,7 +69,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
 
         self.denormalized_virtual_hosts = {}
         self.plugin_manager = PluginManager()
-        gnome.init(APPNAME, APPVERSION)
+        #gnome.init(APPNAME, APPVERSION)
         self.gladefile = Configuration.GLADEPATH + "/" + "main.glade"  
         self.xml = gtk.glade.XML(self.gladefile)         
         #Create our dictionary and connect it
@@ -113,11 +129,10 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         name = self.vhosts_treeview.get_selected_line()
         if ( self.is_vhost_editable( name ) == False ): return False
         if ( name == None ): return False
-        result = easygui.message_box(
-            title='Delete '+name,
-            message="You are about to delete the following domain: \n\n"+name+"\n\nData won't be recoverable. Proceed ?",
-            buttons=('Ok', 'Cancel'))
-        if ( result != "Ok" ): return False
+        result = ConfirmationWindow.ask_confirmation(           
+            "You are about to delete the following domain: \n\n"+name+"\n\nData won't be recoverable. Proceed ?"
+            ,'VirtualHost deletion' )
+        if ( result != True ): return False
         site = VirtualHostModel( name )
         site.delete()
         self.vhosts_treeview.load()
@@ -273,7 +288,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         dialog.set_name( APPNAME )
         dialog.set_version( APPVERSION )
         dialog.set_authors( ["Rapache Developers\nhttps://launchpad.net/~rapache-devel"] )
-        dialog.set_comments('Rapache is an Apache configurator for Debian/Gnome systems')
+        dialog.set_comments('Rapache is an Apache configurator for Ubuntu/Gnome systems')
         dialog.set_website('http://launchpad.net/rapache')
         dialog.run()
         dialog.destroy()
