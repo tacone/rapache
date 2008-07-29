@@ -32,6 +32,8 @@ import gobject
 import gtk
 import os
 import re
+import threading
+import time
 (
     COLUMN_FIXED,
     COLUMN_SEVERITY,
@@ -44,6 +46,7 @@ from RapacheGtk.ModuleGui import ModuleWindow
 from RapacheCore.PluginManager import PluginManager
 from RapacheGtk.ModuleGui import open_module_doc
 from RapacheCore.VirtualHost import *
+from RapacheCore.Apache import Apache2
 from RapacheGtk import ConfirmationWindow
 from RapacheGtk import GuiUtils
 from RapacheCore import Shell
@@ -59,6 +62,16 @@ data = \
 APPNAME="Rapache"
 APPVERSION="0.6"
 
+# Turn on gtk threading
+gtk.gdk.threads_init()
+
+# Define threaded attribute
+def threaded(f):
+	def wrapper(*args):
+		t = threading.Thread(target=f, args=args)
+		t.setDaemon(True) # wont keep app alive
+		t.start()
+	return wrapper
 
 class MainWindow( RapacheCore.Observer.Observable ) :
     """This is an Hello World Rapacheefication application"""
@@ -69,6 +82,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
 
         self.denormalized_virtual_hosts = {}
         self.plugin_manager = PluginManager()
+        self.apache = Apache2()
         #gnome.init(APPNAME, APPVERSION)
         self.gladefile = Configuration.GLADEPATH + "/" + "main.glade"  
         self.xml = gtk.glade.XML(self.gladefile)         
@@ -91,6 +105,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.xml.signal_autoconnect(dic)
         GuiUtils.change_button_label ( self.xml.get_widget( 'restart_apache' ), "Restart Apache" )
         GuiUtils.change_button_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
+        self.statusbar_server_status =  self.xml.get_widget( 'statusbar_server_status' )
         #hereby we create lists
         self.create_vhost_list()
         self.create_modules_list()
@@ -100,6 +115,33 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )    
         
+        # start status update
+        self.statusbar_server_status_context_id = self.statusbar_server_status.get_context_id("Apache Server Status") 
+        self.statusbar_server_status.push(context_id, "Attempting to connect to server")
+        self.update_server_status(True)
+        
+    @threaded    
+    def update_server_status(self, loop=False):
+           
+        while True:
+            status = self.apache.get_status()
+            if status == 0:
+                text = "Disconnected, Apache may be stopped"
+            if status == 1:
+                text = "Apache is running, but can not connect to web server"
+            if status == 2:
+                text  = "Connected, Apache is running"   
+                
+            gtk.gdk.threads_enter()
+            self.statusbar_server_status.pop(self.statusbar_server_status_context_id)
+            self.statusbar_server_status.push(self.statusbar_server_status_context_id, text)
+            gtk.gdk.threads_leave()
+            
+            if not loop:
+                break
+                
+            time.sleep( 3 )
+ 
     def on_button_hide_warning_clicked(self, widget):
         self.xml.get_widget( 'restart_apache_notice' ).hide()
         

@@ -3,10 +3,9 @@ import os
 import urllib
 import urllib2
 
-sys.path.insert(1, os.path.join(sys.path[0], os.path.pardir))
 from RapacheCore import Shell
 
-class Apache():
+class Apache2():
 
     def __init__(self):
         self.server = "localhost"
@@ -51,6 +50,3 @@ class Apache():
         Shell.command.sudo_execute(["apache2ctl", "restart"])
         return
  
-a = Apache()
-print a.is_running() 
-print a.is_reachable()    

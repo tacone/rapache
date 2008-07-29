@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Sun Jul 27 22:47:28 2008 -->
+<!--Generated with glade3 3.4.5 on Tue Jul 29 15:44:09 2008 -->
 <glade-interface>
-  <requires lib="bonobo"/>
   <widget class="GtkWindow" id="MainWindow">
     <property name="width_request">500</property>
     <property name="height_request">400</property>
@@ -346,7 +345,14 @@ web server is restarted</property>
                                   <placeholder/>
                                 </child>
                                 <child>
-                                  <placeholder/>
+                                  <widget class="GtkStatusbar" id="statusbar_server_status">
+                                    <property name="visible">True</property>
+                                    <property name="spacing">2</property>
+                                  </widget>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="position">2</property>
+                                  </packing>
                                 </child>
                               </widget>
                             </child>
