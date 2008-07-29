@@ -242,11 +242,16 @@ class VirtualHostModel:
                     return False                   
         print "Created path: " + path
         return True    
-     
+        
+        
+    def get_source_filename(self):
+         return os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['name'])
+    
     def get_source ( self ):
-        return Shell.command.read_file(os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['name']))
+        return Shell.command.read_file(self.get_source_filename())
+        
     def get_source_version ( self, timestamp ):
-        return Shell.command.read_file_version(os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['name']), timestamp)
+        return Shell.command.read_file_version(self.get_source_filename(), timestamp)
        
 
     def update ( self, new_options, name ):

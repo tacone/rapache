@@ -42,6 +42,7 @@ import traceback
 import time
 import glob
 import operator
+import Configuration
 
 class CommandLogEntry:
 
@@ -88,6 +89,7 @@ class CommandHandler:
             statinfo = os.stat(flist[i])
             flist[i] = flist[i], statinfo.st_ctime
         flist.sort(key=operator.itemgetter(1))
+        flist.reverse()
         return flist
 
     def read_file_version(self, path, date_stamp):
@@ -118,10 +120,9 @@ class CommandHandler:
                 f.close()
 
                 # cleanup backups keep last N - TODO - make a config option
-                N = 10
                 flist = self.get_backup_files(path)
                 # delete older entries                    
-                for i in range(0, len(flist) - N):
+                for i in range(Configuration.NUMBER_OF_BACKUPS, len(flist)):
                     if self.verbose >= 1:
                         print "REMOVE BACKUP : " + flist[i][0]
                     os.remove( flist[i][0] )

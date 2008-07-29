@@ -53,15 +53,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
 		self.combobox_log_level = None
 		self.checkbutton_server_signature = None
 		
-		self.log_levels = ["emerg", "alert", "crit", "error", "warn", "notice", "info", "debug"]
-	
-	# Customise the module properties window
-	def load_module_properties(self, notebook, module):
-		return
-
-	# Perform action on module properties save
-	def save_module_properties(self, module):
-		return
+		self.log_levels = ["emerg", "alert", "crit", "error", "warn", "notice", "info", "debug"]	
 	
 	# Customise the vhost properties window
 	def load_vhost_properties(self, notebook, vhost_data):

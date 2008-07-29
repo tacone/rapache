@@ -127,20 +127,23 @@ class MainWindow( RapacheCore.Observer.Observable ) :
            
         while True:
             status = self.apache.get_status()
-            text = "Disconnected, Apache may be stopped"
+            text = "Apache is stopped"
+            connection = "Connected to " + self.apache.server + ", "
             image = gtk.STOCK_NO
 
+            # TODO: need ssh fail message here some where...
+
             if status == 1:
-                text = "Connected, Warning can not connect via http"
+                text = "Warning can not contact apache"
                 image = gtk.STOCK_DIALOG_WARNING
             if status == 2:
-                text  = "Connected, Apache is running"   
+                text  = "Apache is running"   
                 image = gtk.STOCK_YES
                 
             gtk.gdk.threads_enter()
             self.image_apache_status.set_from_stock(image, -1)
             self.statusbar_server_status.pop(self.statusbar_server_status_context_id)
-            self.statusbar_server_status.push(self.statusbar_server_status_context_id, text)
+            self.statusbar_server_status.push(self.statusbar_server_status_context_id, connection + text)
             gtk.gdk.threads_leave()
             
             if not loop:
@@ -287,7 +290,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         if ( name == None ):
             self.xml.get_widget( 'delete_button' ).set_sensitive( False )
             self.xml.get_widget( 'edit_button' ).set_sensitive( False )
-            self.xml.get_widget( 'open_in_browser_button' ).set_sensitive( False )
+            self.xml.get_widget( 'surf_this_button' ).set_sensitive( False )
         else:
             editable = self.is_vhost_editable( name )
             self.xml.get_widget( 'delete_button' ).set_sensitive( editable )

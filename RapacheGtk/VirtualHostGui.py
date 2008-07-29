@@ -50,6 +50,8 @@ import RapacheGtk.GuiUtils
 from RapacheCore.VirtualHost import *
 from RapacheGtk import GuiUtils
 from EditDomainNameGui import EditDomainNameWindow
+import RapacheGtk.DesktopEnvironment as Desktop
+
         
 class VirtualHostWindow:
     
@@ -76,6 +78,8 @@ class VirtualHostWindow:
         self.notebook = wtree.get_widget("notebook")
         self.button_save = wtree.get_widget("button_save")
         self.error_area = wtree.get_widget("error_area")
+        self.label_path = wtree.get_widget("label_path")
+        
         signals = {
             "on_toolbutton_domain_add_clicked"       : self.on_toolbutton_domain_add_clicked,
             "on_toolbutton_domain_edit_clicked"     : self.on_toolbutton_domain_edit_clicked,
@@ -86,7 +90,8 @@ class VirtualHostWindow:
             "on_button_location_clicked"        : self.on_button_location_clicked,
             "on_entry_domain_focus_out_event"    : self.on_entry_domain_focus_out_event,
             "on_button_location_clear_clicked"    : self.on_button_location_clear_clicked,
-            "on_button_restore_version_clicked" : self.on_button_restore_version_clicked
+            "on_button_restore_version_clicked" : self.on_button_restore_version_clicked,
+            "on_linkbutton_documentation_clicked" : self.on_linkbutton_documentation_clicked
         }
         wtree.signal_autoconnect(signals)
         
@@ -113,6 +118,10 @@ class VirtualHostWindow:
 
         GuiUtils.style_as_tooltip( self.error_area )
         self.on_entry_domain_changed()
+        
+    def on_linkbutton_documentation_clicked(self, widget):
+        print widget.get_uri()
+        Desktop.open_url( widget.get_uri() )
         
     def on_button_restore_version_clicked(self, widget):
         buf = self.text_view_vhost_source.get_buffer()
@@ -179,7 +188,8 @@ class VirtualHostWindow:
         buf.set_text( self.vhost.get_source() )
         buf.set_modified(False)
         
-        self.vhost.get_backup_files().reverse()
+        self.label_path.set_text("File : " + self.vhost.get_source_filename() )
+        
         for file in self.vhost.get_backup_files():
             self.combobox_vhost_backups.append_text("Backup " + file[0][-21:-4])
 

@@ -23,4 +23,4 @@ MODS_ENABLED_DIR = SYSCONFDIR + '/mods-enabled'
 MODS_AVAILABLE_DIR = SYSCONFDIR + '/mods-available'
 APPPATH = '/usr/bin' #please fill at run-time
 GLADEPATH = '/usr/share/rapache/Glade' #please fill at run-time
-
+NUMBER_OF_BACKUPS = 10

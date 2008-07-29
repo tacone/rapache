@@ -11,7 +11,8 @@ class Apache2():
         self.server = "localhost"
 
     def get_status(self):
-        # 0 not running, 1 service started, 2 can get an http connection
+        # -1 no ssh connection, 0 not running, 1 service started, 2 can get an http connection
+        #TODO: ssh
         if not self.is_running():
             return 0
         if not self.is_reachable():

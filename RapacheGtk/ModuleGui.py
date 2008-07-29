@@ -77,7 +77,7 @@ class ModuleWindow:
         self.label_module = wtree.get_widget("label_module")
         self.label_module_description = wtree.get_widget("label_module_description")
         self.combobox_module_backups = wtree.get_widget("combobox_module_backups")
-        
+        self.label_path = wtree.get_widget("label_path")
         self.combobox_module_backups.set_active(0)
 
         signals = {
@@ -136,8 +136,7 @@ class ModuleWindow:
         
         self.label_module.set_markup("<b><big>Apache2 Module : " + name + "</big></b>")
         self.label_module_description.set_markup("<i>" + self.module.get_description() + "</i>")
-        
-        self.module.get_backup_files().reverse()
+        self.label_path.set_text( "File : " + self.module.get_configuration_file_name() )
         for file in self.module.get_backup_files():
             self.combobox_module_backups.append_text("Backup " + file[0][-21:-4])
 
