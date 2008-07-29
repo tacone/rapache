@@ -245,7 +245,9 @@ class VirtualHostModel:
      
     def get_source ( self ):
         return Shell.command.read_file(os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['name']))
-        
+    def get_source_version ( self, timestamp ):
+        return Shell.command.read_file_version(os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['name']), timestamp)
+       
 
     def update ( self, new_options, name ):
         print "updating virtual host", name
@@ -372,3 +374,6 @@ class VirtualHostModel:
         self.toggle( True ) #activate by default 
             
         return True
+        
+    def get_backup_files(self):
+            return Shell.command.get_backup_files(  os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['name']))

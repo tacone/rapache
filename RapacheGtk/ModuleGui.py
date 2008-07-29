@@ -137,10 +137,10 @@ class ModuleWindow:
         self.label_module.set_markup("<b><big>Apache2 Module : " + name + "</big></b>")
         self.label_module_description.set_markup("<i>" + self.module.get_description() + "</i>")
         
+        self.module.get_backup_files().reverse()
         for file in self.module.get_backup_files():
             self.combobox_module_backups.append_text("Backup " + file[0][-21:-4])
-        #self.combobox_module_backups.append_text("Original version")
-        
+
          # Load UI Plugins
         for plugin in self.parent.plugin_manager.plugins:
         	if plugin.module == name:

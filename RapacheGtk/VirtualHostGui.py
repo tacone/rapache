@@ -72,6 +72,7 @@ class VirtualHostWindow:
         self.toolbutton_domain_add = wtree.get_widget("toolbutton_domain_add")
         self.toolbutton_domain_edit = wtree.get_widget("toolbutton_domain_edit")
         self.toolbutton_domain_delete = wtree.get_widget("toolbutton_domain_delete")
+        self.combobox_vhost_backups = wtree.get_widget("combobox_vhost_backups")
         self.notebook = wtree.get_widget("notebook")
         self.button_save = wtree.get_widget("button_save")
         self.error_area = wtree.get_widget("error_area")
@@ -84,17 +85,17 @@ class VirtualHostWindow:
             "on_entry_domain_changed"              : self.on_entry_domain_changed,
             "on_button_location_clicked"        : self.on_button_location_clicked,
             "on_entry_domain_focus_out_event"    : self.on_entry_domain_focus_out_event,
-            "on_button_location_clear_clicked"    : self.on_button_location_clear_clicked
+            "on_button_location_clear_clicked"    : self.on_button_location_clear_clicked,
+            "on_button_restore_version_clicked" : self.on_button_restore_version_clicked
         }
         wtree.signal_autoconnect(signals)
+        
+        self.combobox_vhost_backups.set_active(0)
         
         self.text_view_vhost_source = GuiUtils.new_apache_sourceview()
         wtree.get_widget( 'text_view_vhost_source_area' ).add( self.text_view_vhost_source )
         self.text_view_vhost_source.set_editable( False )
         self.text_view_vhost_source.show()
-                
-        self.notebook.get_nth_page( 1 ).hide()
-        self.notebook.get_nth_page( 2 ).hide()
         
         # add on destroy to quit loop
         self.window.connect("destroy", self.on_destroy)
@@ -112,6 +113,26 @@ class VirtualHostWindow:
 
         GuiUtils.style_as_tooltip( self.error_area )
         self.on_entry_domain_changed()
+        
+    def on_button_restore_version_clicked(self, widget):
+        buf = self.text_view_vhost_source.get_buffer()
+        if buf.get_modified():
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_OK_CANCEL, message_format="Are you sure, you will lose all your current changes")
+            result = md.run()
+            md.destroy()
+            if result != gtk.RESPONSE_OK:
+                return
+        
+        selected = self.combobox_vhost_backups.get_active()
+        
+        if selected == 0:
+            buf.set_text( self.vhost.get_source() )
+        else:
+            value = self.combobox_vhost_backups.get_active_text()[7:]
+            buf.set_text( self.vhost.get_source_version(value) )
+            
+        buf.set_modified(False)
+        
         
     def run(self):
 
@@ -157,7 +178,9 @@ class VirtualHostWindow:
         buf = self.text_view_vhost_source.get_buffer()
         buf.set_text( self.vhost.get_source() )
         
-
+        self.vhost.get_backup_files().reverse()
+        for file in self.vhost.get_backup_files():
+            self.combobox_vhost_backups.append_text("Backup " + file[0][-21:-4])
 
     def get_domain (self):
         return self.entry_domain.get_text().strip()

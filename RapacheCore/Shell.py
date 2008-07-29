@@ -33,14 +33,10 @@ import os
     
 import sys   
 import gksu2
-import gobject
-import md5
 import tempfile
 import getpass
 import subprocess
-import StringIO
 import sys
-import urllib
 from subprocess import *
 import traceback
 import time
@@ -92,9 +88,7 @@ class CommandHandler:
             statinfo = os.stat(flist[i])
             flist[i] = flist[i], statinfo.st_ctime
         flist.sort(key=operator.itemgetter(1))
-        print len(flist)
         return flist
-
 
     def read_file_version(self, path, date_stamp):
         backup_path = self.__get_backup_path(path)
@@ -112,11 +106,9 @@ class CommandHandler:
         backup_file = backup_path + " " +time.strftime("%y-%m-%d %H:%M:%S.bak", time.localtime() )
 
         if existing_content:
-            new_content_md5 = md5.new(new_content).digest()
-            existing_content_md5 = md5.new(existing_content).digest()
 
-            if new_content_md5 != existing_content_md5:
-                # back up the file has changed
+            if new_content != existing_content:
+                # back up, the file has changed
 
                 if self.verbose >= 1:
                     print "CREATE BACKUP : " + backup_file
@@ -125,7 +117,7 @@ class CommandHandler:
                 f.write(existing_content)
                 f.close()
 
-                # cleanup backups keep last N
+                # cleanup backups keep last N - TODO - make a config option
                 N = 10
                 flist = self.get_backup_files(path)
                 # delete older entries                    
