@@ -100,12 +100,14 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "about_clicked" : self.display_about,
             "open_doc_button_clicked" : self.open_doc_button_clicked,
             "on_button_hide_warning_clicked" : self.on_button_hide_warning_clicked,
-            "quit" : self.quit }
+            "quit" : self.quit,
+            "on_menuitem_stop_apache_activate" : self.on_menuitem_stop_apache_activate }
         gtk.window_set_default_icon(self.xml.get_widget("MainWindow").get_icon())
         self.xml.signal_autoconnect(dic)
         GuiUtils.change_button_label ( self.xml.get_widget( 'restart_apache' ), "Restart Apache" )
         GuiUtils.change_button_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
         self.statusbar_server_status =  self.xml.get_widget( 'statusbar_server_status' )
+        self.image_apache_status =  self.xml.get_widget( 'image_apache_status' )
         #hereby we create lists
         self.create_vhost_list()
         self.create_modules_list()
@@ -117,7 +119,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
         # start status update
         self.statusbar_server_status_context_id = self.statusbar_server_status.get_context_id("Apache Server Status") 
-        self.statusbar_server_status.push(context_id, "Attempting to connect to server")
+        self.statusbar_server_status.push(self.statusbar_server_status_context_id, "Attempting to connect to server")
         self.update_server_status(True)
         
     @threaded    
@@ -125,14 +127,18 @@ class MainWindow( RapacheCore.Observer.Observable ) :
            
         while True:
             status = self.apache.get_status()
-            if status == 0:
-                text = "Disconnected, Apache may be stopped"
+            text = "Disconnected, Apache may be stopped"
+            image = gtk.STOCK_NO
+
             if status == 1:
-                text = "Apache is running, but can not connect to web server"
+                text = "Connected, Warning can not connect via http"
+                image = gtk.STOCK_DIALOG_WARNING
             if status == 2:
                 text  = "Connected, Apache is running"   
+                image = gtk.STOCK_YES
                 
             gtk.gdk.threads_enter()
+            self.image_apache_status.set_from_stock(image, -1)
             self.statusbar_server_status.pop(self.statusbar_server_status_context_id)
             self.statusbar_server_status.push(self.statusbar_server_status_context_id, text)
             gtk.gdk.threads_leave()
@@ -141,7 +147,10 @@ class MainWindow( RapacheCore.Observer.Observable ) :
                 break
                 
             time.sleep( 3 )
- 
+    def on_menuitem_stop_apache_activate(self, widget):
+        self.apache.stop()
+        self.update_server_status()
+        
     def on_button_hide_warning_clicked(self, widget):
         self.xml.get_widget( 'restart_apache_notice' ).hide()
         
@@ -261,8 +270,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.xml.get_widget( 'restart_apache_notice' ).show()
     def restart_apache ( self, widget ):
         print "Restarting apache on user's request"
-        Shell.command.sudo_execute( ['/etc/init.d/apache2', 'stop'] )
-        Shell.command.sudo_execute( ['/etc/init.d/apache2', 'start'] )
+        self.apache.restart()
+        self.update_server_status()
         self.xml.get_widget( 'restart_apache_notice' ).hide()
         self.refresh_lists()
     def is_vhost_editable (self, name):

@@ -35,7 +35,7 @@ class Apache2():
             # if we got an error code from the server then its running
             return True
         except urllib2.URLError, e:
-            # http error asume we could not connect
+            # http error assume we could not connect
             return False
 
     def start(self):
@@ -43,10 +43,10 @@ class Apache2():
         return
         
     def stop(self):
-        Shell.command.sudo_execute(["apache2ctl", "stop"])
+        Shell.command.sudo_execute(["apache2ctl", "graceful-stop"])
         return
-    
+       
     def restart(self):
-        Shell.command.sudo_execute(["apache2ctl", "restart"])
+        Shell.command.sudo_execute(["apache2ctl", "graceful"])
         return
  

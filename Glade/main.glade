@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Jul 29 15:44:09 2008 -->
+<!--Generated with glade3 3.4.5 on Tue Jul 29 21:05:54 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="MainWindow">
     <property name="width_request">500</property>
@@ -74,12 +74,26 @@
                     <child>
                       <widget class="GtkImageMenuItem" id="menuitem2">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">_Reload Apache</property>
+                        <property name="label" translatable="yes">_Restart Apache</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="please_restart"/>
                         <child internal-child="image">
                           <widget class="GtkImage" id="menu-item-image1">
                             <property name="stock">gtk-refresh</property>
+                          </widget>
+                        </child>
+                      </widget>
+                    </child>
+                    <child>
+                      <widget class="GtkImageMenuItem" id="menuitem_stop_apache">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">_Stop Apache</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_menuitem_stop_apache_activate"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="menu-item-image3">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-media-stop</property>
                           </widget>
                         </child>
                       </widget>
@@ -92,7 +106,7 @@
                     <child>
                       <widget class="GtkImageMenuItem" id="browse_sites_available">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">_Browse sites-available folder as root</property>
+                        <property name="label" translatable="yes">_Browse sites</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="browse_sites_available"/>
                         <child internal-child="image">
@@ -345,14 +359,7 @@ web server is restarted</property>
                                   <placeholder/>
                                 </child>
                                 <child>
-                                  <widget class="GtkStatusbar" id="statusbar_server_status">
-                                    <property name="visible">True</property>
-                                    <property name="spacing">2</property>
-                                  </widget>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="position">2</property>
-                                  </packing>
+                                  <placeholder/>
                                 </child>
                               </widget>
                             </child>
@@ -617,6 +624,33 @@ web server is restarted</property>
               </widget>
               <packing>
                 <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkHBox" id="hbox6">
+                <property name="visible">True</property>
+                <child>
+                  <widget class="GtkImage" id="image_apache_status">
+                    <property name="visible">True</property>
+                    <property name="stock">gtk-no</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkStatusbar" id="statusbar_server_status">
+                    <property name="visible">True</property>
+                    <property name="spacing">2</property>
+                  </widget>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </widget>
+              <packing>
+                <property name="expand">False</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </widget>
