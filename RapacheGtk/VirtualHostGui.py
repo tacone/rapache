@@ -177,6 +177,7 @@ class VirtualHostWindow:
         
         buf = self.text_view_vhost_source.get_buffer()
         buf.set_text( self.vhost.get_source() )
+        buf.set_modified(False)
         
         self.vhost.get_backup_files().reverse()
         for file in self.vhost.get_backup_files():
