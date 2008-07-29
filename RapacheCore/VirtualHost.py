@@ -224,7 +224,7 @@ class VirtualHostModel:
     def delete( self ):
         "Deletes a VirtualHost configuration file"
         if ( self.is_enabled() ): self.toggle( False )
-        Shell.command.sudo_execute( [ 'rm ', os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['name']) ])
+        Shell.command.sudo_execute( [ 'rm', os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['name']) ])
 
     def _create_complete_path ( self, complete_path ):
         print "Attempting to create: " + complete_path
