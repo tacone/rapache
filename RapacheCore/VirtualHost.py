@@ -67,7 +67,7 @@ def normalize_vhost( fname ):
 class VirtualHostModel():
     def __init__(self, name = None, plugin_manager = None):
         self.data = {
-              'ServerName': name        
+              'ServerName' : name        
             , 'DocumentRoot' : None            
         }
         
@@ -263,6 +263,9 @@ class VirtualHostModel():
         return True  
         
         def get_icon(self):
+        
+            
+        
             return
         
         
