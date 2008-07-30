@@ -207,7 +207,7 @@ class VirtualHostModel():
         
         return "\n".join(parser.get_content())      
                 
-    def save(self):
+    def save(self, content=None):
         print "Creating virtualhost: "+ self.data['ServerName']
         print "Folder: " + self.data['DocumentRoot']
         
@@ -227,7 +227,7 @@ class VirtualHostModel():
         if self.is_new:
             self.__name = self.data['ServerName']
         
-        Shell.command.write_file(self.get_source_filename(), self.__update())
+        Shell.command.write_file(self.get_source_filename(), self.__update(content))
           
         if self.hack_hosts:
             Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, "hosts-manager"), '-a', self.data['ServerName'] ] )

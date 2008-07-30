@@ -134,6 +134,8 @@ class VirtualHostWindow:
             self.save()
             buf = self.text_view_vhost_source.get_buffer()
             text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
+            # TODO: Remove this line !! hack to stop double ups from parser
+            text = text.replace("\n\n\n", "\n\n").replace("\n\n\n", "\n\n")
             buf.set_text( text )
             buf.set_modified(False) 
             pass
@@ -311,7 +313,11 @@ class VirtualHostWindow:
             
     def on_button_save_clicked(self, widget):
         self.save()
-        self.vhost.save()
+        
+        # save over buffer content
+        buf = self.text_view_vhost_source.get_buffer()
+        text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
+        self.vhost.save(text)
         
         #self.parent.create_vhost_list()        
         self.parent.refresh_vhosts()
