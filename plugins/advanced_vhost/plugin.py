@@ -42,11 +42,6 @@ class AdvancedVhostPlugin(PluginBaseObject):
 		# Define what additional config should be read from vhost file
 		self.vhosts_config = { "ServerAdmin" : 0, "LogLevel" : 0, "ErrorLog" : 0, "ServerSignature" : 0 } # 0 value | 1 options
 		
-		# Get glade file XML
-		f = open( os.path.join(self.path, "vhost.glade") ,"r")
-		self.glade_vhost_xml =  f.read()
-		f.close()
-		
 		# Controls
 		self.entry_admin_email = None
 		self.entry_log_location = None
@@ -55,10 +50,14 @@ class AdvancedVhostPlugin(PluginBaseObject):
 		
 		self.log_levels = ["emerg", "alert", "crit", "error", "warn", "notice", "info", "debug"]	
 	
-	# Customise the vhost properties window
-	def load_vhost_properties(self, notebook, vhost_data):
-		label = gtk.Label("Advanced")
-		
+	
+	def init_vhost_properties(self, notebook):
+	
+	    # Get glade file XML
+		f = open( os.path.join(self.path, "vhost.glade") ,"r")
+		self.glade_vhost_xml =  f.read()
+		f.close()
+			
 		# Remember you will need to recreate tree everytime the window loads
 		wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "table_advanced_vhost")
 		table_advanced_vhost = wtree.get_widget("table_advanced_vhost")	
@@ -66,6 +65,18 @@ class AdvancedVhostPlugin(PluginBaseObject):
 		self.entry_log_location = wtree.get_widget("entry_log_location")	
 		self.combobox_log_level = wtree.get_widget("combobox_log_level")
 		self.checkbutton_server_signature = wtree.get_widget("checkbutton_server_signature")
+		
+    	label = gtk.Label("Advanced")
+		notebook.insert_page(table_advanced_vhost, label)
+		
+		# make sure to show items
+		label.show()
+		table_advanced_vhost.show()
+		
+		return True
+		
+	# Customise the vhost properties window
+	def load_vhost_properties(self, vhost_data):
 				
 		if vhost_data["ServerAdmin"]:
 			self.entry_admin_email.set_text(vhost_data["ServerAdmin"])
@@ -76,12 +87,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
 		if vhost_data["ServerSignature"]:
 			if vhost_data["ServerSignature"].lower() != "off":
 				self.checkbutton_server_signature.set_active(True)
-					
-		notebook.insert_page(table_advanced_vhost, label)
-		
-		# make sure to show items
-		label.show()
-		table_advanced_vhost.show()
+
 		return
 		
 	# Perform action on vhost properties save

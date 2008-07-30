@@ -217,7 +217,7 @@ class VirtualHostWindow:
         
         for plugin in self.parent.plugin_manager.plugins:
         	try:
-        	    if plugin.is_enabled():      	        
+        	    if plugin.is_enabled():          
         	        plugin.load_vhost_properties(self.notebook, site.data)
     	        	self.plugins.append(plugin)
         	except Exception:

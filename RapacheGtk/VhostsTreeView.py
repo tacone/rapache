@@ -66,7 +66,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
                 markup = site_template \
                 % ( site.data['ServerName'] , site.data[ 'DocumentRoot' ] )
             else:
-                markup = site_unparsable_template % site.data['name']
+                markup = site_unparsable_template % site.data['ServerName']
             iter = lstore.append()
             lstore.set(iter,
                 COLUMN_FIXED, site.enabled,
@@ -135,14 +135,14 @@ class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
 
         for idx in sorted( self.items ):            
             site = self.items[ idx ]
-            normalizable = not is_not_normalizable(site.data['name'])
-            markup = site_template % site.data['name']
+            normalizable = not is_not_normalizable(site.data['ServerName'])
+            markup = site_template % site.data['ServerName']
             if ( normalizable == False ):
                 markup = markup + " CANNOT FIX"
             iter = lstore.append()
             lstore.set(iter,
                 COLUMN_FIXED, normalizable,
-                COLUMN_SEVERITY, site.data['name'],
+                COLUMN_SEVERITY, site.data['ServerName'],
                 COLUMN_MARKUP, markup 
                 )
     def toggled_callback(self, *args, **kwargs):
