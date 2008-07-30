@@ -70,7 +70,7 @@ class VirtualHostModel():
               'ServerName' : name        
             , 'DocumentRoot' : None            
         }
-        
+        self.__content = ""        
         self.__name = name # save the original name
         self.changed = False
         self.is_new = name == "" or not Shell.command.exists( self.get_source_filename() )
@@ -90,8 +90,8 @@ class VirtualHostModel():
     def get_source ( self ):
         return Shell.command.read_file(self.get_source_filename())
         
-    def get_source_generated( self ):
-        return self.__update()
+    def get_source_generated( self, content=None ):
+        return self.__update(content)
         
     def get_source_filename(self):
          return os.path.join(Configuration.SITES_AVAILABLE_DIR, self.__name)
@@ -178,9 +178,16 @@ class VirtualHostModel():
         self.data.update( options )
         return True
     
-    def __update(self):
+    def __update(self, content=None):
         parser = Parser()
-        parser.set_content_from_string( VHOST_TEMPLATE )
+        if not content:
+            if self.is_new:
+                parser.set_content_from_string( VHOST_TEMPLATE )
+            else:
+                 parser.load( self.get_source_filename() )
+        else:
+             parser.set_content_from_string(content)
+
         piece = VhostParser( parser )
 
         # Get a bit more dynamic with it

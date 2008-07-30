@@ -123,6 +123,7 @@ class VirtualHostWindow:
         	    if plugin.is_enabled():      	        
         	        plugin.init_vhost_properties(self.notebook)
     	        	self.plugins.append(plugin)
+    	        	print "BOOM:"
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
         
@@ -132,7 +133,8 @@ class VirtualHostWindow:
             # how to update this.....
             self.save()
             buf = self.text_view_vhost_source.get_buffer()
-            buf.set_text( self.vhost.get_source_generated() )
+            text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
+            buf.set_text( text )
             buf.set_modified(False) 
             pass
         else:
