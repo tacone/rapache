@@ -165,7 +165,25 @@ class CommandHandler:
 
     def listdir(self, path):
         return os.listdir( path )
-       
+
+    def create_complete_path ( self, complete_path ):
+        if self.verbose >= 1:
+            print "Creating Path: " + complete_path
+        tokens = complete_path.split( '/' )
+        del tokens[ 0 ]        
+        path = '/'
+        for piece in tokens:
+            path = os.path.join(path, piece)
+            print path
+            if not self.exists( path ):
+                try:
+                    self.sudo_execute( ["mkdir", path] )
+                except:
+                    print "error on creating path"+path
+                    return False                   
+        return True 
+
+
     def exists(self, path):
         return os.path.exists(path)
         
@@ -302,7 +320,7 @@ class CommandHandler:
 
 # Look ma'! A singleton !
 command = CommandHandler()    
-command.verbose = 1
+#command.verbose = 1
 
 if __name__ == "__main__":
     c = CommandHandler()

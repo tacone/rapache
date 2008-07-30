@@ -149,7 +149,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             if not loop:
                 break
                 
-            time.sleep( 3 )
+            time.sleep( Configuration.TEST_CONNECTION_INTERVAL )
+            
     def on_menuitem_stop_apache_activate(self, widget):
         self.apache.stop()
         self.update_server_status()

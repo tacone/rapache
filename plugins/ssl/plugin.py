@@ -11,8 +11,6 @@ try:
 except:
     sys.exit(1)
 
-
-
 class AdvancedVhostPlugin(PluginBaseObject):
 
 	def __init__(self, path):

@@ -91,7 +91,8 @@ class VirtualHostWindow:
             "on_entry_domain_focus_out_event"    : self.on_entry_domain_focus_out_event,
             "on_button_location_clear_clicked"    : self.on_button_location_clear_clicked,
             "on_button_restore_version_clicked" : self.on_button_restore_version_clicked,
-            "on_linkbutton_documentation_clicked" : self.on_linkbutton_documentation_clicked
+            "on_linkbutton_documentation_clicked" : self.on_linkbutton_documentation_clicked,
+            "on_notebook_switch_page" : self.on_notebook_switch_page
         }
         wtree.signal_autoconnect(signals)
         
@@ -99,7 +100,6 @@ class VirtualHostWindow:
         
         self.text_view_vhost_source = GuiUtils.new_apache_sourceview()
         wtree.get_widget( 'text_view_vhost_source_area' ).add( self.text_view_vhost_source )
-        self.text_view_vhost_source.set_editable( False )
         self.text_view_vhost_source.show()
         
         # add on destroy to quit loop
@@ -119,6 +119,26 @@ class VirtualHostWindow:
         GuiUtils.style_as_tooltip( self.error_area )
         self.on_entry_domain_changed()
         
+        for plugin in self.parent.plugin_manager.plugins:
+        	try:
+        	    if plugin.is_enabled():      	        
+        	        plugin.init_vhost_properties(self.notebook)
+    	        	self.plugins.append(plugin)
+        	except Exception:
+        		traceback.print_exc(file=sys.stdout)
+        
+    def on_notebook_switch_page(self, notebook, page, page_num):
+        # Assume for now it always page number 1
+        if page_num == 1:
+            # how to update this.....
+            self.save()
+            buf = self.text_view_vhost_source.get_buffer()
+            buf.set_text( self.vhost.get_source_generated() )
+            buf.set_modified(False) 
+            pass
+        else:
+            self.reload()
+
     def on_linkbutton_documentation_clicked(self, widget):
         print widget.get_uri()
         Desktop.open_url( widget.get_uri() )
@@ -151,24 +171,39 @@ class VirtualHostWindow:
         else:
             # load default  
             site = VirtualHostModel( "", self.parent.plugin_manager)
-            
-        for plugin in self.parent.plugin_manager.plugins:
-        	try:
-        	    if plugin.is_enabled():      	        
-        	        plugin.load_vhost_properties(self.notebook, site.data)
-    	        	self.plugins.append(plugin)
-        	except Exception:
-        		traceback.print_exc(file=sys.stdout)
 
         self.window.show()           
         gtk.main()
 
     def load (self, name ):
-        self.vhost = VirtualHostModel( name )
+        self.vhost = VirtualHostModelNew( name )
         self.create_new = False
+        self.name = name
         try:
             self.vhost.load(False, self.parent.plugin_manager)
-            print self.vhost.data
+        except "VhostUnparsable":            
+            pass
+        
+        self._load()
+        
+        for file in self.vhost.get_backup_files():
+            self.combobox_vhost_backups.append_text("Backup " + file[0][-21:-4])
+
+        self.label_path.set_text("File : " + self.vhost.get_source_filename() ) 
+         
+    def reload(self):
+    
+        buf = self.text_view_vhost_source.get_buffer()
+        try:
+            self.vhost.load_from_string( buf.get_text(buf.get_start_iter(), buf.get_end_iter()), self.parent.plugin_manager)
+        except "VhostUnparsable":            
+            pass     
+         
+        self._load()
+        
+    def _load(self):
+        
+        try:
             #self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
             server_name = self.vhost.data[ 'ServerName' ] 
             if ( server_name != None ):
@@ -177,6 +212,7 @@ class VirtualHostWindow:
             if ( document_root != None ):
                 self.entry_location.set_text( document_root )
             server_alias = self.vhost.data[ 'ServerAlias' ]
+            self.treeview_domain_store.clear()
             if ( server_alias != None ): 
                 for domain in server_alias:
                     self.treeview_domain_store.append((domain, None))            
@@ -184,14 +220,13 @@ class VirtualHostWindow:
         except "VhostUnparsable":            
             pass
         
-        buf = self.text_view_vhost_source.get_buffer()
-        buf.set_text( self.vhost.get_source() )
-        buf.set_modified(False)
-        
-        self.label_path.set_text("File : " + self.vhost.get_source_filename() )
-        
-        for file in self.vhost.get_backup_files():
-            self.combobox_vhost_backups.append_text("Backup " + file[0][-21:-4])
+        for plugin in self.parent.plugin_manager.plugins:
+        	try:
+        	    if plugin.is_enabled():      	        
+        	        plugin.load_vhost_properties(self.notebook, site.data)
+    	        	self.plugins.append(plugin)
+        	except Exception:
+        		traceback.print_exc(file=sys.stdout)
 
     def get_domain (self):
         return self.entry_domain.get_text().strip()
@@ -278,47 +313,34 @@ class VirtualHostWindow:
         return  
             
     def on_button_save_clicked(self, widget):
+        self.save()
+        self.vhost.save()
+        
+        #self.parent.create_vhost_list()        
+        self.parent.refresh_vhosts()
+        self.parent.please_restart()
+        self.window.destroy()
+        
+    def save(self):
         if self.entry_location.get_text() == "" and self.create_new:
             self.set_default_values_from_domain( True )
         
-        options = {}
-        options[ 'ServerAlias' ] =  []
-        options[ 'ServerName' ] = self.entry_domain.get_text()
-        options[ 'hack_hosts' ] = self.checkbutton_hosts.get_active()                
-        options[ 'DocumentRoot' ] = self.entry_location.get_text()
-        options[ 'ServerAlias' ] = self.get_server_aliases_list()
-
+        self.vhost.data[ 'ServerAlias' ] =  []
+        self.vhost.data[ 'ServerName' ] = self.entry_domain.get_text()
+        self.vhost.data[ 'DocumentRoot' ] = self.entry_location.get_text()
+        self.vhost.data[ 'ServerAlias' ] = self.get_server_aliases_list()
+        
+        self.hack_hosts = self.checkbutton_hosts.get_active()      
+        
 	    # Save plugins
         if self.plugins:
             for plugin in self.plugins:
                 try:
                     if plugin.is_enabled():
-                        plugin.save_vhost_properties(options)
+                        plugin.save_vhost_properties(self.vhost.data)
                 except Exception:
                     traceback.print_exc(file=sys.stdout) 
-
-        print options
-        
-        try:
-            if ( self.create_new ):
-                site = VirtualHostModel( options[ 'ServerName' ] )
-                site.create ( options )
-            else:
-                name = self.vhost.data['name']
-                print "Current name:", name
-                site = VirtualHostModel( name )
-                site.update( options, name )
-
-            
-            #self.parent.create_vhost_list()        
-            self.parent.refresh_vhosts()
-            self.parent.please_restart()
-            self.window.destroy()
-        except "VhostExists":
-           print "========================"
-           self.show_error( "A virtual host with the same name already exists" )     
-        
-                         
+               
     def on_button_cancel_clicked(self, widget):
         self.window.destroy()
         return    
