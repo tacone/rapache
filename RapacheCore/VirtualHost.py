@@ -64,7 +64,7 @@ def normalize_vhost( fname ):
 
 
 # Replacment that has a bit of state
-class VirtualHostModelNew():
+class VirtualHostModel():
     def __init__(self, name = None, plugin_manager = None):
         self.data = {
               'ServerName': name        
@@ -73,10 +73,11 @@ class VirtualHostModelNew():
         
         self.__name = name # save the original name
         self.changed = False
-        self.is_new = not Shell.command.exists( self.get_source_filename() )
+        self.is_new = name == "" or not Shell.command.exists( self.get_source_filename() )
         self.enabled = self.is_enabled()
         self.hack_hosts = False
-        
+        self.parsable = True
+
         # Init plugin values so the keys exist
         if plugin_manager:
         	for plugin in plugin_manager.plugins:
@@ -150,7 +151,9 @@ class VirtualHostModelNew():
          	return False
         domain_name = piece.get_value( 'ServerName' )
         if domain_name == None:
-         	self.parsable = False
+            self.parsable = False
+            if self.__name == "default":  
+                domain_name = self.__name
          	#return False
         options[ 'ServerName' ] = domain_name
         options[ 'ServerAlias' ] = piece.get_options( 'ServerAlias' )
@@ -212,7 +215,10 @@ class VirtualHostModelNew():
         if ( valid_domain_name( self.data['ServerName'] ) == False ):
             self.error ( 'Bad domain name: '+ self.data['ServerName'] )
             return False
-
+        
+        # if new then make sure to update name before saving
+        if self.is_new:
+            self.__name = self.data['ServerName']
         
         Shell.command.write_file(self.get_source_filename(), self.__update())
           
@@ -226,6 +232,7 @@ class VirtualHostModelNew():
             self.toggle( True ) #activate by default 
             self.is_new = False
         else:
+            # If already existed may need to rename the file
             
             old_enabled = self.is_enabled()
             
@@ -254,9 +261,20 @@ class VirtualHostModelNew():
                     print "error! not created:", new_name  
                     
         return True  
+        
+        def get_icon(self):
             
         
-class VirtualHostModel:
+        
+            
+    def delete( self ):
+        "Deletes a VirtualHost configuration file"
+        if not self.is_new:
+            if ( self.is_enabled() ): 
+                self.toggle( False )
+            Shell.command.sudo_execute( [ 'rm', self.get_source_filename() ])
+
+class VirtualHostModelOld:
     
     def __init__(self, name = None, plugin_manager = None):
         self.defaults = {

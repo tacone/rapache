@@ -58,7 +58,6 @@ class VirtualHostWindow:
     def __init__ ( self, parent = None):
            
         self.vhost = None
-        self.create_new = True
         self.parent = parent
         self.plugins = []
 
@@ -176,14 +175,8 @@ class VirtualHostWindow:
         gtk.main()
 
     def load (self, name ):
-        self.vhost = VirtualHostModelNew( name )
-        self.create_new = False
-        self.name = name
-        try:
-            self.vhost.load(False, self.parent.plugin_manager)
-        except "VhostUnparsable":            
-            pass
-        
+        self.vhost = VirtualHostModel( name )
+
         self._load()
         
         for file in self.vhost.get_backup_files():
@@ -211,7 +204,9 @@ class VirtualHostWindow:
             document_root = self.vhost.data[ 'DocumentRoot' ] 
             if ( document_root != None ):
                 self.entry_location.set_text( document_root )
-            server_alias = self.vhost.data[ 'ServerAlias' ]
+            server_alias = None
+            if (self.vhost.data.has_key("ServerAlias")):
+                server_alias = self.vhost.data[ 'ServerAlias' ]
             self.treeview_domain_store.clear()
             if ( server_alias != None ): 
                 for domain in server_alias:
@@ -322,7 +317,7 @@ class VirtualHostWindow:
         self.window.destroy()
         
     def save(self):
-        if self.entry_location.get_text() == "" and self.create_new:
+        if self.entry_location.get_text() == "" and self.vhost.is_new:
             self.set_default_values_from_domain( True )
         
         self.vhost.data[ 'ServerAlias' ] =  []

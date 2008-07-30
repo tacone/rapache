@@ -52,29 +52,25 @@ class VhostsTreeView ( ConfFilesTreeView ):
         
         lstore = self._reset_model()
             
-        data = []          
+        data = []
         dirList=os.listdir( Configuration.SITES_AVAILABLE_DIR )
         dirList = [x for x in dirList if self._blacklisted( x ) == False ]            
         for fname in  dirList :                        
             site = VirtualHostModel( fname )
-            try:
-                site.load()
-            except "VhostUnparsable":
-                pass
-            self.items[ fname ] = site
-            site = None
+            if not site.is_new:
+                self.items[ fname ] = site
                             
         for idx in sorted( self.items ):
             site = self.items[ idx ]
             if ( site.parsable ):
                 markup = site_template \
-                % ( site.data['name'] , site.data[ 'DocumentRoot' ] )
+                % ( site.data['ServerName'] , site.data[ 'DocumentRoot' ] )
             else:
                 markup = site_unparsable_template % site.data['name']
             iter = lstore.append()
             lstore.set(iter,
-                COLUMN_FIXED, site.data['enabled'],
-                COLUMN_SEVERITY, site.data['name'],
+                COLUMN_FIXED, site.enabled,
+                COLUMN_SEVERITY, site.data['ServerName'],
                 COLUMN_MARKUP, markup )
 
     #TODO: warning ! This function get's called even on mousehover
@@ -86,13 +82,16 @@ class VhostsTreeView ( ConfFilesTreeView ):
         cell.set_property('pixbuf', pixbuf)"""                
         favicon = os.path.join( Configuration.GLADEPATH, 'browser.png' )
         fname = model.get_value(iter, COLUMN_SEVERITY )
-        site = self.items[ fname ]
-        if site.data['DocumentRoot'] != None:
-            custom_favicon = os.path.join(os.path.dirname( site.data['DocumentRoot']+"/" ), "favicon.ico")                                                    
-            if ( os.path.exists( custom_favicon ) ): favicon = custom_favicon
-            
-        pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
-        cell.set_property("pixbuf", pixbuf)
+        print COLUMN_SEVERITY
+        print fname
+        if fname:
+            site = self.items[ fname ]
+            if site.data['DocumentRoot'] != None:
+                custom_favicon = os.path.join(os.path.dirname( site.data['DocumentRoot']+"/" ), "favicon.ico")                                                    
+                if ( os.path.exists( custom_favicon ) ): favicon = custom_favicon
+                
+            pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
+            cell.set_property("pixbuf", pixbuf)
         
     def __fixed_toggled(self, cell, path, treeview):        
         # get toggled iter        
@@ -109,7 +108,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
         # set new value        
         site = VirtualHostModel( name )
         site.toggle( fixed )
-        model.set(iter, COLUMN_FIXED, site.data['enabled'] )        
+        model.set(iter, COLUMN_FIXED, site.enabled )        
         if ( site.changed ):
             self.raise_event( 'please_restart_apache' )                
 gobject.type_register (VhostsTreeView)

@@ -171,7 +171,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     
     def new_button_clicked(self, widget):
         new_vhost_window = VirtualHostWindow ( self )
-        #new_vhost_window.load()
+        new_vhost_window.load("")
         new_vhost_window.run()
     def edit_button_clicked(self, widget, notused = None, notused2 = None):         
         name = self.vhosts_treeview.get_selected_line()
