@@ -263,7 +263,7 @@ class VirtualHostModel():
         return True  
         
         def get_icon(self):
-            
+            return
         
         
             
