@@ -54,11 +54,26 @@ class Parser (Observable):
         self.observer.register(self)
         
     def load(self, filename ):
+        """Loads a configuration file in the parser"""
         self.filename = filename
         file = open ( filename, 'r' )
         self.content = file.readlines()
         file.close()
         return self.content
+    
+    def dump_values (self ):
+        """Dumps every directive/value into a key/value dictionary. Newer 
+        keys override older ones"""
+        dict = {}
+        for line in self.content:            
+            key = self.parser.get_directive( line )
+            if key:                
+                try:
+                    value = self.parser.get_value(line)
+                    dict[ key ] = value
+                except :                    
+                    dict[ key ] = "#ERROR"
+        return dict
     
     def get_value(self, name):
         line = self.get_directive(name)    
@@ -303,7 +318,14 @@ class LineParser:
         value = self.value_unescape( value )
         
         return value
-
+    def get_comment (self, line ):
+        line = line.lstrip()
+        if not line.startswith('#'): return False
+        return line.lstrip('#')
+    def get_indentation (self, line ):
+        tokens = self.tokenize( line );        
+        if ( tokens == False ): return False
+        return tokens[ 0 ]
     def get_directive ( self, line ):
         tokens = self.tokenize( line );        
         if ( tokens == False ): return False
