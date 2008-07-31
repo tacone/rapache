@@ -78,6 +78,8 @@ class VirtualHostWindow:
         self.button_save = wtree.get_widget("button_save")
         self.error_area = wtree.get_widget("error_area")
         self.label_path = wtree.get_widget("label_path")
+        self.message_text = wtree.get_widget("message_text")
+        self.error_area = wtree.get_widget("error_area")
         
         signals = {
             "on_toolbutton_domain_add_clicked"       : self.on_toolbutton_domain_add_clicked,
@@ -312,20 +314,33 @@ class VirtualHostWindow:
         return  
             
     def on_button_save_clicked(self, widget):
-        self.save()
+        res = self.save()
         
         # save over buffer content
         buf = self.text_view_vhost_source.get_buffer()
         text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
         self.vhost.save(text)
         
+        # check apache config
+        returncode, error = self.parent.apache.test_config()
+        print returncode
+        if returncode:
+            error = error.split(":")
+            error = ":".join(error[2:])
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format=error + "\n\nAre you sure you want to continue, apache will not start until all errors are resolved")
+            result = md.run()
+            md.destroy()
+            if result != gtk.RESPONSE_OK:
+                return
+
         #self.parent.create_vhost_list()        
         self.parent.refresh_vhosts()
         self.parent.please_restart()
         self.window.destroy()
         
     def save(self):
-        print "save"
+        result = True
+
         if self.entry_location.get_text() == "" and self.vhost.is_new:
             self.set_default_values_from_domain( True )
         
@@ -336,19 +351,24 @@ class VirtualHostWindow:
         self.hack_hosts = self.checkbutton_hosts.get_active()      
         
 	    # Save plugins
+
         if self.plugins:
             for plugin in self.plugins:
                 try:
                     if plugin.is_enabled():
-                        plugin.save_vhost_properties(self.vhost)
+                        res, message = plugin.save_vhost_properties(self.vhost)
+                        if not res:
+                            self.show_error ( message )
+                            result = False
                 except Exception:
                     traceback.print_exc(file=sys.stdout) 
-               
+        return result
+                       
     def on_button_cancel_clicked(self, widget):
         self.window.destroy()
         return    
     def show_error ( self, message ):
         
-        self.xml.get_widget( 'message_text' ).set_label( '<b>'+message+'</b>' )
-        self.xml.get_widget( 'message_container' ).show()                 
+        self.message_text.set_label( '<b>'+message+'</b>' )
+        self.error_area.show()                 
 

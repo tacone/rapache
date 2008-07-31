@@ -50,4 +50,9 @@ class Apache2():
     def restart(self):
         Shell.command.sudo_execute(["apache2ctl", "graceful"])
         return
- 
+        
+    def test_config(self):
+        returncode, output, error = Shell.command.execute(["apache2ctl", "-S"])
+        return returncode, error
+    
+

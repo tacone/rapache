@@ -98,7 +98,8 @@ class AdvancedVhostPlugin(PluginBaseObject):
              vhost.set_value("ServerSignature", "on" )
         else:
              vhost.set_value("ServerSignature", "off")
-        return
+        
+        return False, "'Server Admin Email' is not a valid email address"
 
 def register( path ):
     return AdvancedVhostPlugin( path )
