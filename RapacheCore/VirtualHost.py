@@ -26,9 +26,9 @@ from RapacheCore import Shell
 
 VHOST_TEMPLATE = """#created for you by Rapache
 <VirtualHost *>
-	#ServerAdmin webmaster@example.com
-	ServerName example
-	DocumentRoot /var/www/examplepath
+    #ServerAdmin webmaster@example.com
+    ServerName example
+    DocumentRoot /var/www/examplepath
 </VirtualHost>"""
 
 
@@ -80,12 +80,21 @@ class VirtualHostModel():
 
         # Init plugin values so the keys exist
         if plugin_manager:
-        	for plugin in plugin_manager.plugins:
-        		for key in plugin.vhosts_config.keys():
-        				self.data[ key ] = None		
+            for plugin in plugin_manager.plugins:
+                for key in plugin.vhosts_config.keys():
+                        self.data[ key ] = None        
 
         if not self.is_new:
-            self.load()
+            self.load(None, plugin_manager)
+
+    def get_value(self, key, default=None):
+        if self.data.has_key( key ):
+            if self.data[key]:
+                return self.data[key]
+        return default
+        
+    def set_value(self, key, value):    
+        self.data[key] = value
 
     def get_source ( self ):
         return Shell.command.read_file(self.get_source_filename())
@@ -124,9 +133,9 @@ class VirtualHostModel():
     def toggle( self, status ):
         "status = True|False"
         if status:
-    	    command = "a2ensite"
+            command = "a2ensite"
         else :
-    	    command = "a2dissite"        
+            command = "a2dissite"        
         # set new value
         Shell.command.sudo_execute( [ command, self.__name ] )
         self.enabled = self.is_enabled()
@@ -143,21 +152,20 @@ class VirtualHostModel():
         return self.__load( parser, plugin_manager)
 
     def __load(self, parser, plugin_manager = None):
-    	options = {}    	
+        options = {}        
         try:
             piece = VhostParser( parser )
         except "VhostNotFound":
-         	self.parsable = False
-         	return False
+             self.parsable = False
+             return False
         domain_name = piece.get_value( 'ServerName' )
         if domain_name == None:
             self.parsable = False
             if self.__name == "default":  
                 domain_name = self.__name
-         	#return False
+             #return False
         options[ 'ServerName' ] = domain_name
         options[ 'ServerAlias' ] = piece.get_options( 'ServerAlias' )
-        print options[ 'ServerAlias' ]
         options[ 'DocumentRoot' ] = piece.get_value('DocumentRoot')
         hosts = HostsManager()
         if ( domain_name == None or hosts.find ( domain_name ) == False ):
@@ -167,15 +175,17 @@ class VirtualHostModel():
         self.parsable = True
         
         # Load plugin values
+
         if plugin_manager:
-        	for plugin in plugin_manager.plugins:
-        		for key in plugin.vhosts_config.keys():
-        			if plugin.vhosts_config[key] == 1:
-        				options[ key ] = piece.get_options( key )
-        			else:
-        				options[ key ] = piece.get_value( key )
+            for plugin in plugin_manager.plugins:
+                for key in plugin.vhosts_config.keys():
+                    if plugin.vhosts_config[key] == 1:
+                        options[ key ] = piece.get_options( key )
+                    else:
+                        options[ key ] = piece.get_value( key )
         
         self.data.update( options )
+        
         return True
     
     def __update(self, content=None):
@@ -226,13 +236,13 @@ class VirtualHostModel():
         # if new then make sure to update name before saving
         if self.is_new:
             self.__name = self.data['ServerName']
-        
+
         Shell.command.write_file(self.get_source_filename(), self.__update(content))
           
         if self.hack_hosts:
             Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, "hosts-manager"), '-a', self.data['ServerName'] ] )
             for alias_name in self.data[ 'ServerAlias' ]:
-            	Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, 'hosts-manager'), '-a',alias_name ])
+                Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, 'hosts-manager'), '-a',alias_name ])
         self.changed = True  
         
         if self.is_new:      
@@ -269,11 +279,11 @@ class VirtualHostModel():
                     
         return True  
         
-        def get_icon(self):
+    def get_icon(self):
+    
         
-            
-        
-            return
+    
+        return
         
         
             
@@ -307,9 +317,9 @@ class VirtualHostModelOld:
             
         # Init plugin values so the keys exist
         if plugin_manager:
-        	for plugin in plugin_manager.plugins:
-        		for key in plugin.vhosts_config.keys():
-        				self.data[ key ] = None
+            for plugin in plugin_manager.plugins:
+                for key in plugin.vhosts_config.keys():
+                        self.data[ key ] = None
     
     def get_backup_files(self):
             return Shell.command.get_backup_files(  os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['name']))
@@ -342,16 +352,16 @@ class VirtualHostModelOld:
         return self._load( parser, plugin_manager)
         
     def _load(self, parser, plugin_manager = None):
-    	options = {}    	
+        options = {}        
         try:
             piece = VhostParser( parser )
         except "VhostNotFound":
-         	self.parsable = False
-         	return False
+             self.parsable = False
+             return False
         domain_name = piece.get_value( 'ServerName' )
         if domain_name == None:
-         	self.parsable = False
-         	#return False
+             self.parsable = False
+             #return False
         options[ 'ServerName' ] = domain_name
         options[ 'ServerAlias' ] = piece.get_options( 'ServerAlias' )
         print options[ 'ServerAlias' ]
@@ -365,12 +375,12 @@ class VirtualHostModelOld:
         
         # Load plugin values
         if plugin_manager:
-        	for plugin in plugin_manager.plugins:
-        		for key in plugin.vhosts_config.keys():
-        			if plugin.vhosts_config[key] == 1:
-        				options[ key ] = piece.get_options( key )
-        			else:
-        				options[ key ] = piece.get_value( key )
+            for plugin in plugin_manager.plugins:
+                for key in plugin.vhosts_config.keys():
+                    if plugin.vhosts_config[key] == 1:
+                        options[ key ] = piece.get_options( key )
+                    else:
+                        options[ key ] = piece.get_value( key )
         
         self.data.update( options )
         return True
@@ -443,9 +453,9 @@ class VirtualHostModelOld:
     def toggle( self, status ):
         "status = True|False"
         if status:
-    	    command = "a2ensite"
+            command = "a2ensite"
         else :
-    	    command = "a2dissite"        
+            command = "a2dissite"        
         # set new value
         if self.simulation:
             print "SIMULATED ",[ command, self.data['name'] ]
@@ -609,7 +619,7 @@ class VirtualHostModelOld:
         if ( options[ 'hack_hosts' ] ):
             Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, "hosts-manager"), '-a', options['ServerName'] ] )
             for alias_name in options[ 'ServerAlias' ]:
-            	Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, 'hosts-manager'), '-a',alias_name ])
+                Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, 'hosts-manager'), '-a',alias_name ])
         self.changed = True        
         self.toggle( True ) #activate by default 
             

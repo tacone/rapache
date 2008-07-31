@@ -77,31 +77,27 @@ class AdvancedVhostPlugin(PluginBaseObject):
         return True
         
     # Customise the vhost properties window
-    def load_vhost_properties(self, vhost_data):
+    def load_vhost_properties(self, vhost):
                 
-        if vhost_data["ServerAdmin"]:
-            self.entry_admin_email.set_text(vhost_data["ServerAdmin"])
-        if vhost_data["ErrorLog"]:
-            self.entry_log_location.set_text(vhost_data["ErrorLog"])
-        if vhost_data["LogLevel"]:
-            self.combobox_log_level.set_active( self.log_levels.index( vhost_data["LogLevel"] ) )
-        if vhost_data["ServerSignature"]:
-            if vhost_data["ServerSignature"].lower() != "off":
-                self.checkbutton_server_signature.set_active(True)
+        self.entry_admin_email.set_text(vhost.get_value("ServerAdmin", ""))
+        self.entry_log_location.set_text(vhost.get_value("ErrorLog", ""))
+        if vhost.get_value("LogLevel"):
+            self.combobox_log_level.set_active( self.log_levels.index( vhost.get_value("LogLevel") ) )
+        if vhost.get_value("ServerSignature", "off").lower() != "off":
+            self.checkbutton_server_signature.set_active(True)
 
         return
         
     # Perform action on vhost properties save
-    def save_vhost_properties(self, vhost_data):
+    def save_vhost_properties(self, vhost):
     
-        vhost_data["ServerAdmin"] = self.entry_admin_email.get_text()
-        vhost_data["ErrorLog"] = self.entry_log_location.get_text()
-        vhost_data["LogLevel"] = self.log_levels[ self.combobox_log_level.get_active() ]
+        vhost.set_value("ServerAdmin", self.entry_admin_email.get_text())
+        vhost.set_value("ErrorLog", self.entry_log_location.get_text())
+        vhost.set_value("LogLevel", self.log_levels[ self.combobox_log_level.get_active() ] )
         if self.checkbutton_server_signature.get_active():
-             vhost_data["ServerSignature"] = "on" 
+             vhost.set_value("ServerSignature", "on" )
         else:
-             vhost_data["ServerSignature"] = "off"
-    
+             vhost.set_value("ServerSignature", "off")
         return
 
 def register( path ):

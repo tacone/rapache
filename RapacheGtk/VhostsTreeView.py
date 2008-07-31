@@ -82,8 +82,6 @@ class VhostsTreeView ( ConfFilesTreeView ):
         cell.set_property('pixbuf', pixbuf)"""                
         favicon = os.path.join( Configuration.GLADEPATH, 'browser.png' )
         fname = model.get_value(iter, COLUMN_SEVERITY )
-        print COLUMN_SEVERITY
-        print fname
         if fname:
             site = self.items[ fname ]
             if site.data['DocumentRoot'] != None:
@@ -116,7 +114,7 @@ gobject.type_register (VhostsTreeView)
 class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
     def __init__ (self, *args, **kwargs):
         super (DenormalizedVhostsTreeView, self).__init__ (*args, **kwargs)
-        print self.column_checkbox, self.column_description, self.column_icon
+        #print self.column_checkbox, self.column_description, self.column_icon
         self.column_checkbox.set_visible( False )
         self.column_icon.get_cell_renderers()[0].set_property( 'stock-id',  gtk.STOCK_DIALOG_WARNING )        
     def load(self):    

@@ -123,7 +123,6 @@ class VirtualHostWindow:
         	    if plugin.is_enabled():      	        
         	        plugin.init_vhost_properties(self.notebook)
     	        	self.plugins.append(plugin)
-    	        	print "BOOM:"
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
         
@@ -179,7 +178,8 @@ class VirtualHostWindow:
         gtk.main()
 
     def load (self, name ):
-        self.vhost = VirtualHostModel( name )
+
+        self.vhost = VirtualHostModel( name, self.parent.plugin_manager )
 
         self._load()
         
@@ -199,7 +199,7 @@ class VirtualHostWindow:
         self._load()
         
     def _load(self):
-        
+        print "load"
         try:
             #self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
             server_name = self.vhost.data[ 'ServerName' ] 
@@ -222,7 +222,7 @@ class VirtualHostWindow:
         for plugin in self.parent.plugin_manager.plugins:
         	try:
         	    if plugin.is_enabled():          
-        	        plugin.load_vhost_properties(self.notebook, site.data)
+        	        plugin.load_vhost_properties(self.vhost)
     	        	self.plugins.append(plugin)
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
@@ -325,10 +325,10 @@ class VirtualHostWindow:
         self.window.destroy()
         
     def save(self):
+        print "save"
         if self.entry_location.get_text() == "" and self.vhost.is_new:
             self.set_default_values_from_domain( True )
         
-        self.vhost.data[ 'ServerAlias' ] =  []
         self.vhost.data[ 'ServerName' ] = self.entry_domain.get_text()
         self.vhost.data[ 'DocumentRoot' ] = self.entry_location.get_text()
         self.vhost.data[ 'ServerAlias' ] = self.get_server_aliases_list()
@@ -340,7 +340,7 @@ class VirtualHostWindow:
             for plugin in self.plugins:
                 try:
                     if plugin.is_enabled():
-                        plugin.save_vhost_properties(self.vhost.data)
+                        plugin.save_vhost_properties(self.vhost)
                 except Exception:
                     traceback.print_exc(file=sys.stdout) 
                
