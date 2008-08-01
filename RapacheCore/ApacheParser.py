@@ -8,10 +8,13 @@ lineparser = ApacheConf.LineParser()
 class ApacheParser():
     def __init__(self):
         self.parser = ApacheConf.LineParser()
-        self.document = None
+        self.element = None
         self.__reset_document()
     def __reset_document (self):
-        self.document = etree.Element("root")
+        self.element = etree.Element("root")
+    def count(self):
+        """returns line count, subtags lines excluded"""
+        return len( self.element )
     def load(self, filename ):
         """Loads a configuration file in the parser"""
         self.filename = filename
@@ -20,19 +23,23 @@ class ApacheParser():
         file.close()
         self.set_content(content)
     def set_content_from_string(self, string_content):
+        """uses a string as the configuration file to be parsed"""
         return self.set_content( string_content.split( "\n" ) )
     def set_content(self, content):
+        """uses a (line) list as the configuration file to be parsed"""
         self.__reset_document()
         for line in content:
             c = self.__parse_line(line, True)
-            self.document.append( c )
+            self.element.append( c )
     def get_content (self):
+        """returns the content as a string (i.e. for saving)"""
         content = []
-        for line in self.document:
+        for line in self.element:
             content.append( self.compile_line(line) )
         print "\n".join(content)
         return content
     def __parse_line(self, line, with_source = False):
+        """parses a configuration line into a <line> xml element"""
         parser = self.parser
         c = etree.Element("line")
         directive = parser.get_directive( line )
@@ -54,17 +61,20 @@ class ApacheParser():
         if with_source: c.attrib[ 'source' ] = line
         return c
     def dump_xml (self, include_comments = False):
+        """dumps the internal xml structure"""
         if include_comments:
-            print etree.tostring( self.document, pretty_print = True )
+            print etree.tostring( self.element, pretty_print = True )
         else:
             #hackish
             selection = etree.XPath( '/root/line[attribute::directive]' )
-            for el in selection(self.document):
+            for el in selection(self.element):
                 print etree.tostring( el, pretty_print = True )
     #useful for debug
     def dump_values(self):
+        """dumps all the key/values. key are unique, later keys override 
+        previous ones """
         dict = {}
-        for line in self.document:
+        for line in self.element:
             name = line.get('directive')
             if name:
                 if line.get('unparsable' ) == 'unparsable':
@@ -74,6 +84,7 @@ class ApacheParser():
         #print dict
         return dict
     def make_line (self, properties = {}): 
+        """returns a <line> xml element starting from a dictionary"""
         c = etree.Element("line")
         directive = properties.get( 'directive' )
         if directive: 
@@ -92,7 +103,7 @@ class ApacheParser():
         line = self.make_line(properties)
         if line == None:
             return False
-        self.document.append( line )
+        self.element.append( line )
         return True
     def compile_line(self, obj_line):
         source = obj_line.attrib.get('source')
@@ -118,11 +129,11 @@ class ApacheParser():
             line += "#" + comment
         return line
     def __get_last_line (self, key ):
-        
+        """ returns the last <line> found with the directive "key" """
         escaped_key = key.replace( '"', '\\"' )
         query = '/root/line[attribute::directive="%s"][position()=last()]' % escaped_key
         xpath = etree.XPath( query )
-        selection = xpath( self.document )
+        selection = xpath( self.element )
         #oh, by the way, should be the only element of the list
         if not selection : return None
         return selection[-1]
@@ -136,10 +147,10 @@ class ApacheParser():
         line = self.__parse_line(string_line)
         existing_line = self.__get_last_line(key)
         if existing_line != None:            
-            idx = self.document.index( existing_line )
-            self.document[ idx ] = line
+            idx = self.element.index( existing_line )
+            self.element[ idx ] = line
         else:
-            self.document.append( line )
+            self.element.append( line )
     def remove_option (self, name, option ): 
         #we need idx later if we decide to remove the whole line
         existing_line = self.__get_last_line(name)
@@ -148,8 +159,8 @@ class ApacheParser():
         line = self.parser.remove_option(line, option)
         new_value = self.parser.get_value( line )
         if ( new_value.strip() == "" ):
-            idx = self.document.index( existing_line )
-            del( self.document[idx] )
+            idx = self.element.index( existing_line )
+            del( self.element[idx] )
         else:
             self.set_directive(name, line)
     def get_raw_value(self, key):
@@ -212,3 +223,25 @@ class Line():
     def __set_directive (self, value):
         pass
     directive = property( __get_directive, __set_directive )
+    
+    
+    
+"""
+Draft (not implemented)
+
+p = ApacheParser( "myconf.conf" )
+line = p.get('DocumentRoot')
+line.comment = 'this is the root of your site'
+line.value = '/var/www/webmix'
+
+lines = p.get_all( 'ErrorDocument' ) # ???
+l = lines[0]
+
+
+
+
+
+
+
+
+"""    

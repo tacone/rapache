@@ -61,7 +61,7 @@ class ApacheParserTest ( unittest.TestCase ):
     def test_load(self):
         p = ApacheParser()
         p.load( self.apache2conf )
-        self.assertTrue( len( p.document ) > 0 )
+        self.assertTrue( p.count() > 0 )
         #p.dump_xml()
     def test_get_value(self):
         p = Parser()
@@ -79,7 +79,7 @@ class ApacheParserTest ( unittest.TestCase ):
     def test_set_value (self):
         p = Parser()
         p.load( self.apache2conf )
-        length = len( p.document )
+        length = p.count()
         
         for key in self.apache2conf_expected:
             self.assertFalse( p.is_modified( key ))
@@ -90,7 +90,7 @@ class ApacheParserTest ( unittest.TestCase ):
             else:
                 p.set_value( key, 'NULLIFIED' )
         #number of lines shuoldn't be changed
-        self.assertEqual( len( p.document ), length )
+        self.assertEqual( p.count(), length )
         dict = p.dump_values()
         
         for key in dict: 
@@ -104,11 +104,11 @@ class ApacheParserTest ( unittest.TestCase ):
                 
         p.set_value( 'DocumentRoot', '/var/www/htdocs' )
         #DocumentRoot is not present in the file, should add a new line
-        self.assertEqual( len(p.document), length +1 )
+        self.assertEqual( p.count(), length +1 )
         #try setting a value with spaces
         p.set_value( 'DocumentRoot', '/var/www/my htdocs' )
         #length should be the same as before
-        self.assertEqual( len(p.document), length +1 )        
+        self.assertEqual( p.count(), length +1 )        
         self.assertEqual( p.get_value( 'DocumentRoot' ), '/var/www/my htdocs' )
     def test_has_option(self):
         p = Parser()
@@ -140,15 +140,15 @@ class ApacheParserTest ( unittest.TestCase ):
     def test_set_directive (self):
         p = Parser()
         p.load( self.apache2conf )
-        length = len ( p.document )
+        length = p.count()
         
         p.set_directive( "KeepAliveTimeout", "\t\tKeepAliveTimeout 30" )
-        self.assertEqual( length, len ( p.document ) )
+        self.assertEqual( length, p.count() )
         self.assertEqual( p.get_value( 'KeepAliveTimeout' ), "30" )
         
         p.set_directive( "NewDirective", "\t\tNewDirective MyValue" )
         self.assertEqual( p.get_value( 'NewDirective' ), 'MyValue' )
-        self.assertEqual( length +1 , len ( p.document ) )
+        self.assertEqual( length +1 , p.count() )
         
     def test_add_option(self):
         p = Parser()
