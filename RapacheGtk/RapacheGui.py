@@ -83,7 +83,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.denormalized_virtual_hosts = {}
         self.plugin_manager = PluginManager()
         self.apache = Apache2()
-        self.apache.test_config()
+        
         #gnome.init(APPNAME, APPVERSION)
         self.gladefile = Configuration.GLADEPATH + "/" + "main.glade"  
         self.xml = gtk.glade.XML(self.gladefile)         
@@ -116,12 +116,27 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.refresh_lists()
         
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
-        GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )    
-        
+        GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )  
+        GuiUtils.style_as_tooltip( self.xml.get_widget( 'hbox_apache_config_error' ) )   
+       
         # start status update
         self.statusbar_server_status_context_id = self.statusbar_server_status.get_context_id("Apache Server Status") 
         self.statusbar_server_status.push(self.statusbar_server_status_context_id, "Attempting to connect to server")
         self.update_server_status(True)
+        
+        self.refresh_config_test()
+        
+    def refresh_config_test(self): 
+        res, text = self.apache.test_config()
+        if not res:
+            self.xml.get_widget('label_apache_error_message').set_text(text.strip())
+            self.xml.get_widget( 'hbox_apache_config_error' ).show()
+            self.xml.get_widget( 'unnormalized_notice' ).show_all()
+            self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).show()
+            self.xml.get_widget( 'notebook' ).set_current_page(2)
+        else:
+            self.xml.get_widget( 'hbox_apache_config_error' ).hide()            
+        
         
     @threaded    
     def update_server_status(self, loop=False):
@@ -129,7 +144,6 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         while True:
             status = self.apache.get_status()
             text = "Apache is stopped"
-            connection = "Connected to " + self.apache.server + ", "
             image = gtk.STOCK_NO
 
             # TODO: need ssh fail message here some where...
@@ -144,7 +158,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             gtk.gdk.threads_enter()
             self.image_apache_status.set_from_stock(image, -1)
             self.statusbar_server_status.pop(self.statusbar_server_status_context_id)
-            self.statusbar_server_status.push(self.statusbar_server_status_context_id, connection + text)
+            self.statusbar_server_status.push(self.statusbar_server_status_context_id, text)
             gtk.gdk.threads_leave()
             
             if not loop:
@@ -174,6 +188,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         new_vhost_window = VirtualHostWindow ( self )
         new_vhost_window.load("")
         new_vhost_window.run()
+        self.refresh_config_test()
+        
     def edit_button_clicked(self, widget, notused = None, notused2 = None):         
         name = self.vhosts_treeview.get_selected_line()
         print "edit button clicked on:" + name          
@@ -181,6 +197,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         new_vhost_window = VirtualHostWindow ( self )
         new_vhost_window.load( name )
         new_vhost_window.run()    
+        self.refresh_config_test()
+        
     def delete_button_clicked( self, widget ):
         name = self.vhosts_treeview.get_selected_line()
         if ( self.is_vhost_editable( name ) == False ): return False
@@ -193,13 +211,17 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         site.delete()
         self.vhosts_treeview.load()
         self.please_restart()
+        self.refresh_config_test()
+        
     def edit_module_button_clicked(self, widget, notused = None, notused2 = None):
         name = self.modules_treeview.get_selected_line()
         if ( self.is_module_editable( name ) == False ): return False
         print "module edit button clicked on:", name          
         module_window = ModuleWindow ( self )
         module_window.load( name )
-        module_window.run()        
+        module_window.run()  
+        self.refresh_config_test()
+              
     def quit (self, widget):
         print 'quitting'
         gtk.main_quit()
@@ -279,6 +301,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.update_server_status()
         self.xml.get_widget( 'restart_apache_notice' ).hide()
         self.refresh_lists()
+        self.refresh_config_test()
+        
     def is_vhost_editable (self, name):
         return name != 'default'
     def is_module_editable (self, name):

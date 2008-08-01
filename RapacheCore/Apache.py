@@ -53,6 +53,7 @@ class Apache2():
         
     def test_config(self):
         returncode, output, error = Shell.command.execute(["apache2ctl", "-S"])
-        return returncode, error
+        error = error.strip()
+        return error.endswith("Syntax OK"), error
     
 
