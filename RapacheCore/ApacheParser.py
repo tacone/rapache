@@ -26,9 +26,16 @@ class ApacheParser( object ):
     def _reset_document (self):        
         tag_name = self.key.lower()
         self.element = etree.Element( tag_name )
-    def count(self):
+    def linescount(self):
         """returns line count, subtags lines excluded"""
-        return len( self.element )
+        
+        query = './line'
+        xpath = etree.XPath( query )
+        selection = xpath( self.element )
+        #oh, by the way, should be the only element of the list
+        if not selection : return 0
+        return len( selection )
+        #return len( self.element )
     def load(self, filename ):
         """Loads a configuration file in the parser"""
         self.filename = filename
@@ -69,6 +76,9 @@ class ApacheParser( object ):
                 print self.key,'--> opening', tag_open[0], tag_open[1]
                 self.open_child = SubTag( tag_open[0], tag_open[1] )
             else:
+                #unexpected closure ? we will trigger an exception
+                self.is_tag_close(line, False )
+                
                 c = self._parse_line(line, True)
                 self.element.append( c )
         
@@ -294,7 +304,10 @@ class ApacheParser( object ):
     
     
 class SubTag ( ApacheParser ):
-    pass
+    
+    def set_element (self, element):
+        pass
+
     """def __init__(self, key, value):
         super (SubTag, self).__init__()
         self.key = key
