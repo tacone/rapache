@@ -240,10 +240,13 @@ class LineParser:
     """Utility class. Contains methods to parse and manipulate apache conf
     directives"""
     def tokenize (self, line ):
-        basic_regexp = '^(\s*)([A-Z0-9]+)(\s+)(.*)'  
+        basic_regexp = '^(\s*)([A-Z0-9]+)((\s+)(.*))?'  
         result = re.match( basic_regexp, line, re.IGNORECASE )        
         if ( result == None ): return False
-        return list( result.groups() )
+        result_list = list( result.groups() )
+        #we need to strip the outer parentesys around (\s+)(.*)
+        del( result_list[2] )        
+        return result_list
     def value_unescape(self, value):
         #value should have no precedig or trailing spaces
         if value == "" : return value

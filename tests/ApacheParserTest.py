@@ -4,9 +4,12 @@ sys.path.append('../RapacheCore')
 from ApacheParser import *
 
 class LineParserTest( unittest.TestCase ):
-    def test_directive (self):
+    def old_directive (self):
         line = Line( '\t\t\nDocumentRoot /var/www' )
         self.assertEquals( line.directive, 'DocumentRoot' )
+
+#TODO: test newlines !! strip them !
+#TODO: raise exception on unexpected close tags !
 
 #allow to reuse ApacheConfTest.py
 def Parser():
@@ -58,14 +61,28 @@ class ApacheParserTest ( unittest.TestCase ):
      'PidFile': '${APACHE_PID_FILE}'
     }
     optionsconf = 'datafiles/options.conf'
-    def test_load(self):
+    vhostconf = 'datafiles/vhost.conf'
+    valid_tags = {
+        '<VirtualHost *>' : ('VirtualHost', '*')
+      , '<Directory "/usr/share/doc/">': ('Directory', '/usr/share/doc/')
+      , '<IfModule mpm_prefork_module>': ('IfModule', 'mpm_prefork_module')
+      , '<LocationMatch .*/music/stream.php>': ('LocationMatch', '.*/music/stream.php')
+      , '<Tag>': ('Tag', None )
+    }
+    invalid_tags = [
+        'ErrorLog /var/log/apache2/error.log'
+      , '#    <LocationMatch .*/pl/stream/[0-9]+/[0-9]+>'
+    ]
+    
+    def old_load(self):
         p = ApacheParser()
         p.load( self.apache2conf )
         self.assertTrue( p.count() > 0 )
         #p.dump_xml()
-    def test_get_value(self):
+    def old_get_value(self):
         p = Parser()
         p.load( self.apache2conf )
+        
         for key in self.apache2conf_expected :
             expected = self.apache2conf_expected[ key ]
             if expected == '#ERROR':
@@ -76,7 +93,7 @@ class ApacheParserTest ( unittest.TestCase ):
         expected = None
         key = 'IDontExist'
         self.assertEqual( p.get_value( key ), expected )
-    def test_set_value (self):
+    def old_set_value (self):
         p = Parser()
         p.load( self.apache2conf )
         length = p.count()
@@ -110,7 +127,7 @@ class ApacheParserTest ( unittest.TestCase ):
         #length should be the same as before
         self.assertEqual( p.count(), length +1 )        
         self.assertEqual( p.get_value( 'DocumentRoot' ), '/var/www/my htdocs' )
-    def test_has_option(self):
+    def old_has_option(self):
         p = Parser()
         p.load( self.optionsconf )
         self.assertTrue( p.has_option( 'ServerAlias', 'www.bart.loc' ) )
@@ -119,14 +136,14 @@ class ApacheParserTest ( unittest.TestCase ):
         self.assertFalse( p.has_option( 'ServerAlias', '' ) )
         self.assertFalse( p.has_option( 'ServerAlias', None ) )
         self.assertFalse( p.has_option( 'ServerAlias', True ) )
-    def test_get_options(self):
+    def old_get_options(self):
         p = Parser()
         p.load( self.optionsconf )
         expected = ['www.bart.loc', 'test.bart.loc']
         options = p.get_options( 'ServerAlias' )
         self.assertEqual( options, expected )
         self.assertEqual( p.get_options( 'NoOptions' ), [] )
-    def test_get_directive (self):
+    def old_get_directive (self):
         p = Parser()
         p.load( self.apache2conf )
         for key in self.apache2conf_expected :
@@ -137,7 +154,7 @@ class ApacheParserTest ( unittest.TestCase ):
                 self.assertNotEquals ( p.get_directive(key).find(key), -1 )
                 self.assertNotEquals ( p.get_directive(key).find(expected), -1 )
         
-    def test_set_directive (self):
+    def old_set_directive (self):
         p = Parser()
         p.load( self.apache2conf )
         length = p.count()
@@ -150,7 +167,7 @@ class ApacheParserTest ( unittest.TestCase ):
         self.assertEqual( p.get_value( 'NewDirective' ), 'MyValue' )
         self.assertEqual( length +1 , p.count() )
         
-    def test_add_option(self):
+    def old_add_option(self):
         p = Parser()
         p.load( self.optionsconf )
         expected = ['www.bart.loc', 'test.bart.loc', 'new.bart.loc' ]
@@ -174,7 +191,7 @@ class ApacheParserTest ( unittest.TestCase ):
         self.assertEqual( p.get_value( 'ErrorDocument' ), 1 )
         self.assertEqual( options, expected )"""
         
-    def test_remove_option(self):
+    def old_remove_option(self):
         p = Parser()
         p.load( self.optionsconf )
         expected = ['www.bart.loc', 'test.bart.loc', 'new.bart.loc' ]
@@ -182,7 +199,7 @@ class ApacheParserTest ( unittest.TestCase ):
         
         options = p.get_options( 'ServerAlias' )
         
-    def test_get_content(self):
+    def old_get_content(self):
         p = Parser()
         p.load( self.optionsconf )
         content = p.get_content()
@@ -190,7 +207,7 @@ class ApacheParserTest ( unittest.TestCase ):
         self.assertEqual( len( content), 13 )
         #do lines contain extra  trailing \n ?
         self.assertEqual( len( "/n".join( content ).split( "\n" )), 13 )
-    def test_set_content_from_string (self):
+    def old_set_content_from_string (self):
         p = Parser()
         p.set_content_from_string( STRING_VHOST )
         content = p.get_content()
@@ -198,6 +215,24 @@ class ApacheParserTest ( unittest.TestCase ):
         self.assertEqual( len( content), 13 )
         #do lines contain extra  trailing \n ?
         self.assertEqual( len( "\n".join( content ).split( "\n" )), 13 )
-   
+    def old_is_tag_open(self):
+        p = Parser()
+        for line in self.valid_tags:
+            result = p.is_tag_open( line )
+            expected = self.valid_tags[line]
+            self.assertEquals( result, expected )
+        for line in self.invalid_tags:
+            result = p.is_tag_open( line )
+            self.assertFalse( result )
+    def test_nesting (self):   
+        print '=========xxxxxxxxxxxxxxxxxxxxx'
+        p = Parser()
+        p.load( self.vhostconf )
+        p.dump_xml( True )
+        print 'COUNT:', p.count()
 if __name__ == "__main__":
     unittest.main()    
+    """p = ApacheParser()
+    p.load('datafiles/vhost.conf')
+    p.dump_xml()
+    print p.open_child.key"""
