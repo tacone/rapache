@@ -14,15 +14,21 @@ class TagEndUnexpected( Exception ):
     pass
 
 class ApacheParser( object ):
-    def __init__(self, key='root', value=None):
+    def __init__(self, line = None):
         self.parser = ApacheConf.LineParser()
         self.element = None
-        self.key = key
-        self.value = value
-        print "======> init: ", key
+        if line == None:
+            self.key = 'root'
+            self.value = None
+        else:
+            self._update_from_line(line)
+        print "======> init: ", self.key
         self._reset_document()
         #temporary reference for the currently opened subtag
         self.open_child = None
+    
+    def _update_from_line(self, line ):
+            self.key, self.value = self.is_tag_open(line)            
     def _reset_document (self):        
         tag_name = self.key.lower()
         self.element = etree.Element( tag_name )
@@ -73,8 +79,9 @@ class ApacheParser( object ):
         else:    
             tag_open = self.is_tag_open(line)
             if tag_open is not False:
-                print self.key,'--> opening', tag_open[0], tag_open[1]
-                self.open_child = SubTag( tag_open[0], tag_open[1] )
+                #print self.key,'--> opening', tag_open[0], tag_open[1]
+                #self.open_child = SubTag( tag_open[0], tag_open[1] )
+                self.open_child = SubTag( line )
             else:
                 #unexpected closure ? we will trigger an exception
                 self.is_tag_close(line, False )
@@ -111,9 +118,13 @@ class ApacheParser( object ):
         if with_source: c.attrib[ 'source' ] = line
         return c
     def is_tag_open( self, line ):
-        basic_regexp = r'^\s*<s*([A-Z0-9\-.]+)(\s+[^>]*)*>.*'
+        basic_regexp = r'^(\s*)<s*([A-Z0-9\-.]+)(\s+[^>]*)*>.*'
         result = re.match( basic_regexp, line, re.IGNORECASE )    
         if ( result == None or result == False ): return False
+        
+        result_list = list( result.groups() )
+        indentation = result_list[0]
+        
         line = line.strip().lstrip( '<' ).rstrip( '>' ).strip()
         print "========> CHECKING :",line
         key = self.parser.get_directive( line )
@@ -122,7 +133,8 @@ class ApacheParser( object ):
         except AttributeError:
             value = None
             pass#value may not be a string
-        return key,value
+        #        return indentation, key," ",value
+        return key, value
     def is_tag_close (self, line, name):
         print '..............',self.key
         basic_regexp = r'^\s*<s*(/[A-Z0-9\-._]+)\s*>.*'
@@ -306,7 +318,8 @@ class ApacheParser( object ):
 class SubTag ( ApacheParser ):
     
     def set_element (self, element):
-        pass
+        self.element = element
+        self._update_from_line(line)
 
     """def __init__(self, key, value):
         super (SubTag, self).__init__()
