@@ -51,7 +51,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
         self.log_levels = ["emerg", "alert", "crit", "error", "warn", "notice", "info", "debug"]    
     
     
-    def init_vhost_properties(self, notebook):
+    def init_vhost_properties(self):
 
         # Get glade file XML
         f = open( os.path.join(self.path, "vhost.glade") ,"r")
@@ -66,15 +66,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
         self.combobox_log_level = wtree.get_widget("combobox_log_level")
         self.checkbutton_server_signature = wtree.get_widget("checkbutton_server_signature")
 
-        label = gtk.Label("Advanced")
-        
-        notebook.insert_page(table_advanced_vhost, label)
-
-        # make sure to show items
-        label.show()
-        table_advanced_vhost.show()
-
-        return True
+        return table_advanced_vhost, gtk.Label("Logging")
         
     # Customise the vhost properties window
     def load_vhost_properties(self, vhost):
@@ -99,7 +91,14 @@ class AdvancedVhostPlugin(PluginBaseObject):
         else:
              vhost.set_value("ServerSignature", "off")
         
-        return False, "'Server Admin Email' is not a valid email address"
+        
+        server_admin = self.entry_admin_email.get_text()
+        
+        if len(server_admin) > 1:
+            return False, "'Server Admin Email' is not a valid email address"
+            
+            
+        return True, None
 
 def register( path ):
     return AdvancedVhostPlugin( path )

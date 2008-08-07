@@ -96,15 +96,14 @@ class VirtualHostWindow:
             "on_notebook_switch_page" : self.on_notebook_switch_page
         }
         wtree.signal_autoconnect(signals)
+        # add on destroy to quit loop
+        self.window.connect("destroy", self.on_destroy)  
         
         self.combobox_vhost_backups.set_active(0)
         
         self.text_view_vhost_source = GuiUtils.new_apache_sourceview()
         wtree.get_widget( 'text_view_vhost_source_area' ).add( self.text_view_vhost_source )
         self.text_view_vhost_source.show()
-        
-        # add on destroy to quit loop
-        self.window.connect("destroy", self.on_destroy)
         
         # Setup tree
         column = gtk.TreeViewColumn(('Domains'))
@@ -123,16 +122,21 @@ class VirtualHostWindow:
         for plugin in self.parent.plugin_manager.plugins:
         	try:
         	    if plugin.is_enabled():      	        
-        	        plugin.init_vhost_properties(self.notebook)
+        	        content, tab_label = plugin.init_vhost_properties()
+        	        plugin._tab_number = self.notebook.insert_page(content, tab_label, self.notebook.get_n_pages() - 1)
+        	        content.show()
+        	        tab_label.show()
     	        	self.plugins.append(plugin)
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
+
+        self.__previous_active_tab = 0
         
     def on_notebook_switch_page(self, notebook, page, page_num):
         # Assume for now it always page number 1
-        if page_num == 1:
+        if page_num == notebook.get_n_pages() - 1:
             # how to update this.....
-            self.save()
+            self.save(self.__previous_active_tab)
             buf = self.text_view_vhost_source.get_buffer()
             text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
             # TODO: Remove this line !! hack to stop double ups from parser
@@ -142,6 +146,8 @@ class VirtualHostWindow:
             pass
         else:
             self.reload()
+        
+        self.__previous_active_tab = page_num
 
     def on_linkbutton_documentation_clicked(self, widget):
         print widget.get_uri()
@@ -316,6 +322,14 @@ class VirtualHostWindow:
     def on_button_save_clicked(self, widget):
         res = self.save()
         
+        if not res:
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format="Are you sure you want to continue\n\nThere are incomplete fields to be completed") #TODO: Terrible error text !!!
+            result = md.run()
+            md.destroy()
+            if result != gtk.RESPONSE_OK:
+                return
+        
+        
         # save over buffer content
         buf = self.text_view_vhost_source.get_buffer()
         text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
@@ -337,7 +351,7 @@ class VirtualHostWindow:
         self.parent.please_restart()
         self.window.destroy()
         
-    def save(self):
+    def save(self, tab_number=None):
         result = True
 
         if self.entry_location.get_text() == "" and self.vhost.is_new:
@@ -350,24 +364,27 @@ class VirtualHostWindow:
         self.hack_hosts = self.checkbutton_hosts.get_active()      
         
 	    # Save plugins
-
         if self.plugins:
             for plugin in self.plugins:
                 try:
                     if plugin.is_enabled():
                         res, message = plugin.save_vhost_properties(self.vhost)
                         if not res:
-                            self.show_error ( message )
                             result = False
+                            if tab_number and plugin._tab_number == tab_number:
+                                self.show_error ( message )
+                            
                 except Exception:
                     traceback.print_exc(file=sys.stdout) 
+        if result:
+            self.error_area.hide() 
         return result
-                       
+                               
     def on_button_cancel_clicked(self, widget):
         self.window.destroy()
         return    
-    def show_error ( self, message ):
         
+    def show_error ( self, message ):
         self.message_text.set_label( '<b>'+message+'</b>' )
         self.error_area.show()                 
 

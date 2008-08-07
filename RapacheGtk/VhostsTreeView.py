@@ -41,7 +41,6 @@ gobject.type_register (ConfFilesTreeView)
 class VhostsTreeView ( ConfFilesTreeView ):
     def __init__ (self, *args, **kwargs):
         super (VhostsTreeView, self).__init__ (*args, **kwargs)
-        self.icon_callback = self.__get_row_icon  
         self.toggled_callback = self.__fixed_toggled
     
     
@@ -64,33 +63,20 @@ class VhostsTreeView ( ConfFilesTreeView ):
             site = self.items[ idx ]
             if ( site.parsable ):
                 markup = site_template \
-                % ( site.data['ServerName'] , site.data[ 'DocumentRoot' ] )
+                % ( site.get_display_name() , site.data[ 'DocumentRoot' ] )
             else:
-                markup = site_unparsable_template % site.data['ServerName']
+                markup = site_unparsable_template % site.get_display_name()
             iter = lstore.append()
+            
+            favicon = site.get_icon()
+            pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
+                       
             lstore.set(iter,
                 COLUMN_FIXED, site.enabled,
+                COLUMN_ICON, pixbuf,
                 COLUMN_SEVERITY, site.data['ServerName'],
                 COLUMN_MARKUP, markup )
 
-    #TODO: warning ! This function get's called even on mousehover
-    #      check for a way to optimize it
-    def __get_row_icon (self, column, cell, model, iter):
-        """ Provides the icon for a virtual host looking up it's favicon"""        
-        """node = model.get_value(iter, MODEL_FIELD_NODE)
-        pixbuf = getPixbufForNode(node)
-        cell.set_property('pixbuf', pixbuf)"""                
-        favicon = os.path.join( Configuration.GLADEPATH, 'browser.png' )
-        fname = model.get_value(iter, COLUMN_SEVERITY )
-        if fname:
-            site = self.items[ fname ]
-            if site.data['DocumentRoot'] != None:
-                custom_favicon = os.path.join(os.path.dirname( site.data['DocumentRoot']+"/" ), "favicon.ico")                                                    
-                if ( os.path.exists( custom_favicon ) ): favicon = custom_favicon
-                
-            pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
-            cell.set_property("pixbuf", pixbuf)
-        
     def __fixed_toggled(self, cell, path, treeview):        
         # get toggled iter        
         model = treeview.get_model()
@@ -215,20 +201,5 @@ class ModulesTreeView ( ConfFilesTreeView ):
         if ( mod.changed ):
             self.raise_event( 'please_restart_apache' ) 
         self.raise_event( 'please_reload_lists', {}, True ) 
-    #TODO: warning ! This function get's called even on mousehover
-    #      check for a way to optimize it
-    def __get_row_icon (self, column, cell, model, iter):
-        """ Provides the icon for a module"""        
-        """node = model.get_value(iter, MODEL_FIELD_NODE)
-        pixbuf = getPixbufForNode(node)
-        cell.set_property('pixbuf', pixbuf)"""                
-        favicon = os.path.join( Configuration.GLADEPATH, 'browser.png' )
-        fname = model.get_value(iter, COLUMN_SEVERITY )
-        site = self.items[ fname ]
-        if site.data['DocumentRoot'] != None:
-            custom_favicon = os.path.join(os.path.dirname( site.data['DocumentRoot']+"/" ), "favicon.ico")                                                    
-            if ( os.path.exists( custom_favicon ) ): favicon = custom_favicon
-            
-        pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
-        cell.set_property("pixbuf", pixbuf)
+
 gobject.type_register ( ModulesTreeView )

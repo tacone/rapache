@@ -87,6 +87,7 @@ class VirtualHostModel():
         if not self.is_new:
             self.load(None, plugin_manager)
 
+    # Shorcut for getting data value 
     def get_value(self, key, default=None):
         if self.data.has_key( key ):
             if self.data[key]:
@@ -95,6 +96,10 @@ class VirtualHostModel():
         
     def set_value(self, key, value):    
         self.data[key] = value
+
+    # Returns a label for displaying in UI
+    def get_display_name(self):
+        return self.get_value("ServerName", self.__name)
 
     def get_source ( self ):
         return Shell.command.read_file(self.get_source_filename())
@@ -280,8 +285,14 @@ class VirtualHostModel():
         return True  
         
     def get_icon(self):
-        return
-     
+        # TODO: This MUST return a local path...
+        # TODO: Try url for a favicon as well
+        if self.data['DocumentRoot'] != None:
+                favicon = os.path.join(self.data['DocumentRoot'], "favicon.ico")
+                if ( os.path.exists( favicon ) ): 
+                    return favicon
+        return os.path.join( Configuration.GLADEPATH, 'browser.png' )
+
     def delete( self ):
         "Deletes a VirtualHost configuration file"
         if not self.is_new:

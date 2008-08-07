@@ -28,6 +28,9 @@ class PluginBaseObject():
         
         # Define what additional config should be read from vhost file
         self.vhosts_config = {  } # 0 value | 1 options
+        
+        # Number set when plugin UI is added to notebook
+        self._tab_number = -1
     
     def is_module_enabled(self):
         if self.module:
