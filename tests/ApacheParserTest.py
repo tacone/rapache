@@ -62,6 +62,7 @@ class ApacheParserTest ( unittest.TestCase ):
     }
     optionsconf = 'datafiles/options.conf'
     vhostconf = 'datafiles/vhost.conf'
+    fromtemplateconf = 'datafiles/fromtemplate.conf'
     valid_tags = {
         '<VirtualHost *>' : ('VirtualHost', '*')
       , '<Directory "/usr/share/doc/">': ('Directory', '/usr/share/doc/')
@@ -127,6 +128,46 @@ class ApacheParserTest ( unittest.TestCase ):
         #length should be the same as before
         self.assertEqual( p.linescount(), length +1 )        
         self.assertEqual( p.get_value( 'DocumentRoot' ), '/var/www/my htdocs' )
+    def test_remove_value (self):
+        p = Parser()
+        p.load( self.optionsconf )
+        length = p.linescount()
+        res = p.remove_value( 'Options' );
+        self.assertTrue( res )
+        self.assertEqual( length -1, p.linescount() )
+        #Options shouldn't exist anymore
+        length = p.linescount()
+        res = p.remove_value( 'Options' );
+        self.assertFalse( res )
+        self.assertEqual( length, p.linescount() )
+        #this directive doesn't exists
+        res = p.remove_value( 'Doesntexist' );
+        self.assertFalse( res )
+        self.assertEqual( length, p.linescount() )
+        
+        
+        
+        p = Parser()
+        p.set_content_from_string( """    ServerName bart.loc
+    ServerAlias www.bart.loc test.bart.loc
+    DocumentRoot /var/www/bart.loc/httpdocs/html
+    Options Indexes FollowSymLinks MultiViews
+    LogLevel    debug
+    ServerAdmin    webmaster@bart.loc
+    ServerSignature    off
+    ErrorDocument 500 "Sorry I can't wrap my head around it"
+    NoOptions""" )
+        #removing the first directive
+        length = p.linescount()
+        res = p.remove_value( 'ServerName' );
+        self.assertTrue( res )
+        self.assertEqual( length -1, p.linescount() )
+        #removing the last
+        length = p.linescount()
+        res = p.remove_value( 'NoOptions' );
+        self.assertTrue( res )
+        self.assertEqual( length -1, p.linescount() )
+        
     def test_has_option(self):
         p = Parser()
         p.load( self.optionsconf )
@@ -207,6 +248,36 @@ class ApacheParserTest ( unittest.TestCase ):
         self.assertEqual( len( content), 13 )
         #do lines contain extra  trailing \n ?
         self.assertEqual( len( "/n".join( content ).split( "\n" )), 13 )
+        
+        p.set_value( 'DocumentRoot', '/var/www/fake' )
+        content = p.get_content()
+        self.assertEqual( type(content), type([]) )
+        self.assertEqual( len( content), 13 )
+        
+        p.set_value( 'NotYetExistant', 'value' )
+        content = p.get_content()
+        self.assertEqual( type(content), type([]) )
+        self.assertEqual( len( content), 14 )
+        
+        p.add_option( 'NewOption', 'option1' )
+        content = p.get_content()
+        self.assertEqual( type(content), type([]) )
+        self.assertEqual( len( content), 15 )
+        
+        p.add_option( 'NewOption', 'option2' )
+        content = p.get_content()
+        self.assertEqual( type(content), type([]) )
+        self.assertEqual( len( content), 15 )
+        
+        
+        
+    def test_get_source (self):
+        p = Parser()
+        p.load( self.optionsconf )
+        source = p.get_source()
+        #let's make sure we suppresed newline-spam with hate
+        content = source.split( "\n" )
+        self.assertEqual( len( content), 13 )
     def test_set_content_from_string (self):
         p = Parser()
         p.set_content_from_string( STRING_VHOST )
@@ -233,8 +304,12 @@ class ApacheParserTest ( unittest.TestCase ):
         #testing not existing virtualhost
         p = Parser()
         p.load( self.optionsconf )
-        vhost = p.get_virtualhost()
-        self.assertEqual( vhost, None )
+        try:
+            vhost = p.get_virtualhost()
+            self.assertFalse( True )
+        except VhostNotFound:
+            pass
+            
         #testing existing virtualhost
         p = Parser()
         p.load( self.vhostconf )
@@ -252,16 +327,14 @@ class ApacheParserTest ( unittest.TestCase ):
         
         p = Parser()
         p.load( self.vhostconf )
-        content = p.get_content()
-        
-        print content
-        print "---/","".join(content),"/"
+        content = p.get_content()        
 
         #    print "\n".join( content )
         self.assertEqual( type(content), type([]) )
         #do lines contain extra  trailing \n ?
         self.assertEqual( len(original_content), len(content) )
         self.assertEqual( original_content, content )
+    
     def test_nesting_scope_of_operations(self):
         p = Parser()
         p.load( self.vhostconf )
@@ -278,7 +351,31 @@ class ApacheParserTest ( unittest.TestCase ):
         self.assertEqual( vhost.get_value( 'ServerSignature'), "off" )
         #outside the <virtualhost>.. NEIN !
         self.assertEqual( vhost.get_value( 'OuterDirectives'), None )
-    
+    def test_newlines_on_the_last_line(self):
+        p = Parser()
+        p.load( self.vhostconf )
+        #p.dump_xml( True )
+        vhost = p.get_virtualhost()
+        expectedlen = 16
+        self.assertEqual( len( vhost.get_content() ), expectedlen )
+        vhost.add_option( 'newoption', 'opt1' )
+        self.assertEqual( len( vhost.get_content() ), expectedlen +1 )
+    def test_newlines_on_get_source(self):
+        """yet another test on newlines reliability"""
+        p = Parser()
+        p.load( self.fromtemplateconf )
+        actuallen = len( p.get_source().split("\n" ) );
+        self.assertNotEqual( actuallen, 1 )
+        vhost = p.get_virtualhost()
+        vhost.set_value( 'DocumentRoot', '/var/www/bbb/httpdocs' )
+        vhost.set_value( 'ServerName', 'bbba' )
+        vhost.add_option( 'ServerAlias', 'www.bbba' )
+        self.assertEqual( actuallen, len( p.get_content() ) )
+        
+        source = p.get_source()
+        print source
+        self.assertEqual( actuallen, len( source.split("\n")) )
+        
 if __name__ == "__main__":
     outt = ""
     unittest.main()  

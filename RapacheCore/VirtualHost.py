@@ -21,7 +21,12 @@ import os
 import tempfile
 import re
 from RapacheCore import Configuration
-from RapacheCore.ApacheConf import *
+#from RapacheCore.ApacheConf import *
+from RapacheCore.ApacheParser import ApacheParser as Parser
+
+from RapacheCore.ApacheParser import VhostParser
+from RapacheCore.ApacheParser import VhostNotFound
+
 from RapacheCore.HostsManager import HostsManager
 from RapacheCore import Shell
 
@@ -109,10 +114,10 @@ class VirtualHostModel:
     	if ( name == False ): name = self.data[ 'name' ]
     	options = {}    	
         parser = Parser()
-        parser.load(  os.path.join(Configuration.SITES_AVAILABLE_DIR, name) )
         try:
-            piece = VhostParser( parser )
-        except "VhostNotFound":
+			parser.load(  os.path.join(Configuration.SITES_AVAILABLE_DIR, name) )
+			piece = VhostParser( parser )
+        except VhostNotFound:
          	self.parsable = False
          	return False
         domain_name = piece.get_value( 'ServerName' )
@@ -296,7 +301,7 @@ class VirtualHostModel:
         if old_name != new_name and os.path.exists( new_name ) == False:
             print "Server name changed, updating conf filename"
             self.toggle( False )     
-            Shell.command.sudo_execute( [mv, old_name, new_name] )
+            Shell.command.sudo_execute( ['mv', old_name, new_name] )
             if os.path.exists( new_name ) == True:
                 #success ! we need to reload vhost with the new name
                 self.load( new_options['ServerName'] )
@@ -360,7 +365,6 @@ class VirtualHostModel:
         piece.set_value('ServerName',  options['ServerName'] ) 
         piece.set_value('DocumentRoot',  options['DocumentRoot'] ) 
 
-        print "min", piece.min, "max", piece.max
         #reset previous aliases
         piece.set_value('ServerAlias',  '' )
         for domain in options ['ServerAlias']:

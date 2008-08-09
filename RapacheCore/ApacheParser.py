@@ -7,10 +7,15 @@ import re #temporary ?
 
 lineparser = ApacheConf.LineParser()
 
+
+""" NOT USED 
 class TagEndExpected( Exception ):
     pass
 
 class TagEndUnexpected( Exception ):    
+    pass
+"""
+class VhostNotFound( Exception ):
     pass
 
 class ApacheParser( object ):
@@ -69,7 +74,7 @@ class ApacheParser( object ):
             self.append(line)
         if self.open_child != None:
             #something wrong, one tag has been left open in the .conf
-            raise TagEndExpected, 'expected end tag for:'+self.open_child.key
+            raise VhostNotFound, 'TagEndExpected: expected end tag for:'+self.open_child.key
         #print '..... ends with:', line
     def append(self, line):
         """Parses a line of code and appends it's xml equivalent to
@@ -113,8 +118,11 @@ class ApacheParser( object ):
                 #print "---subtag content----->",subtag_content
                 content += subtag_content
             else:
-                content.append( self.compile_line(line) )        
+                content.append( self.compile_line(line) )
         return content
+    def get_source (self):
+        return "".join( self.get_content() )
+    
     def _parse_line(self, line, with_source = False):
         """parses a configuration line into a <line> xml element"""
         parser = self.parser
@@ -162,8 +170,8 @@ class ApacheParser( object ):
         if result == None or result == False:
             return False
         if name == False:
-            raise TagEndUnexpected \
-                , 'Unexpected closure found: %s, there\'s no open tag in the current context node.' \
+            raise VhostNotFound \
+                , 'TagEndUnexpected, Unexpected closure found: %s, there\'s no open tag in the current context node.' \
                 % line.strip()
         else:
             basic_regexp = r'^\s*<s*(/'+name+r')\s*>.*'
@@ -171,8 +179,8 @@ class ApacheParser( object ):
             if ( result != None and result != False ): 
                 return True
             else:
-                raise TagEndUnexpected \
-                    , 'Unexpected closure found: %s, expecting %s' \
+                raise VhostNotFound \
+                    , 'TagEndUnexpected, Unexpected closure found: %s, expecting %s' \
                     % ( line.strip(), '</%s>' % name )
                 
         
@@ -250,6 +258,8 @@ class ApacheParser( object ):
         if comment: 
             if line != '': line += ' '
             line += "#" + comment
+        #remove traling spaces and assure a newline at the end of the file.
+        line = line.rstrip() + "\n"
         return line
     def _get_last_line (self, key ):
         """ returns the last <line> found with the directive "key" """
@@ -310,6 +320,14 @@ class ApacheParser( object ):
         if value:
             value = self.parser.value_escape( value )
         return self.set_raw_value(name, value)
+    def remove_value(self, name):
+        line = self._get_last_line( name )
+        if line == None or line == False: return False
+        idx = self.element.index( line )
+        if  type( idx ) == type(int()):
+            del( self.element[ idx ] )
+            return True
+        return False
     def has_option (self, name, option ):
         line = self._get_last_line(name)
         if ( line == False or line == None ): return False
@@ -339,7 +357,9 @@ class ApacheParser( object ):
         query = 'virtualhost'
         xpath = etree.XPath( query )
         selection = xpath( self.element )
-        if len( selection ) < 1 : return None
+        if len( selection ) < 1 : 
+            raise VhostNotFound
+            #return None
         tag =  SubTag ()
         tag.set_element( selection[0] ) #TODO: fix this
         return tag
@@ -366,6 +386,10 @@ class SubTag ( ApacheParser ):
         tag_name = self.key.lower()
         self.element = etree.Element( tag_name )
     """    
+
+#compatibility fix
+def VhostParser( parser ):
+    return parser.get_virtualhost()
         
 class Line():
     def __init__(self, line = None):
