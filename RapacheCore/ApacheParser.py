@@ -22,7 +22,7 @@ class ApacheParser( object ):
             self.value = None
         else:
             self._update_from_line(line)
-        print "======> init: ", self.key
+        #print "======> init: ", self.key
         self._reset_document()
         #temporary reference for the currently opened subtag
         self.open_child = None
@@ -60,14 +60,15 @@ class ApacheParser( object ):
         if self.open_child != None:
             #something wrong, one tag has been left open in the .conf
             raise TagEndExpected, 'expected end tag for:'+self.open_child.key
-        print '..... ends with:', line
+        #print '..... ends with:', line
     def append(self, line):
-        print self.key, '==>', [line]
+        """Parses a line of code and appends it's xml equivalent to
+        self.element"""
+        #print self.key, '==>', [line]
         
         #children_key = False
         #if self.open_child != None:
-        #    children_key = self.open_child.key
-            
+        #    children_key = self.open_child.key            
         
         if self.open_child != None:
             if self.open_child.open_child == None \
@@ -126,7 +127,7 @@ class ApacheParser( object ):
         indentation = result_list[0]
         
         line = line.strip().lstrip( '<' ).rstrip( '>' ).strip()
-        print "========> CHECKING :",line
+        #print "========> CHECKING :",line
         key = self.parser.get_directive( line )
         try:
             value = self.parser.get_value( line )
@@ -136,7 +137,7 @@ class ApacheParser( object ):
         #        return indentation, key," ",value
         return key, value
     def is_tag_close (self, line, name):
-        print '..............',self.key
+        #print '..............',self.key
         basic_regexp = r'^\s*<s*(/[A-Z0-9\-._]+)\s*>.*'
         result = re.match( basic_regexp, line, re.IGNORECASE )
         if result == None or result == False:
@@ -313,7 +314,10 @@ class ApacheParser( object ):
         if line == None or line == False : return False
         #print key, '==>', bool( line.attrib.get('source' ) ), line.attrib.get('source')
         return not bool( line.attrib.get('source' ) )
-    
+    def get_virtualhost(self):
+        tag =  SubTag ( )
+        tag.set_element( self.element )
+        return tag
     
 class SubTag ( ApacheParser ):
     

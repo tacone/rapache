@@ -225,11 +225,15 @@ class ApacheParserTest ( unittest.TestCase ):
             result = p.is_tag_open( line )
             self.assertFalse( result )
     def test_nesting (self):   
-        print '=========xxxxxxxxxxxxxxxxxxxxx'
         p = Parser()
         p.load( self.vhostconf )
         #p.dump_xml( True )
         self.assertEqual( p.linescount(), 3)
+    def test_get_virtualhost(self):
+        p = Parser()
+        p.load( self.vhostconf )
+        p.dump_xml( True )
+        print p.get_virtualhost()
 if __name__ == "__main__":
     unittest.main()    
     """p = ApacheParser()
