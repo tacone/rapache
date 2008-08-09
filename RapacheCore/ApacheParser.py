@@ -24,11 +24,19 @@ class ApacheParser( object ):
             self._update_from_line(line)
         #print "======> init: ", self.key
         self._reset_document()
+        
+        if self.key != None:
+            self.element.attrib['directive'] = self.key
+        if self.value != None:
+            self.element.attrib['value'] = self.value
+        if line != None:
+            self.element.attrib['source'] = line
         #temporary reference for the currently opened subtag
         self.open_child = None
     
+    
     def _update_from_line(self, line ):
-            self.key, self.value = self.is_tag_open(line)            
+            self.key, self.value = self.is_tag_open(line)
     def _reset_document (self):        
         tag_name = self.key.lower()
         self.element = etree.Element( tag_name )
@@ -177,7 +185,8 @@ class ApacheParser( object ):
         """dumps all the key/values. key are unique, later keys override 
         previous ones """
         dict = {}
-        for line in self.element:
+        selection = etree.XPath( './line[attribute::directive]' )
+        for line in selection(self.element):
             name = line.get('directive')
             if name:
                 if line.get('unparsable' ) == 'unparsable':
@@ -323,7 +332,9 @@ class SubTag ( ApacheParser ):
     
     def set_element (self, element):
         self.element = element
-        self._update_from_line(line)
+        self.key = self.element.attrib.get( 'directive' )
+        self.value = self.element.attrib.get( 'key' )
+        
 
     """def __init__(self, key, value):
         super (SubTag, self).__init__()
