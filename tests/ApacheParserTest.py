@@ -230,11 +230,22 @@ class ApacheParserTest ( unittest.TestCase ):
         #p.dump_xml( True )
         self.assertEqual( p.linescount(), 3)
     def test_get_virtualhost(self):
+        #testing not existing virtualhost
+        p = Parser()
+        p.load( self.optionsconf )
+        vhost = p.get_virtualhost()
+        self.assertEqual( vhost, None )
+        #testing existing virtualhost
         p = Parser()
         p.load( self.vhostconf )
         #p.dump_xml( True )
-        print p.get_virtualhost()
+        vhost = p.get_virtualhost()
+        self.assertTrue( isinstance( vhost, SubTag ))
+        self.assertEqual( len( vhost.get_content() ), 16 )
+        
     def test_get_content_with_nesting(self):
+        """tests that the content of subtags is actually rendered in
+        the parent element get_content()"""
         file = open ( self.vhostconf, 'r' )
         original_content = file.readlines()
         file.close()
@@ -244,13 +255,29 @@ class ApacheParserTest ( unittest.TestCase ):
         content = p.get_content()
         
         print content
-        print "---/","\n".join(content),"/"
+        print "---/","".join(content),"/"
 
         #    print "\n".join( content )
         self.assertEqual( type(content), type([]) )
         #do lines contain extra  trailing \n ?
         self.assertEqual( len(original_content), len(content) )
-        #self.assertEqual( original_content, content )
+        self.assertEqual( original_content, content )
+    def test_nesting_scope_of_operations(self):
+        p = Parser()
+        p.load( self.vhostconf )
+        #p.dump_xml( True )
+        vhost = p.get_virtualhost()
+        expectedlen = 16
+        self.assertTrue( isinstance( vhost, SubTag ))
+        self.assertEqual( len( vhost.get_content() ), expectedlen )
+        #this is inside <virtualhost>
+        self.assertEqual( vhost.get_value( 'ServerName'), 'bart.loc' )
+        #subtags directives should not be accessible
+        self.assertEqual( vhost.get_value( 'options'), None )
+        #inside the virtualhost but placed after a subtag. should work
+        self.assertEqual( vhost.get_value( 'ServerSignature'), "off" )
+        #outside the <virtualhost>.. NEIN !
+        self.assertEqual( vhost.get_value( 'OuterDirectives'), None )
     
 if __name__ == "__main__":
     outt = ""

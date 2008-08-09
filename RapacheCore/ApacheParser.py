@@ -33,7 +33,9 @@ class ApacheParser( object ):
             self.element.attrib['source'] = line
         #temporary reference for the currently opened subtag
         self.open_child = None
-    
+    def close (self, line):
+        """Sets source for closing the tag"""
+        self.element.attrib[ 'close_source' ] = line
     
     def _update_from_line(self, line ):
             self.key, self.value = self.is_tag_open(line)
@@ -81,6 +83,7 @@ class ApacheParser( object ):
         if self.open_child != None:
             if self.open_child.open_child == None \
             and self.is_tag_close(line, self.open_child.key ):
+                self.open_child.close( line )
                 self.element.append( self.open_child.element )
                 self.open_child = None
             else:
@@ -332,8 +335,13 @@ class ApacheParser( object ):
         #print key, '==>', bool( line.attrib.get('source' ) ), line.attrib.get('source')
         return not bool( line.attrib.get('source' ) )
     def get_virtualhost(self):
-        tag =  SubTag ( )
-        tag.set_element( self.element ) #TODO: fix this
+        """Returns the first virtualhost in tree"""
+        query = 'virtualhost'
+        xpath = etree.XPath( query )
+        selection = xpath( self.element )
+        if len( selection ) < 1 : return None
+        tag =  SubTag ()
+        tag.set_element( selection[0] ) #TODO: fix this
         return tag
     
 class SubTag ( ApacheParser ):
@@ -346,7 +354,8 @@ class SubTag ( ApacheParser ):
         # replace compile_line !
         content = [ self.compile_line( self.element) ]
         content +=  super (SubTag, self).get_content() 
-        content += [ "</%s>" % self.key ]
+        #content += [ "</%s>\n" % self.key ]
+        content += [ self.element.attrib[ 'close_source' ] ]
         return content
         
     """def __init__(self, key, value):
