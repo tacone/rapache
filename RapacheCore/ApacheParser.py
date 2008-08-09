@@ -102,7 +102,15 @@ class ApacheParser( object ):
         """returns the content as a string (i.e. for saving)"""
         content = []
         for line in self.element:
-            content.append( self.compile_line(line) )        
+            if line.tag != 'line' :
+                subtag = SubTag()
+                subtag.set_element( line )
+                #print "--------------------> subtag.get_content() FTW!"
+                subtag_content = subtag.get_content()
+                print "---subtag content----->",subtag_content
+                content += subtag_content
+            else:
+                content.append( self.compile_line(line) )        
         return content
     def _parse_line(self, line, with_source = False):
         """parses a configuration line into a <line> xml element"""
@@ -325,7 +333,7 @@ class ApacheParser( object ):
         return not bool( line.attrib.get('source' ) )
     def get_virtualhost(self):
         tag =  SubTag ( )
-        tag.set_element( self.element )
+        tag.set_element( self.element ) #TODO: fix this
         return tag
     
 class SubTag ( ApacheParser ):
@@ -334,8 +342,13 @@ class SubTag ( ApacheParser ):
         self.element = element
         self.key = self.element.attrib.get( 'directive' )
         self.value = self.element.attrib.get( 'key' )
+    def get_content (self):
+        # replace compile_line !
+        content = [ self.compile_line( self.element) ]
+        content +=  super (SubTag, self).get_content() 
+        content += [ "</%s>" % self.key ]
+        return content
         
-
     """def __init__(self, key, value):
         super (SubTag, self).__init__()
         self.key = key

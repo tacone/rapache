@@ -232,19 +232,30 @@ class ApacheParserTest ( unittest.TestCase ):
     def test_get_virtualhost(self):
         p = Parser()
         p.load( self.vhostconf )
-        p.dump_xml( True )
+        #p.dump_xml( True )
         print p.get_virtualhost()
     def test_get_content_with_nesting(self):
+        file = open ( self.vhostconf, 'r' )
+        original_content = file.readlines()
+        file.close()
+        
         p = Parser()
-        p.load( self.optionsconf )
+        p.load( self.vhostconf )
         content = p.get_content()
+        
+        print content
+        print "---/","\n".join(content),"/"
+
+        #    print "\n".join( content )
         self.assertEqual( type(content), type([]) )
-        self.assertEqual( len( content), 13 )
         #do lines contain extra  trailing \n ?
-        self.assertEqual( len( "/n".join( content ).split( "\n" )), 13 )
+        self.assertEqual( len(original_content), len(content) )
+        #self.assertEqual( original_content, content )
     
 if __name__ == "__main__":
-    unittest.main()    
+    outt = ""
+    unittest.main()  
+      
     """p = ApacheParser()
     p.load('datafiles/vhost.conf')
     p.dump_xml()
