@@ -110,7 +110,7 @@ class ApacheParser( object ):
                 subtag.set_element( line )
                 #print "--------------------> subtag.get_content() FTW!"
                 subtag_content = subtag.get_content()
-                print "---subtag content----->",subtag_content
+                #print "---subtag content----->",subtag_content
                 content += subtag_content
             else:
                 content.append( self.compile_line(line) )        
