@@ -50,13 +50,14 @@ import RapacheGtk.GuiUtils
 from RapacheCore.VirtualHost import *
 from RapacheGtk import GuiUtils
 from EditDomainNameGui import EditDomainNameWindow
+import RapacheGtk.DesktopEnvironment as Desktop
+
         
 class VirtualHostWindow:
     
     def __init__ ( self, parent = None):
            
         self.vhost = None
-        self.create_new = True
         self.parent = parent
         self.plugins = []
 
@@ -72,9 +73,14 @@ class VirtualHostWindow:
         self.toolbutton_domain_add = wtree.get_widget("toolbutton_domain_add")
         self.toolbutton_domain_edit = wtree.get_widget("toolbutton_domain_edit")
         self.toolbutton_domain_delete = wtree.get_widget("toolbutton_domain_delete")
+        self.combobox_vhost_backups = wtree.get_widget("combobox_vhost_backups")
         self.notebook = wtree.get_widget("notebook")
         self.button_save = wtree.get_widget("button_save")
         self.error_area = wtree.get_widget("error_area")
+        self.label_path = wtree.get_widget("label_path")
+        self.message_text = wtree.get_widget("message_text")
+        self.error_area = wtree.get_widget("error_area")
+        
         signals = {
             "on_toolbutton_domain_add_clicked"       : self.on_toolbutton_domain_add_clicked,
             "on_toolbutton_domain_edit_clicked"     : self.on_toolbutton_domain_edit_clicked,
@@ -84,20 +90,20 @@ class VirtualHostWindow:
             "on_entry_domain_changed"              : self.on_entry_domain_changed,
             "on_button_location_clicked"        : self.on_button_location_clicked,
             "on_entry_domain_focus_out_event"    : self.on_entry_domain_focus_out_event,
-            "on_button_location_clear_clicked"    : self.on_button_location_clear_clicked
+            "on_button_location_clear_clicked"    : self.on_button_location_clear_clicked,
+            "on_button_restore_version_clicked" : self.on_button_restore_version_clicked,
+            "on_linkbutton_documentation_clicked" : self.on_linkbutton_documentation_clicked,
+            "on_notebook_switch_page" : self.on_notebook_switch_page
         }
         wtree.signal_autoconnect(signals)
+        # add on destroy to quit loop
+        self.window.connect("destroy", self.on_destroy)  
+        
+        self.combobox_vhost_backups.set_active(0)
         
         self.text_view_vhost_source = GuiUtils.new_apache_sourceview()
         wtree.get_widget( 'text_view_vhost_source_area' ).add( self.text_view_vhost_source )
-        self.text_view_vhost_source.set_editable( False )
         self.text_view_vhost_source.show()
-                
-        self.notebook.get_nth_page( 1 ).hide()
-        self.notebook.get_nth_page( 2 ).hide()
-        
-        # add on destroy to quit loop
-        self.window.connect("destroy", self.on_destroy)
         
         # Setup tree
         column = gtk.TreeViewColumn(('Domains'))
@@ -113,6 +119,60 @@ class VirtualHostWindow:
         GuiUtils.style_as_tooltip( self.error_area )
         self.on_entry_domain_changed()
         
+        for plugin in self.parent.plugin_manager.plugins:
+        	try:
+        	    if plugin.is_enabled():      	        
+        	        content, tab_label = plugin.init_vhost_properties()
+        	        plugin._tab_number = self.notebook.insert_page(content, tab_label, self.notebook.get_n_pages() - 1)
+        	        content.show()
+        	        tab_label.show()
+    	        	self.plugins.append(plugin)
+        	except Exception:
+        		traceback.print_exc(file=sys.stdout)
+
+        self.__previous_active_tab = 0
+        
+    def on_notebook_switch_page(self, notebook, page, page_num):
+        # Assume for now it always page number 1
+        if page_num == notebook.get_n_pages() - 1:
+            # how to update this.....
+            self.save(self.__previous_active_tab)
+            buf = self.text_view_vhost_source.get_buffer()
+            text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
+            # TODO: Remove this line !! hack to stop double ups from parser
+            text = text.replace("\n\n\n", "\n\n").replace("\n\n\n", "\n\n")
+            buf.set_text( text )
+            buf.set_modified(False) 
+            pass
+        else:
+            self.reload()
+        
+        self.__previous_active_tab = page_num
+
+    def on_linkbutton_documentation_clicked(self, widget):
+        print widget.get_uri()
+        Desktop.open_url( widget.get_uri() )
+        
+    def on_button_restore_version_clicked(self, widget):
+        buf = self.text_view_vhost_source.get_buffer()
+        if buf.get_modified():
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_OK_CANCEL, message_format="Are you sure, you will lose all your current changes")
+            result = md.run()
+            md.destroy()
+            if result != gtk.RESPONSE_OK:
+                return
+        
+        selected = self.combobox_vhost_backups.get_active()
+        
+        if selected == 0:
+            buf.set_text( self.vhost.get_source() )
+        else:
+            value = self.combobox_vhost_backups.get_active_text()[7:]
+            buf.set_text( self.vhost.get_source_version(value) )
+            
+        buf.set_modified(False)
+        
+        
     def run(self):
 
         # Load UI Plugins
@@ -121,24 +181,34 @@ class VirtualHostWindow:
         else:
             # load default  
             site = VirtualHostModel( "", self.parent.plugin_manager)
-            
-        for plugin in self.parent.plugin_manager.plugins:
-        	try:
-        	    if plugin.is_enabled():      	        
-        	        plugin.load_vhost_properties(self.notebook, site.data)
-    	        	self.plugins.append(plugin)
-        	except Exception:
-        		traceback.print_exc(file=sys.stdout)
 
         self.window.show()           
         gtk.main()
 
     def load (self, name ):
-        self.vhost = VirtualHostModel( name )
-        self.create_new = False
+
+        self.vhost = VirtualHostModel( name, self.parent.plugin_manager )
+
+        self._load()
+        
+        for file in self.vhost.get_backup_files():
+            self.combobox_vhost_backups.append_text("Backup " + file[0][-21:-4])
+
+        self.label_path.set_text("File : " + self.vhost.get_source_filename() ) 
+         
+    def reload(self):
+    
+        buf = self.text_view_vhost_source.get_buffer()
         try:
-            self.vhost.load(False, self.parent.plugin_manager)
-            print self.vhost.data
+            self.vhost.load_from_string( buf.get_text(buf.get_start_iter(), buf.get_end_iter()), self.parent.plugin_manager)
+        except "VhostUnparsable":            
+            pass     
+         
+        self._load()
+        
+    def _load(self):
+        print "load"
+        try:
             #self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
             server_name = self.vhost.data[ 'ServerName' ] 
             if ( server_name != None ):
@@ -146,7 +216,10 @@ class VirtualHostWindow:
             document_root = self.vhost.data[ 'DocumentRoot' ] 
             if ( document_root != None ):
                 self.entry_location.set_text( document_root )
-            server_alias = self.vhost.data[ 'ServerAlias' ]
+            server_alias = None
+            if (self.vhost.data.has_key("ServerAlias")):
+                server_alias = self.vhost.data[ 'ServerAlias' ]
+            self.treeview_domain_store.clear()
             if ( server_alias != None ): 
                 for domain in server_alias:
                     self.treeview_domain_store.append((domain, None))            
@@ -154,10 +227,13 @@ class VirtualHostWindow:
         except "VhostUnparsable":            
             pass
         
-        buf = self.text_view_vhost_source.get_buffer()
-        buf.set_text( self.vhost.get_source() )
-        
-
+        for plugin in self.parent.plugin_manager.plugins:
+        	try:
+        	    if plugin.is_enabled():          
+        	        plugin.load_vhost_properties(self.vhost)
+    	        	self.plugins.append(plugin)
+        	except Exception:
+        		traceback.print_exc(file=sys.stdout)
 
     def get_domain (self):
         return self.entry_domain.get_text().strip()
@@ -244,52 +320,71 @@ class VirtualHostWindow:
         return  
             
     def on_button_save_clicked(self, widget):
-        if self.entry_location.get_text() == "" and self.create_new:
+        res = self.save()
+        
+        if not res:
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format="Are you sure you want to continue\n\nThere are incomplete fields to be completed") #TODO: Terrible error text !!!
+            result = md.run()
+            md.destroy()
+            if result != gtk.RESPONSE_OK:
+                return
+        
+        
+        # save over buffer content
+        buf = self.text_view_vhost_source.get_buffer()
+        text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
+        self.vhost.save(text)
+        
+        # check apache config
+        returncode, error = self.parent.apache.test_config()
+        if not returncode:
+            error = error.strip().split(":")
+            error = ":".join(error[2:])
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format=error + "\n\nAre you sure you want to continue, apache will not start until all errors are resolved")
+            result = md.run()
+            md.destroy()
+            if result != gtk.RESPONSE_OK:
+                return
+
+        #self.parent.create_vhost_list()        
+        self.parent.refresh_vhosts()
+        self.parent.please_restart()
+        self.window.destroy()
+        
+    def save(self, tab_number=None):
+        result = True
+
+        if self.entry_location.get_text() == "" and self.vhost.is_new:
             self.set_default_values_from_domain( True )
         
-        options = {}
-        options[ 'ServerAlias' ] =  []
-        options[ 'ServerName' ] = self.entry_domain.get_text()
-        options[ 'hack_hosts' ] = self.checkbutton_hosts.get_active()                
-        options[ 'DocumentRoot' ] = self.entry_location.get_text()
-        options[ 'ServerAlias' ] = self.get_server_aliases_list()
-
+        self.vhost.data[ 'ServerName' ] = self.entry_domain.get_text()
+        self.vhost.data[ 'DocumentRoot' ] = self.entry_location.get_text()
+        self.vhost.data[ 'ServerAlias' ] = self.get_server_aliases_list()
+        
+        self.hack_hosts = self.checkbutton_hosts.get_active()      
+        
 	    # Save plugins
         if self.plugins:
             for plugin in self.plugins:
                 try:
                     if plugin.is_enabled():
-                        plugin.save_vhost_properties(options)
+                        res, message = plugin.save_vhost_properties(self.vhost)
+                        if not res:
+                            result = False
+                            if tab_number and plugin._tab_number == tab_number:
+                                self.show_error ( message )
+                            
                 except Exception:
                     traceback.print_exc(file=sys.stdout) 
-
-        print options
-        
-        try:
-            if ( self.create_new ):
-                site = VirtualHostModel( options[ 'ServerName' ] )
-                site.create ( options )
-            else:
-                name = self.vhost.data['name']
-                print "Current name:", name
-                site = VirtualHostModel( name )
-                site.update( options, name )
-
-            
-            #self.parent.create_vhost_list()        
-            self.parent.refresh_vhosts()
-            self.parent.please_restart()
-            self.window.destroy()
-        except "VhostExists":
-           print "========================"
-           self.show_error( "A virtual host with the same name already exists" )     
-        
-                         
+        if result:
+            self.error_area.hide() 
+        return result
+                               
     def on_button_cancel_clicked(self, widget):
         self.window.destroy()
         return    
-    def show_error ( self, message ):
         
-        self.xml.get_widget( 'message_text' ).set_label( '<b>'+message+'</b>' )
-        self.xml.get_widget( 'message_container' ).show()                 
+    def show_error ( self, message ):
+        self.message_text.set_label( '<b>'+message+'</b>' )
+        self.error_area.show()                 
 

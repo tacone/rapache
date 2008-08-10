@@ -50,7 +50,7 @@ import RapacheGtk.GuiUtils
 from RapacheCore.Module import *
 from RapacheGtk import GuiUtils
 import RapacheGtk.DesktopEnvironment as Desktop
-
+import RapacheCore.Shell
 
 def open_module_doc( name ):
         if ( name == None ): return False
@@ -74,11 +74,18 @@ class ModuleWindow:
         self.button_save = wtree.get_widget("button_save")
         self.error_area = wtree.get_widget("error_area")
         self.module_doc_button = wtree.get_widget("module_doc_button")
-        
+        self.label_module = wtree.get_widget("label_module")
+        self.label_module_description = wtree.get_widget("label_module_description")
+        self.combobox_module_backups = wtree.get_widget("combobox_module_backups")
+        self.label_path = wtree.get_widget("label_path")
+        self.combobox_module_backups.set_active(0)
+
         signals = {
             "on_button_save_clicked"            : self.on_button_save_clicked,
             "on_button_cancel_clicked"          : self.on_button_cancel_clicked,
-            "on_module_doc_button_clicked"      : self.on_module_doc_button_clicked
+            "on_module_doc_button_clicked"      : self.on_module_doc_button_clicked,
+            "on_combobox_module_backups_changed" : self.on_combobox_module_backups_changed,
+            "on_button_restore_version_clicked" : self.on_button_restore_version_clicked
         }
         wtree.signal_autoconnect(signals)            
         # add on destroy to quit loop
@@ -88,19 +95,51 @@ class ModuleWindow:
         self.text_view_module_conf.show()
         wtree.get_widget("text_view_module_conf_area").add(self.text_view_module_conf)
         
-        GuiUtils.change_button_label( self.module_doc_button, 'Documentation' )
+        #GuiUtils.change_button_label( self.module_doc_button, 'Documentation' )
         GuiUtils.style_as_tooltip( self.error_area )
+
     def run(self):
         self.window.show()           
         gtk.main()
 
+    def on_combobox_module_backups_changed(self, widget):
+        return
+
+    def on_button_restore_version_clicked(self, widget):
+        
+        if self.text_view_module_conf.get_buffer().get_modified():
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_OK_CANCEL, message_format="Are you sure, you will lose all your current changes")
+            result = md.run()
+            md.destroy()
+            if result != gtk.RESPONSE_OK:
+                return
+        
+        selected = self.combobox_module_backups.get_active()
+        
+        if selected == 0:
+            self.__set_module_conf( self.module.get_configuration() )
+        else:
+            value = self.combobox_module_backups.get_active_text()[7:]
+            self.__set_module_conf( self.module.get_configuration_version(value) )
+       
+    def __set_module_conf(self, text):
+        buf = self.text_view_module_conf.get_buffer()
+        buf.set_text( text )
+        buf.set_modified(False)
+        
+
     def load (self, name ):
-        self.window.set_title(name)
+       # self.window.set_title(name)
         self.module = ModuleModel ( name )
         #self.module.load()
-        buf = self.text_view_module_conf.get_buffer()
-        buf.set_text( self.module.get_configuration() )
+        self.__set_module_conf( self.module.get_configuration() )
         
+        self.label_module.set_markup("<b><big>Apache2 Module : " + name + "</big></b>")
+        self.label_module_description.set_markup("<i>" + self.module.get_description() + "</i>")
+        self.label_path.set_text( "File : " + self.module.get_configuration_file_name() )
+        for file in self.module.get_backup_files():
+            self.combobox_module_backups.append_text("Backup " + file[0][-21:-4])
+
          # Load UI Plugins
         for plugin in self.parent.plugin_manager.plugins:
         	if plugin.module == name:
@@ -109,6 +148,7 @@ class ModuleWindow:
 				plugin.load_module_properties(self.notebook, self.module)
 			except Exception:
 				traceback.print_exc(file=sys.stdout)
+				
 
     def on_destroy(self, widget, data=None):
         gtk.main_quit()

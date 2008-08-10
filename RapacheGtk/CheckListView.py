@@ -19,9 +19,11 @@ import gobject
 
 (
     COLUMN_FIXED,
+    COLUMN_ICON,
     COLUMN_SEVERITY,
     COLUMN_MARKUP
-) = range(3)
+) = range(4)
+
 from RapacheCore import Configuration
 import RapacheCore.Observer
 from RapacheGtk.EventDispatcher import Master
@@ -68,6 +70,7 @@ class CheckListView (gtk.TreeView ):
     def _default_model (self):
         lstore = gtk.ListStore(
                 gobject.TYPE_BOOLEAN,
+                gtk.gdk.Pixbuf,
                 gobject.TYPE_STRING,
                 gobject.TYPE_STRING)
         return lstore
@@ -91,6 +94,13 @@ class CheckListView (gtk.TreeView ):
         self.column_checkbox.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
         self.column_checkbox.set_fixed_width(40)
         self.append_column(self.column_checkbox)
+        
+        self.column_icon = gtk.TreeViewColumn(('Icon'))
+        self.column_icon.set_spacing(4)
+        cell = gtk.CellRendererPixbuf()
+        self.column_icon.pack_start(cell, False)
+        self.column_icon.set_attributes(cell, pixbuf=1)
+        self.append_column(self.column_icon)
 
         self.column_icon = gtk.TreeViewColumn()
         cellRenderer = gtk.CellRendererPixbuf()
@@ -113,7 +123,7 @@ class CheckListView (gtk.TreeView ):
             rows = selection.get_selected_rows()[1][0]
             num_row = rows[0]
             model = self.get_model()
-            name = model[ num_row ][1]
+            name = model[ num_row ][COLUMN_SEVERITY]
         except IndexError:
             return None
         return name
