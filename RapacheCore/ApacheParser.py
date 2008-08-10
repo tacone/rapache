@@ -262,7 +262,7 @@ class ApacheParser( object ):
         
         directive = obj_line.attrib.get('directive')
         if directive: 
-            if line != '': line += ' '
+            #if line != '': line += ' ' #terribly wrong.
             line += directive
             
         value = obj_line.attrib.get('value')
