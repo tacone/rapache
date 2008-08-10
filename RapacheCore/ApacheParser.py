@@ -71,6 +71,7 @@ class ApacheParser( object ):
         """uses a (line) list as the configuration file to be parsed"""
         self._reset_document()
         for line in content:
+            #if not line.endswith( "\n" ): line = line.rstrip()+"\n"
             self.append(line)
         if self.open_child != None:
             #something wrong, one tag has been left open in the .conf
@@ -115,10 +116,25 @@ class ApacheParser( object ):
                 subtag.set_element( line )
                 #print "--------------------> subtag.get_content() FTW!"
                 subtag_content = subtag.get_content()
+                #the last line won't have a newline, we need to add it
+                subtag_content[-1] = subtag_content[-1].rstrip()+"\n"
                 #print "---subtag content----->",subtag_content
                 content += subtag_content
             else:
-                content.append( self.compile_line(line) )
+                #if it's not the very last line we have to make sure it 
+                # ends with a newline
+                #also we need newlines on the last line of subtags 
+                #because we are going to append the closure </subtag> after it
+                string_line = self.compile_line(line)
+                string_line = string_line.rstrip() +  "\n"
+                content.append( string_line )
+        if self.element.getparent() == None: 
+            #if line.getnext() != None or self.element.getparent() != None:
+            if len(content) > 0 : content[-1] = content[-1].rstrip()
+            #TODO: useless debug crap follows
+            #print "------->--------->--------_>-------"
+            #for l in content:
+            #    print [l]
         return content
     def get_source (self):
         return "".join( self.get_content() )
@@ -259,7 +275,7 @@ class ApacheParser( object ):
             if line != '': line += ' '
             line += "#" + comment
         #remove traling spaces and assure a newline at the end of the file.
-        line = line.rstrip() + "\n"
+        #line = line.rstrip() + "\n"
         return line
     def _get_last_line (self, key ):
         """ returns the last <line> found with the directive "key" """
@@ -372,10 +388,10 @@ class SubTag ( ApacheParser ):
         self.value = self.element.attrib.get( 'key' )
     def get_content (self):
         # replace compile_line !
-        content = [ self.compile_line( self.element) ]
+        content = [ self.compile_line( self.element).rstrip()+"\n" ]
         content +=  super (SubTag, self).get_content() 
         #content += [ "</%s>\n" % self.key ]
-        content += [ self.element.attrib[ 'close_source' ] ]
+        content += [ self.element.attrib[ 'close_source' ].rstrip()+"\n" ]
         return content
         
     """def __init__(self, key, value):
