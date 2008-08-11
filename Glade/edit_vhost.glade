@@ -106,7 +106,6 @@
                     <property name="use_stock">True</property>
                     <property name="response_id">0</property>
                     <signal name="clicked" handler="on_ok"/>
-                    <accelerator key="Return" modifiers="" signal="clicked"/>
                   </widget>
                   <packing>
                     <property name="left_attach">1</property>
@@ -828,7 +827,6 @@ domain name or an entry in
                 <property name="use_stock">True</property>
                 <property name="response_id">0</property>
                 <signal name="clicked" handler="on_button_save_clicked"/>
-                <accelerator key="Return" modifiers="" signal="clicked"/>
               </widget>
               <packing>
                 <property name="position">1</property>

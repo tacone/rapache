@@ -93,8 +93,7 @@ class VirtualHostWindow:
             "on_button_location_clear_clicked"    : self.on_button_location_clear_clicked,
             "on_button_restore_version_clicked" : self.on_button_restore_version_clicked,
             "on_linkbutton_documentation_clicked" : self.on_linkbutton_documentation_clicked,
-            "on_notebook_switch_page" : self.on_notebook_switch_page,
-            "on_entry_domain_key_press_event":  self.on_entry_domain_key_press_event
+            "on_notebook_switch_page" : self.on_notebook_switch_page
         }
         wtree.signal_autoconnect(signals)
         # add on destroy to quit loop
@@ -133,10 +132,11 @@ class VirtualHostWindow:
 
         self.__previous_active_tab = 0
         
+        self.accel_group = gtk.AccelGroup()
+        self.window.add_accel_group(self.accel_group)
         
-    def on_entry_domain_key_press_event(self, widget, event): 
-        from gtk.gdk import keyval_name 
-        print keyval_name(event.keyval)
+        self.button_save.add_accelerator("click", self.accel_group, 13, 0, 0)
+        
         
     def on_notebook_switch_page(self, notebook, page, page_num):
         # Assume for now it always page number 1

@@ -35,6 +35,8 @@ TODO:
 """
 
 import re
+#from RapacheCore.Observer import PollyObserver
+#from RapacheCore.Observer import Observable
 from Observer import PollyObserver
 from Observer import Observable
 
@@ -54,26 +56,11 @@ class Parser (Observable):
         self.observer.register(self)
         
     def load(self, filename ):
-        """Loads a configuration file in the parser"""
         self.filename = filename
         file = open ( filename, 'r' )
         self.content = file.readlines()
         file.close()
         return self.content
-    
-    def dump_values (self ):
-        """Dumps every directive/value into a key/value dictionary. Newer 
-        keys override older ones"""
-        dict = {}
-        for line in self.content:            
-            key = self.parser.get_directive( line )
-            if key:                
-                try:
-                    value = self.parser.get_value(line)
-                    dict[ key ] = value
-                except :                    
-                    dict[ key ] = "#ERROR"
-        return dict
     
     def get_value(self, name):
         line = self.get_directive(name)    
@@ -96,6 +83,7 @@ class Parser (Observable):
             self.remove_line(idx)
             return True
         return False
+        
     def get_directive(self, name):
         idx = self._get_last_directive_idx(name)
         if ( idx == None ): return None
@@ -106,6 +94,7 @@ class Parser (Observable):
         idx = self._get_last_directive_idx(name)
         self.set_line( idx, line )
     """
+   
     # idx starts from 0 !! it's not a line number    
     def _get_last_directive_idx (self, name ):
         last_found = None
@@ -118,6 +107,7 @@ class Parser (Observable):
         if ( idx == None ):
              return self.insert_line( self._last_line_idx() , line.rstrip()+"\n")
         self.set_line( idx, line.rstrip()+"\n" )
+    
     
     def _last_line_idx (self):
         return 999999
@@ -152,8 +142,15 @@ class Parser (Observable):
             self.remove_line( idx )
         else:
             self.set_directive(name, line)
+    def _sanitize_line_breaks(self):
+        """makes sure there's only one trailing line-break for every line"""
+        sanitized = []        
+        for line in self.get_content():
+            sanitized.append( line.rstrip()+"\n" )
+        return sanitized
     def get_source (self):
-        return "".join( self.get_content() )
+        return "".join( self._sanitize_line_breaks() )
+    
     def get_content(self):
         return self.content
     def set_content_from_string(self, string):
@@ -204,6 +201,7 @@ class VhostParser( PieceParser ):
         if ( self.max == None ): raise "VhostNotFound", "End not found"
 
     def _last_line_idx (self):
+        #return (self.max-self.min) - 1
         return -1
     def _find_min( self, content ):
         for idx, line in enumerate( content ):
@@ -219,7 +217,8 @@ class VhostParser( PieceParser ):
                 if ( result != None and result != False ): return idx
         return None
     def set_line (self, idx, line ):
-        if idx >= 0: idx = idx + self.min
+        #??!?
+        #if idx >= 0: idx = idx + self.min
         return self.father.set_line( idx, line )
     def insert_line (self, idx, line ):
         print "===========> INSERTING"
@@ -240,13 +239,10 @@ class LineParser:
     """Utility class. Contains methods to parse and manipulate apache conf
     directives"""
     def tokenize (self, line ):
-        basic_regexp = '^(\s*)([A-Z0-9]+)((\s+)(.*))?'  
+        basic_regexp = '^(\s*)([A-Z0-9]+)(\s+)(.*)'  
         result = re.match( basic_regexp, line, re.IGNORECASE )        
         if ( result == None ): return False
-        result_list = list( result.groups() )
-        #we need to strip the outer parentesys around (\s+)(.*)
-        del( result_list[2] )        
-        return result_list
+        return list( result.groups() )
     def value_unescape(self, value):
         #value should have no precedig or trailing spaces
         if value == "" : return value
@@ -291,7 +287,7 @@ class LineParser:
         for k,o in enumerate( options ):
             if ( option == o ): del options[ k ] 
         
-        return self.change_raw_value( line, " ".join( options ) )
+        return self.change_value( line, " ".join( options ) )
     def has_option (self, line, option):
         options = self.parse_options( line )
         for o in options: 
@@ -321,14 +317,7 @@ class LineParser:
         value = self.value_unescape( value )
         
         return value
-    def get_comment (self, line ):
-        line = line.lstrip()
-        if not line.startswith('#'): return False
-        return line.lstrip('#')
-    def get_indentation (self, line ):
-        tokens = self.tokenize( line );        
-        if ( tokens == False ): return False
-        return tokens[ 0 ]
+
     def get_directive ( self, line ):
         tokens = self.tokenize( line );        
         if ( tokens == False ): return False
@@ -349,19 +338,71 @@ class LineParser:
 
 if __name__ == "__main__":  
     
+    template = """    
+random messy messy mess
+<VirtualHost *>
+    ServerAdmin webmaster@multi.localhost
+    ServerName multi.loc
+    #ServerAlias www.multi.loc
+    DocumentRoot /var/www/multi.loc/httpdocs
+    Options Indexes FollowSymLinks MultiViews        
+    <Directory /var/www/multi.loc/httpdocs>
+        AllowOverride All
+        Order allow,deny
+        allow from all
+    </Directory>
+</VirtualHost>
+random messy messy mess
+random messy messy mess
+"""
+    VHOST_TEMPLATE = """#created for you by Rapache
+<VirtualHost *>
+    #ServerAdmin webmaster@example.com
+    DocumentRoot /var/www/examplepath
+    ServerName example
+</VirtualHost>"""
+    options ={
+       'DocumentRoot':'/var/www/aaa/httpdocs'
+       , 'ServerName':'aaa'
+    }
     parser = Parser()
-    parser.load( '/etc/apache2/sites-available/figa' )
-    parser.set_value('DocumentRoot', '/var/www/xxxx/yyyy' )
-        
+    parser.set_content_from_string( VHOST_TEMPLATE )
     piece = VhostParser( parser )
-
-    print piece.get_value('DocumentRoot' )
-    print piece.get_value('ServerName' )
-    piece.set_directive( 'fatwife' , 'fatwife 1')
-    
-    #piece.remove_option( 'ServerAlias', 'www.figa' )
+   
+    piece.set_value('DocumentRoot',  options['DocumentRoot'] ) 
+    piece.set_value('ServerName',  options['ServerName'] )
+    piece.set_value('DocumentRoot',  options['DocumentRoot'] ) 
+    piece.set_value('ServerName',  options['ServerName'] )
+    piece.set_value('DocumentRoot',  options['DocumentRoot'] ) 
+    piece.set_value('ServerName',  options['ServerName'] )
+    piece.set_value('DocumentRoot',  options['DocumentRoot'] ) 
+    piece.set_value('ServerName',  options['ServerName'] )
+    piece.set_value('DocumentRoot',  options['DocumentRoot'] ) 
+    piece.set_value('ServerName',  options['ServerName'] )
+    piece.set_value('DocumentRoot',  options['DocumentRoot'] ) 
+    piece.set_value('ServerName',  options['ServerName'] )
+    print "====="
+    print piece.get_source()
+    print "====="
+    exit()
+   
+    parser = Parser()
+    parser.set_content_from_string(template)
+    #parser.load( '/etc/apache2/sites-available/aaa' )
+    print template.split("\n")
+    parser.set_value('DocumentRoot', '/var/www/xxxx/yyyy' )
+    parser.set_value('DocumentRoot', '/var/www/xxxx/sas' )
+    parser.set_value('DocumentRoot', '/var/www/xxxx/yyyy' )
+    piece = VhostParser( parser )
+    print piece.min, piece.max
+    #print piece.get_value('DocumentRoot' )
+    #print piece.get_value('ServerName' )
+    #piece.set_directive( 'fatwife' , 'fatwife 1')
+    piece.set_value('fatwife', "1")
     piece.add_option( 'ServerAlias', 'ftp.figa' ) 
-    
+    piece.remove_value('ServerAlias' )
+    #piece.remove_value('ServerAdmin' )    
+    #piece.remove_option( 'ServerAlias', 'www.figa' )
     
     print "====="
     print piece.get_source()

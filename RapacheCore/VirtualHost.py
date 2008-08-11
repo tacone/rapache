@@ -20,7 +20,12 @@ import sys
 import os
 import re
 from RapacheCore import Configuration
-from RapacheCore.ApacheConf import *
+#from RapacheCore.ApacheConf import *
+from RapacheCore.ApacheParser import ApacheParser as Parser
+
+from RapacheCore.ApacheParser import VhostParser
+from RapacheCore.ApacheParser import VhostNotFound
+
 from RapacheCore.HostsManager import HostsManager
 from RapacheCore import Shell
 
@@ -154,16 +159,17 @@ class VirtualHostModel():
     
     def load(self, name = False, plugin_manager = None):  
         parser = Parser()
-        parser.load( self.get_source_filename() )
-        return self.__load( parser, plugin_manager)
+        try:
+        	parser.load( self.get_source_filename() )
+        	return self.__load( parser, plugin_manager)
+        except VhostNotFound:
+             self.parsable = False
+             return False
+        
 
     def __load(self, parser, plugin_manager = None):
         options = {}        
-        try:
-            piece = VhostParser( parser )
-        except "VhostNotFound":
-             self.parsable = False
-             return False
+        piece = VhostParser( parser )        
         domain_name = piece.get_value( 'ServerName' )
         if domain_name == None:
             self.parsable = False
@@ -219,9 +225,9 @@ class VirtualHostModel():
                 else:
                     piece.remove_value(key)
 
-        print "min", piece.min, "max", piece.max
+
         
-        return "\n".join(parser.get_content())      
+        return "".join(parser.get_content())      
                 
     def save(self, content=None):
         print "Creating virtualhost: "+ self.data['ServerName']
