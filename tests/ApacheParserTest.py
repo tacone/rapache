@@ -2,6 +2,7 @@ import unittest
 import sys
 sys.path.append('../RapacheCore')
 from ApacheParser import *
+import re
 
 class LineParserTest( unittest.TestCase ):
     def old_directive (self):
@@ -63,6 +64,7 @@ class ApacheParserTest ( unittest.TestCase ):
     optionsconf = 'datafiles/options.conf'
     vhostconf = 'datafiles/vhost.conf'
     fromtemplateconf = 'datafiles/fromtemplate.conf'
+    defaultssl = 'datafiles/default-ssl'
     valid_tags = {
         '<VirtualHost *>' : ('VirtualHost', '*')
       , '<Directory "/usr/share/doc/">': ('Directory', '/usr/share/doc/')
@@ -326,6 +328,12 @@ class ApacheParserTest ( unittest.TestCase ):
         self.assertTrue( isinstance( vhost, SubTag ))
         self.assertEqual( len( vhost.get_content() ), 13+3 )
         
+        #testing a virtualhost nested into a <ifmodule>
+        p = Parser()
+        p.load( self.defaultssl )
+        #p.dump_xml( True )
+        v = p.get_virtualhost()
+        
     def test_get_content_with_nesting(self):
         """tests that the content of subtags is actually rendered in
         the parent element get_content()"""
@@ -406,6 +414,36 @@ class ApacheParserTest ( unittest.TestCase ):
                 #print "-----> source dump"
                 #print p.get_source()
                 #print "-----> end source dump"
+    def test_virtualhost_get_port(self):
+        p = Parser()
+        p.load( self.fromtemplateconf )
+        v = p.get_virtualhost()
+        self.assertEqual( v.get_port(), None )        
+        p = Parser()
+        p.load( self.defaultssl )
+        v = p.get_virtualhost()        
+        self.assertEqual( v.get_port(), 443 )
+        
+    def test_virtualhost_ports(self):
+        p = Parser()
+        p.load( self.fromtemplateconf )                  
+        v = p.get_virtualhost()        
+        self.assertEqual( v.get_port(), None )
+        v.set_port( 80 )
+        self.assertEqual( v.get_port(), 80 )
+        
+        source = p.get_source()
+        basic_regexp = r'^(\s*)<s*(VirtualHost)\s+[^>]*:80\s*>.*'
+        result = re.search( basic_regexp, source, re.MULTILINE | re.IGNORECASE )    
+        self.assertNotEqual( result, None )
+        
+        v.set_port( None )
+        self.assertEqual( v.get_port(), None )
+        source = p.get_source()
+        basic_regexp = r'^(\s*)<s*(VirtualHost)\s+[^>]*\s*>.*'
+        result = re.search( basic_regexp, source, re.MULTILINE | re.IGNORECASE )    
+        self.assertNotEqual( result, None )
+        
         
 if __name__ == "__main__":
     outt = ""
