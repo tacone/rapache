@@ -135,7 +135,7 @@ class VirtualHostWindow:
         self.accel_group = gtk.AccelGroup()
         self.window.add_accel_group(self.accel_group)
         
-        self.button_save.add_accelerator("click", self.accel_group, 13, 0, 0)
+        self.button_save.add_accelerator("clicked", self.accel_group, 13, 0, 0)
         
         
     def on_notebook_switch_page(self, notebook, page, page_num):

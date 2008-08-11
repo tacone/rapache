@@ -827,6 +827,7 @@ domain name or an entry in
                 <property name="use_stock">True</property>
                 <property name="response_id">0</property>
                 <signal name="clicked" handler="on_button_save_clicked"/>
+
               </widget>
               <packing>
                 <property name="position">1</property>

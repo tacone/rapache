@@ -91,7 +91,6 @@ class Parser (Observable):
             self.set_line( idx, line )
     def remove_value(self, name):
         idx = self._get_last_directive_idx(name)
-        print "removing line:",idx
         if idx: 
             self.remove_line(idx)
             return True
@@ -130,7 +129,6 @@ class Parser (Observable):
         value = self.get_value(name)
         if value == None: return []
         options = self.parser.parse_options( value )
-        print options
         return options
     def add_option (self, name, option ):    
         line = self.get_directive(name)
@@ -222,7 +220,6 @@ class VhostParser( PieceParser ):
         if idx >= 0: idx = idx + self.min
         return self.father.set_line( idx, line )
     def insert_line (self, idx, line ):
-        print "===========> INSERTING"
         if idx >= 0: idx = idx + self.min
         line = "\t"+line.lstrip() #ident
         return self.father.insert_line( idx, line )
@@ -268,6 +265,7 @@ class LineParser:
     #TODO: doesn't hanlde single quotes at all :(
     def parse_options ( self, s ):
         """parse a value into a list of multiple options"""
+        if s == None or s == False: return []
         s = s.rstrip()
         s = s.replace ( '\"', '&quot;' )
         result = '';    
@@ -300,7 +298,7 @@ class LineParser:
     
     def add_option ( self, line, option ):
         options = self.get_value( line );
-        if options == False : options = ""   
+        if options == False or options == None : options = ""   
         options = self.parse_options( options);
         found = False;
         for k,o in enumerate( options ):
@@ -317,9 +315,9 @@ class LineParser:
         tokens = self.tokenize( line )
         if ( tokens == False ): return False;
         value = tokens.pop()
-        value = value.strip()
-        value = self.value_unescape( value )
-        
+        if isinstance( value, str ):
+            value = value.strip()
+            value = self.value_unescape( value )
         return value
     def get_comment (self, line ):
         line = line.lstrip()
@@ -340,6 +338,8 @@ class LineParser:
 
     def change_raw_value ( self, line , new_value ):
         tokens = self.tokenize( line )
+        for idx, tok in enumerate( tokens ):
+            if tok is None: tokens[idx] = ''            
         tokens[2] = tokens[2].replace( "\n", '' ) #separator shuoldn't contain newlines
         if tokens[2] == '': tokens[2] = ' ' #at least as space as separator
         line = tokens[0]+tokens[1]+tokens[2]+new_value
