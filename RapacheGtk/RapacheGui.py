@@ -104,7 +104,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "quit" : self.quit,
             "on_menuitem_stop_apache_activate" : self.on_menuitem_stop_apache_activate }
         
-        gtk.window_set_default_icon(self.xml.get_widget("MainWindow").get_icon())
+        gtk.window_set_default_icon_from_file(os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle_golden.svg'))
         
         self.xml.signal_autoconnect(dic)
         GuiUtils.change_button_label ( self.xml.get_widget( 'restart_apache' ), "Restart Apache" )
