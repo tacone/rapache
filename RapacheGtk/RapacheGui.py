@@ -34,12 +34,6 @@ import os
 import re
 import threading
 import time
-(
-    COLUMN_FIXED,
-    COLUMN_SEVERITY,
-    COLUMN_MARKUP
-) = range(3)
-
 
 from RapacheGtk.VirtualHostGui import VirtualHostWindow
 from RapacheGtk.ModuleGui import ModuleWindow
@@ -205,7 +199,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
     def edit_button_clicked(self, widget, notused = None, notused2 = None):         
         name = self.vhosts_treeview.get_selected_line()
-        print "edit button clicked on:" + name          
+        
         if ( self.is_vhost_editable( name ) == False ): return False
         new_vhost_window = VirtualHostWindow ( self )
         new_vhost_window.load( name )
