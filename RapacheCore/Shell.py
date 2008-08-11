@@ -230,7 +230,8 @@ class CommandHandler:
         #because we have not encoding declared in this file
         #http://www.python.org/dev/peps/pep-0263/
         fakepass= 'xxxASAISUHAISGHauyguyagUDBhb2156412-,1-2.,1212'
-        command = [ 'head', '/var/log/syslog', '-n 1' ]
+        #command = [ 'head', '/var/log/syslog', '-n 1' ]
+        command = [ 'sudo', '-v' ]
         p = self.__sudo_popen( command, fakepass)
         output, error = p.communicate()
         returncode = p.returncode        

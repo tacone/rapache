@@ -96,6 +96,7 @@ class VirtualHostModel():
         
     def set_value(self, key, value):    
         self.data[key] = value
+        self.changed = True
 
     # Returns a label for displaying in UI
     def get_display_name(self):

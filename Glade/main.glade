@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Fri Aug  1 16:52:43 2008 -->
+<!--Generated with glade3 3.4.5 on Fri Aug  8 16:10:05 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="MainWindow">
     <property name="width_request">500</property>
@@ -249,6 +249,7 @@
                   </widget>
                   <packing>
                     <property name="expand">False</property>
+                    <property name="homogeneous">False</property>
                   </packing>
                 </child>
               </widget>
@@ -812,6 +813,20 @@ web server is restarted</property>
                   <packing>
                     <property name="type">tab</property>
                     <property name="position">2</property>
+                    <property name="tab_fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="Plugins">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Plugins</property>
+                  </widget>
+                  <packing>
+                    <property name="type">tab</property>
+                    <property name="position">3</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
