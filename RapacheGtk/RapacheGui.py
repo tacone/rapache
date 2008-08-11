@@ -103,12 +103,15 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "on_button_hide_warning_clicked" : self.on_button_hide_warning_clicked,
             "quit" : self.quit,
             "on_menuitem_stop_apache_activate" : self.on_menuitem_stop_apache_activate }
+        
         gtk.window_set_default_icon(self.xml.get_widget("MainWindow").get_icon())
+        
         self.xml.signal_autoconnect(dic)
         GuiUtils.change_button_label ( self.xml.get_widget( 'restart_apache' ), "Restart Apache" )
         GuiUtils.change_button_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
         self.statusbar_server_status =  self.xml.get_widget( 'statusbar_server_status' )
         self.image_apache_status =  self.xml.get_widget( 'image_apache_status' )
+        self.main_window = self.xml.get_widget("MainWindow")
         #hereby we create lists
         self.create_vhost_list()
         self.create_modules_list()
@@ -140,7 +143,15 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
     @threaded    
     def update_server_status(self, loop=False):
-           
+        window_status_icons = [ 
+          # 0 - apache stopped
+          os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle.svg' )
+          # 1 - apache unreachable
+         , os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle_orange.svg' ) #1
+          # 2 - apache started
+         , os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle_green.svg' ) #1
+        ]
+        
         while True:
             status = self.apache.get_status()
             text = "Apache is stopped"
@@ -160,6 +171,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.statusbar_server_status.pop(self.statusbar_server_status_context_id)
             self.statusbar_server_status.push(self.statusbar_server_status_context_id, text)
             gtk.gdk.threads_leave()
+            
+            self.main_window.set_icon_from_file(window_status_icons[status])
             
             if not loop:
                 break
