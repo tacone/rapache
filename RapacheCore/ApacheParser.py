@@ -27,7 +27,6 @@ class ApacheParser( object ):
             self.value = None
         else:
             self._update_from_line(line)
-        #print "======> init: ", self.key
         self._reset_document()
         
         if self.key != None:
@@ -76,15 +75,9 @@ class ApacheParser( object ):
         if self.open_child != None:
             #something wrong, one tag has been left open in the .conf
             raise VhostNotFound, 'TagEndExpected: expected end tag for:'+self.open_child.key
-        #print '..... ends with:', line
     def append(self, line):
         """Parses a line of code and appends it's xml equivalent to
         self.element"""
-        #print self.key, '==>', [line]
-        
-        #children_key = False
-        #if self.open_child != None:
-        #    children_key = self.open_child.key            
         
         if self.open_child != None:
             if self.open_child.open_child == None \
@@ -97,8 +90,6 @@ class ApacheParser( object ):
         else:    
             tag_open = self.is_tag_open(line)
             if tag_open is not False:
-                #print self.key,'--> opening', tag_open[0], tag_open[1]
-                #self.open_child = SubTag( tag_open[0], tag_open[1] )
                 self.open_child = SubTag( line )
             else:
                 #unexpected closure ? we will trigger an exception
@@ -114,11 +105,9 @@ class ApacheParser( object ):
             if line.tag != 'line' :
                 subtag = SubTag()
                 subtag.set_element( line )
-                #print "--------------------> subtag.get_content() FTW!"
                 subtag_content = subtag.get_content()
                 #the last line won't have a newline, we need to add it
                 subtag_content[-1] = subtag_content[-1].rstrip()+"\n"
-                #print "---subtag content----->",subtag_content
                 content += subtag_content
             else:
                 #if it's not the very last line we have to make sure it 
@@ -131,10 +120,6 @@ class ApacheParser( object ):
         if self.element.getparent() == None: 
             #if line.getnext() != None or self.element.getparent() != None:
             if len(content) > 0 : content[-1] = content[-1].rstrip()
-            #TODO: useless debug crap follows
-            #print "------->--------->--------_>-------"
-            #for l in content:
-            #    print [l]
         return content
     def get_source (self):
         return "".join( self.get_content() )
@@ -144,8 +129,6 @@ class ApacheParser( object ):
         parser = self.parser
         c = etree.Element("line")
         directive = parser.get_directive( line )
-        #print line
-        #print 'directive', directive
         if directive: 
             c.attrib['directive'] = directive
             try:
@@ -170,7 +153,6 @@ class ApacheParser( object ):
         indentation = result_list[0]
         
         line = line.strip().lstrip( '<' ).rstrip( '>' ).strip()
-        #print "========> CHECKING :",line
         key = self.parser.get_directive( line )
         try:
             value = self.parser.get_value( line )
@@ -180,7 +162,6 @@ class ApacheParser( object ):
         #        return indentation, key," ",value
         return key, value
     def is_tag_close (self, line, name):
-        #print '..............',self.key
         basic_regexp = r'^\s*<s*(/[A-Z0-9\-._]+)\s*>.*'
         result = re.match( basic_regexp, line, re.IGNORECASE )
         if result == None or result == False:
@@ -198,14 +179,7 @@ class ApacheParser( object ):
                 raise VhostNotFound \
                     , 'TagEndUnexpected, Unexpected closure found: %s, expecting %s' \
                     % ( line.strip(), '</%s>' % name )
-                
-        
-        
-        
-        
-        
         return False
-        
     def dump_xml (self, include_comments = False):
         """prints out the internal xml structure"""
         if include_comments:
@@ -228,7 +202,6 @@ class ApacheParser( object ):
                     dict[ name ] = "#ERROR"
                 else:
                     dict[ name ] = line.get('value')
-        #print dict
         return dict
     def make_line (self, properties = {}): 
         """returns a <line> xml element starting from a dictionary"""
@@ -313,10 +286,7 @@ class ApacheParser( object ):
         else:
             self.set_directive(name, line)
     def get_raw_value(self, key):
-        #print "---->", key
         line = self._get_last_line(key)
-        #print etree.tostring( line )
-        
         if line == None : return None
         #oh, by the way, should be the only element of the list
         return line.get('value')

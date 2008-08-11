@@ -60,7 +60,9 @@ class LineParserTest( unittest.TestCase ):
     def test_parse_options(self):
         lp = LineParser()
         please_test =[
-          [ 'option1 option2' , ['option1','option2'] ]
+            [ 'option1 option2' , ['option1','option2'] ]
+          , [ '', [] ]
+          , [ None, [] ]
           # TODO: fix this
           #, [ 'option1 "spaced option"' , ['option1','"spaced option"'] ]
         ]
@@ -133,12 +135,13 @@ class LineParserTest( unittest.TestCase ):
           ,[  '\t\tServerAlias www.example.com'
             , 'www.example.net'
             , '\t\tServerAlias www.example.com www.example.net' ]
-          # TODO: this fails, please fix
-          # # adding to an empty directive
-          #,[  '\t\tServerAlias'
-          #  , 'example.com'
-          #  , '\t\tServerAlias example.com' ]          
+          #adding to an empty directive
+          ,[  '\t\tServerAlias'
+            , 'www.example.net'
+            , '\t\tServerAlias www.example.net' ]
+                  
         ]
+            
         for case in please_test:
             line, option, expected = case 
             result = lp.add_option( line, option )
@@ -168,7 +171,9 @@ class LineParserTest( unittest.TestCase ):
             #should strip preceding spaces
             [ 'DocumentRoot \t\t  /var/www/    ', '/var/www/' ], 
             #should return all the options as one single string
-            [ '\t\tServerAlias www.example.com beta.example.com ', 'www.example.com beta.example.com' ]            
+            [ '\t\tServerAlias www.example.com beta.example.com ', 'www.example.com beta.example.com' ],
+            #should return None
+            [ 'ServerAlias', None]
           ]
         for case in please_test:
             value, expected = case  
@@ -211,86 +216,6 @@ class LineParserTest( unittest.TestCase ):
             value, new_value, expected = case  
             result = lp.change_value( value, new_value )
             self.assertEqual( result.rstrip(), expected.rstrip())
-
-class ParserTest ( unittest.TestCase ):
-    apache2conf = 'datafiles/apache2.conf'
-    apache2conf_expected  = {
- 'Group': '${APACHE_RUN_GROUP}',
- 'StartServers': '2',
- 'ThreadsPerChild': '25',
- 'HostnameLookups': 'Off',
- 'LockFile': '/var/lock/apache2/accept.lock',
- 'KeepAlive': 'On',
- 'Include': '/etc/apache2/sites-enabled/',
- 'ServerRoot': '/etc/apache2',
- 'MinSpareServers': '5',
- 'MinSpareThreads': '25',
- 'MaxClients': '150',
- 'User': '${APACHE_RUN_USER}',
- 'MaxRequestsPerChild': '0',
- 'Deny': 'from all',
- 'ServerSignature': 'On',
- 'Timeout': '300',
- 'KeepAliveTimeout': '15',
- 'AccessFileName': '.htaccess',
- 'Order': 'allow,deny',
- 'MaxSpareServers': '10',
- 'ServerTokens': 'Full',
- 'ErrorLog': '/var/log/apache2/error.log',
- 'LogLevel': 'warn',
- 'LogFormat': '#ERROR',
- 'MaxSpareThreads': '75',
- 'MaxKeepAliveRequests': '100',
- 'DefaultType': 'text/plain',
- 'PidFile': '${APACHE_PID_FILE}'
-}
-
-    def test_load (self):
-        p = Parser()
-        p.load( self.apache2conf )
-        self.assertTrue( isinstance(p.content , list ) )
-        self.assertTrue( len( p.content ) > 0 )
-    def test_get_value(self):
-        p = Parser()
-        p.load( self.apache2conf )
-        for key in self.apache2conf_expected :
-            expected = self.apache2conf_expected[ key ]
-            if expected == '#ERROR':
-                print "Please cover parsing of ",key," in apache2.conf with tests"
-            else:
-                self.assertEqual( p.get_value( key ), expected )
-    def test_set_value (self):
-        p = Parser()
-        p.load( self.apache2conf )
-        length = len( p.content )
-        for key in self.apache2conf_expected :
-            if self.apache2conf_expected[ key ] == '#ERROR':
-                print "Please cover parsing of ",key," in apache2.conf with tests"
-            else:
-                p.set_value( key, 'NULLIFIED' )
-        #number of lines shuoldn't be changed
-        self.assertEqual( len( p.content ), length )
-        dict = p.dump_values()
-        for key in dict: 
-            #print key,dict[key]
-            res = self.assertTrue(dict[ key ]=='NULLIFIED' or dict[ key ]=='#ERROR' )
-        p.set_value( 'DocumentRoot', '/var/www/htdocs' )
-        #DocumentRoot is not present in the file, should add a new line
-        self.assertEqual( len(p.content), length +1 )
-        #try setting a value with spaces
-        p.set_value( 'DocumentRoot', '/var/www/my htdocs' )
-        #length should be the same as before
-        self.assertEqual( len(p.content), length +1 )        
-        self.assertEqual( p.get_value( 'DocumentRoot' ), '/var/www/my htdocs' )
-    """def test_remove_value(self):
-        p = Parser()
-        p.load( self.apache2conf )
-        length = len( p.content )
-        for key in self.apache2conf_expected :            
-            p.remove_value( 'key' )
-            print key, p.get_value( key )
-            self.assertTrue( p.get_value( key ) == False )
-    """    
         
 if __name__ == "__main__":
     unittest.main()

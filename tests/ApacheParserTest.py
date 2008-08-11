@@ -232,6 +232,12 @@ class ApacheParserTest ( unittest.TestCase ):
         self.assertEqual( p.get_value( 'ErrorDocument' ), 1 )
         self.assertEqual( options, expected )"""
         
+        #testing adding to an empty directive
+        p = Parser()
+        p.set_content_from_string( "\t\tServerAlias" )
+        p.add_option( 'ServerAlias', 'www.example.net' )
+        self.assertEqual( p.get_options( 'ServerAlias' ), ['www.example.net'] )
+        
     def test_remove_option(self):
         p = Parser()
         p.load( self.optionsconf )
