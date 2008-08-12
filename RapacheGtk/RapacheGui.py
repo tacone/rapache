@@ -236,7 +236,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         if ( name == None ):
             self.xml.get_widget( 'delete_button' ).set_sensitive( False )
             self.xml.get_widget( 'edit_button' ).set_sensitive( False )
-            self.xml.get_widget( 'open_in_browser_button' ).set_sensitive( False )
+            self.xml.get_widget( 'surf_this_button' ).set_sensitive( False )
         else:
             editable = self.is_vhost_editable( name )
             self.xml.get_widget( 'delete_button' ).set_sensitive( editable )
