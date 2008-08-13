@@ -233,6 +233,9 @@ class ApacheParser( object ):
         indentation = obj_line.attrib.get('indentation')
         if indentation: line += indentation
         
+        #lets open subtag
+        if obj_line.tag != 'line': line += '<'
+            
         directive = obj_line.attrib.get('directive')
         if directive: 
             #if line != '': line += ' ' #terribly wrong.
@@ -242,7 +245,10 @@ class ApacheParser( object ):
         if value: 
             if line != '': line += ' '
             line += value
-            
+         
+        #lets close subtag
+        if obj_line.tag != 'line': line += '>'    
+        
         comment = obj_line.attrib.get('comment')
         if comment: 
             if line != '': line += ' '
@@ -340,7 +346,7 @@ class ApacheParser( object ):
         return not bool( line.attrib.get('source' ) )
     def get_virtualhost(self):
         """Returns the first virtualhost in tree"""
-        query = 'virtualhost'
+        query = './/virtualhost'
         xpath = etree.XPath( query )
         selection = xpath( self.element )
         if len( selection ) < 1 : 
@@ -363,6 +369,35 @@ class SubTag ( ApacheParser ):
         #content += [ "</%s>\n" % self.key ]
         content += [ self.element.attrib[ 'close_source' ].rstrip()+"\n" ]
         return content
+    def get_port(self):
+        value = self.element.attrib.get('value');
+        if value is None: return None
+        tokens = value.split(':')
+        if len(tokens) < 2: return None
+        return int(tokens[-1])
+    def set_port(self, portnumber):
+        old_port = self.get_port()
+        value = self.element.attrib.get('value')
+        if str(portnumber) == str(old_port):
+            return #no changes needed
+        if portnumber is not None:
+            if old_port is None: 
+                value += ":"+str(portnumber)
+            else:
+                tokens = value.split(':')
+                tokens[-1] = str( portnumber )
+                value = ":".join( tokens )
+        else: 
+            #old_port can't be None because of the condition:
+            #if str(portnumber) == str(old_port)
+            #at the top of this method
+            tokens = value.split(':')
+            tokens[-1] = str( portnumber )
+            value = ":".join( tokens[:-1] )
+        self.element.attrib[ 'value' ] = value
+        #tell the parser the line is changed
+        if self.element.attrib.get( 'source' ) is not None:
+            del( self.element.attrib[ 'source' ] )
         
     """def __init__(self, key, value):
         super (SubTag, self).__init__()

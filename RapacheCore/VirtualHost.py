@@ -73,7 +73,7 @@ class VirtualHostModel():
     def __init__(self, name = None, plugin_manager = None):
         self.data = {
               'ServerName' : name        
-            , 'DocumentRoot' : None            
+            , 'DocumentRoot' : None   
         }
         self.__content = ""        
         self.__name = name # save the original name
@@ -82,6 +82,7 @@ class VirtualHostModel():
         self.enabled = self.is_enabled()
         self.hack_hosts = False
         self.parsable = True
+        self.__port = "80"
 
         # Init plugin values so the keys exist
         if plugin_manager:
@@ -94,13 +95,21 @@ class VirtualHostModel():
 
     # Shorcut for getting data value 
     def get_value(self, key, default=None):
+    
+        if key.lower() == "port":
+            if self.__port: return self.__port
+            return default
+    
         if self.data.has_key( key ):
             if self.data[key]:
                 return self.data[key]
         return default
         
-    def set_value(self, key, value):    
-        self.data[key] = value
+    def set_value(self, key, value):   
+        if key.lower() == "port":
+            self.__port = value
+        else:
+             self.data[key] = value
         self.changed = True
 
     # Returns a label for displaying in UI
@@ -179,6 +188,7 @@ class VirtualHostModel():
         options[ 'ServerName' ] = domain_name
         options[ 'ServerAlias' ] = piece.get_options( 'ServerAlias' )
         options[ 'DocumentRoot' ] = piece.get_value('DocumentRoot')
+        #options[ 'Port' ] = piece.get_port()
         hosts = HostsManager()
         if ( domain_name == None or hosts.find ( domain_name ) == False ):
             options['hack_hosts'] = False
@@ -186,8 +196,9 @@ class VirtualHostModel():
             options['hack_hosts'] = True
         self.parsable = True
         
-        # Load plugin values
+        self.__port = piece.get_port()
 
+        # Load plugin values
         if plugin_manager:
             for plugin in plugin_manager.plugins:
                 for key in plugin.vhosts_config.keys():
@@ -212,6 +223,8 @@ class VirtualHostModel():
 
         piece = VhostParser( parser )
 
+        piece.set_port(self.__port)
+
         # Get a bit more dynamic with it
         for key in self.data.keys():
             obj = self.data[key]
@@ -224,8 +237,6 @@ class VirtualHostModel():
                     piece.set_value(key, obj)
                 else:
                     piece.remove_value(key)
-
-
         
         return "".join(parser.get_content())      
                 
