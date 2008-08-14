@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Wed Aug 13 17:05:42 2008 -->
+<!--Generated with glade3 3.4.5 on Fri Aug 15 10:53:44 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -52,27 +52,7 @@
               <placeholder/>
             </child>
             <child>
-              <widget class="GtkLinkButton" id="linkbutton_active_cert">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="label" translatable="yes">None</property>
-                <property name="relief">GTK_RELIEF_NONE</property>
-                <property name="response_id">0</property>
-                <property name="uri">http://glade.gnome.org</property>
-              </widget>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
-                <property name="top_attach">1</property>
-                <property name="bottom_attach">2</property>
-                <property name="y_options"></property>
-                <property name="x_padding">8</property>
-              </packing>
-            </child>
-            <child>
               <widget class="GtkLabel" id="label20">
-                <property name="visible">True</property>
                 <property name="label" translatable="yes">Current SSL Certificate</property>
               </widget>
               <packing>
@@ -80,6 +60,7 @@
                 <property name="bottom_attach">2</property>
                 <property name="x_options"></property>
                 <property name="y_options"></property>
+                <property name="x_padding">8</property>
               </packing>
             </child>
             <child>
@@ -100,7 +81,6 @@
                     <child>
                       <widget class="GtkEntry" id="entry_ssl_port">
                         <property name="visible">True</property>
-                        <property name="sensitive">False</property>
                         <property name="can_focus">True</property>
                         <property name="text" translatable="yes">443</property>
                       </widget>
@@ -250,7 +230,7 @@
             <child>
               <widget class="GtkLabel" id="label13">
                 <property name="visible">True</property>
-                <property name="label" translatable="yes">Enable</property>
+                <property name="label" translatable="yes">SSL Enabled</property>
                 <property name="justify">GTK_JUSTIFY_RIGHT</property>
               </widget>
               <packing>
@@ -303,22 +283,24 @@
                 <property name="bottom_attach">4</property>
                 <property name="x_options"></property>
                 <property name="y_options"></property>
+                <property name="x_padding">8</property>
               </packing>
             </child>
             <child>
               <widget class="GtkHBox" id="hbox3">
                 <property name="visible">True</property>
                 <child>
-                  <widget class="GtkFileChooserButton" id="filechooserbutton1">
+                  <widget class="GtkFileChooserButton" id="filechooserbutton_ssl_cert">
                     <property name="visible">True</property>
                   </widget>
                 </child>
                 <child>
-                  <widget class="GtkButton" id="button2">
+                  <widget class="GtkButton" id="button_import">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="response_id">0</property>
+                    <signal name="clicked" handler="on_button_import_clicked"/>
                     <child>
                       <widget class="GtkHBox" id="hbox5">
                         <property name="visible">True</property>
@@ -405,7 +387,7 @@
                           <widget class="GtkTreeView" id="treeview_requests">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="headers_visible">False</property>
+                            <signal name="row_activated" handler="on_treeview_requests_row_activated"/>
                           </widget>
                         </child>
                       </widget>
@@ -422,6 +404,36 @@
                 <property name="bottom_attach">3</property>
                 <property name="x_padding">8</property>
                 <property name="y_padding">8</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkHBox" id="hbox8">
+                <child>
+                  <widget class="GtkLinkButton" id="linkbutton_active_cert">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="label" translatable="yes">None</property>
+                    <property name="relief">GTK_RELIEF_NONE</property>
+                    <property name="response_id">0</property>
+                    <property name="uri">http://glade.gnome.org</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <placeholder/>
+                </child>
+              </widget>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="right_attach">2</property>
+                <property name="top_attach">1</property>
+                <property name="bottom_attach">2</property>
+                <property name="y_options"></property>
+                <property name="x_padding">8</property>
               </packing>
             </child>
           </widget>

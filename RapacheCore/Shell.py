@@ -159,6 +159,8 @@ class CommandHandler:
             f = open(local_path, "w")
             f.write(content)
             f.close()
+            
+            self.create_complete_path(os.path.dirname(path))
 
             # copy file now using sudo
             self.sudo_execute( ["cp", local_path, path] )
