@@ -1,5 +1,5 @@
 <IfModule mod_ssl.c>
-<VirtualHost __default__:443>
+<VirtualHost _default_:443>
 	ServerAdmin webmaster@localhost
 	
 	DocumentRoot /var/www/
