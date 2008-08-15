@@ -67,6 +67,18 @@ def normalize_vhost( fname ):
     return ( code == 0 )
     return  Shell.command.exists( dest )
 
+def get_all_vhosts(plugin_manager = None):
+        def _blacklisted ( fname ):
+            if re.match( '.*[~]\s*$', fname ) != None : return True
+            if re.match( '.*.swp$', fname ) != None : return True
+            
+        data = []
+        dirList = Shell.command.listdir( Configuration.SITES_AVAILABLE_DIR )
+        dirList = [x for x in dirList if _blacklisted( x ) == False ]            
+        for fname in  dirList :                        
+            data.append( VirtualHostModel( fname, plugin_manager ) )
+        
+        return data
 
 # Replacment that has a bit of state
 class VirtualHostModel():
@@ -82,6 +94,7 @@ class VirtualHostModel():
         self.enabled = self.is_enabled()
         self.hack_hosts = False
         self.parsable = True
+        self.can_edit_server_name = True
         self.__port = "80"
 
         # Init plugin values so the keys exist
@@ -181,9 +194,10 @@ class VirtualHostModel():
         piece = VhostParser( parser )        
         domain_name = piece.get_value( 'ServerName' )
         if domain_name == None:
-            self.parsable = False
+            domain_name = self.__name
+            self.can_edit_server_name = False
             if self.__name == "default":  
-                domain_name = self.__name
+                self.parsable = False
              #return False
         options[ 'ServerName' ] = domain_name
         options[ 'ServerAlias' ] = piece.get_options( 'ServerAlias' )

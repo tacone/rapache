@@ -6,6 +6,8 @@ from text_display import TextDisplayWindow
 from OpenSSL import crypto
 import subprocess
 import time
+from RapacheCore import VirtualHost
+from RapacheCore import Configuration
 try:
      import pygtk
      pygtk.require("2.0")
@@ -46,11 +48,35 @@ class AdvancedVhostPlugin(PluginBaseObject):
         self.vhost = None
         
         self.active_cert = None
-    
-    
+        
+        
+    def on_menu_item_activate(self, widget, main_window):
+        #if self.is_module_enabled():
+        ssl_vhost = None
+        for vhost in VirtualHost.get_all_vhosts():
+            if vhost.get_value("port", "80") == "443": 
+                # TODO: is this the best check... maybe check ssl property?
+                ssl_vhost = vhost
+                break
+        
+        if not ssl_vhost:
+            # There is no ssl_host create one now!
+            print "No ssl vhost exists creating one now"
+            f = open(os.path.join(self.path , "default-ssl"), "r")
+            content = f.read()
+            f.close()
+            Shell.command.write_file(os.path.join(Configuration.SITES_AVAILABLE_DIR, "default-ssl"), content)
+            ssl_vhost = VirtualHost.VirtualHostModel("default-ssl")
+            #ssl_vhost.toggle(False)
+            main_window.open_edit_vhost_window("default-ssl")
+            
+    # Add item to tools menu
+    def init_main_window(self, main_window):
+        self.menu_item = gtk.MenuItem("Create SSL Host")
+        self.menu_item.connect("activate", self.on_menu_item_activate, main_window)
+        return self.menu_item
+
     def init_vhost_properties(self):
-
-
         # Get glade file XML
         f = open( os.path.join(self.path, "vhost.glade") ,"r")
         self.glade_vhost_xml =  f.read()
@@ -291,7 +317,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
              vhost.set_value("Port", self.entry_ssl_port.get_text() )
         else:
              vhost.set_value("SSLEngine", "off")
-             vhost.set_value("Port", "80" )
+             #vhost.set_value("Port", "80" )
 
         vhost.set_value("SSLCertificateFile", self.active_cert)
         vhost.set_value("SSLCertificateKeyFile", os.path.join(self.ssl_path, self.vhost.get_value("ServerName") + '.pkey'))

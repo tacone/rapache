@@ -49,7 +49,7 @@ import RapacheCore.Observer
 from RapacheGtk.EventDispatcher import Master
 import subprocess
 import RapacheGtk.DesktopEnvironment as Desktop
-
+import traceback
 data = \
 [(False, "Loading", "please wait" )]
 
@@ -123,6 +123,17 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
         self.refresh_config_test()
         
+        self.menu_tools = self.xml.get_widget( 'menu_tools' )
+        for plugin in self.plugin_manager.plugins:
+        	try:
+        	    if plugin.is_enabled():      	        
+        	        menu_item = plugin.init_main_window(self)
+                    if menu_item != None:
+                        self.menu_tools.add(menu_item)
+                        menu_item.show()
+        	except Exception:
+        		traceback.print_exc(file=sys.stdout)
+
     def refresh_config_test(self): 
         res, text = self.apache.test_config()
         if not res:
@@ -199,7 +210,10 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
     def edit_button_clicked(self, widget, notused = None, notused2 = None):         
         name = self.vhosts_treeview.get_selected_line()
+        self.open_edit_vhost_window( name )
+
         
+    def open_edit_vhost_window(self, name):
         if ( self.is_vhost_editable( name ) == False ): return False
         new_vhost_window = VirtualHostWindow ( self )
         new_vhost_window.load( name )

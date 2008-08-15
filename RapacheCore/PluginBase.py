@@ -47,6 +47,11 @@ class PluginBaseObject():
         
         return enabled
         
+    # Add item to tools menu
+    def init_main_window(self, MainWindow):
+        return None
+        
+        
     # Customise the module properties window
     def load_module_properties(self, notebook, module):
         return True
