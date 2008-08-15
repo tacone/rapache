@@ -40,7 +40,8 @@ class AdvancedVhostPlugin(PluginBaseObject):
         
         # Define what additional config should be read from vhost file
         self.vhosts_config = {  "SSLEngine" : 0, 
-                                "SSLCertificateFile" : 0  } # 0 value | 1 options
+                                "SSLCertificateFile" : 0 ,
+                                "SSLCertificateKeyFile" : 0 } # 0 value | 1 options
             
         self.vhost = None
         
@@ -293,6 +294,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
              vhost.set_value("Port", "80" )
 
         vhost.set_value("SSLCertificateFile", self.active_cert)
+        vhost.set_value("SSLCertificateKeyFile", os.path.join(self.ssl_path, self.vhost.get_value("ServerName") + '.pkey'))
 
         return True, None
 
