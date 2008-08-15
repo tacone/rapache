@@ -141,7 +141,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
             cert = crypto.load_certificate(crypto.FILETYPE_PEM, text) 
             timestamp = time.strftime("%y-%m-%d %H:%M:%S", time.localtime() )
 
-            cert_path = os.path.join(self.ssl_path, cert.get_subject().commonName + ' ' + timestamp +'.cert')
+            cert_path = os.path.join("/etc/ssl/certs/", cert.get_subject().commonName + ' ' + timestamp +'.pem')
             
             Shell.command.write_file(cert_path, text)
             
@@ -176,7 +176,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
                 text += "Locality:\t\t" + cert.get_subject().localityName + "\n"
                 
             if cert.get_subject().stateOrProvinceName:
-                text += "State:\t\t" + cert.get_subject().stateOrProvinceName + "\n"
+                text += "State:\t\t\t" + cert.get_subject().stateOrProvinceName + "\n"
                 
             if cert.get_subject().countryName:
                 text += "Country:\t\t" + cert.get_subject().countryName + "\n"
@@ -188,7 +188,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
             
             tdw.load(text, path)
             tdw.run()
-        if path.endswith(".cert"):
+        if path.endswith(".crt"):
             tdw = TextDisplayWindow(self.path)
             
             cert = crypto.load_certificate(crypto.FILETYPE_PEM, Shell.command.read_file(path)) 
@@ -210,7 +210,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
                 text += "Locality:\t\t" + cert.get_subject().localityName + "\n"
                 
             if cert.get_subject().stateOrProvinceName:
-                text += "State:\t\t" + cert.get_subject().stateOrProvinceName + "\n"
+                text += "State:\t\t\t" + cert.get_subject().stateOrProvinceName + "\n"
                 
             if cert.get_subject().countryName:
                 text += "Country:\t\t" + cert.get_subject().countryName + "\n"
@@ -252,14 +252,12 @@ class AdvancedVhostPlugin(PluginBaseObject):
         self.treeview_requests_store = gtk.ListStore(gtk.gdk.Pixbuf,str, str, str, str)
         self.treeview_requests.set_model(self.treeview_requests_store)
         
-        files = Shell.command.listdir(self.ssl_path)
+        files = Shell.command.listdir("/etc/ssl/certs")
         files.sort()
         for path in files: 
-            full_path = os.path.join(self.ssl_path, path)     
-            if path.endswith(".csr"):
-                cert_req = crypto.load_certificate_request(crypto.FILETYPE_PEM, Shell.command.read_file(full_path)) 
-                self.treeview_requests_store.append((file_icon, "Request", cert_req.get_subject().commonName, "",  full_path))
-            if path.endswith(".cert"):
+            full_path = os.path.join("/etc/ssl/certs", path)     
+
+            if path.endswith(".crt"):
                 
                 cert = crypto.load_certificate(crypto.FILETYPE_PEM, Shell.command.read_file(full_path)) 
                 expired = self.get_expiry_date_hack(cert, full_path)
@@ -276,11 +274,19 @@ class AdvancedVhostPlugin(PluginBaseObject):
             #if path.endswith(".pkey"):
             #    self.treeview_requests_store.append((auth_icon, "Key", path, path)) 
 
+        files = Shell.command.listdir("/etc/ssl/request")
+        files.sort()
+        for path in files: 
+            full_path = os.path.join("/etc/ssl/request", path)     
+            if path.endswith(".csr"):
+                cert_req = crypto.load_certificate_request(crypto.FILETYPE_PEM, Shell.command.read_file(full_path)) 
+                self.treeview_requests_store.append((file_icon, "Request", cert_req.get_subject().commonName, "",  full_path))
+
     def on_button_csr_clicked(self, widget):
 
         w = CertificateRequestWindow(self.path)
         
-        w.load( [self.vhost.get_value("ServerName")] + self.vhost.get_value("ServerAlias", []),  self.vhost.get_value("ServerAdmin", ""), self.ssl_path )
+        w.load( [self.vhost.get_value("ServerName")] + self.vhost.get_value("ServerAlias", []),  self.vhost.get_value("ServerAdmin", "") )
         cert = w.run()
         
         if cert:
@@ -295,14 +301,9 @@ class AdvancedVhostPlugin(PluginBaseObject):
     # Customise the vhost properties window
     def load_vhost_properties(self, vhost):
         self.vhost = vhost
-          
-        self.ssl_path = os.path.abspath(os.path.join(self.vhost.get_value( 'DocumentRoot' ), os.path.pardir, "ssl"))
-        
-        
+                  
         self.update_active_cert(vhost.get_value("SSLCertificateFile", ""))
-        self.update_treeview()
-        self.entry_ssl_certificate_location.set_text( self.ssl_path )  
-        
+        self.update_treeview()      
 
         if vhost.get_value("SSLEngine", "Off").lower() == "on":
             self.checkbutton_ssl_enable.set_active(True)
@@ -312,7 +313,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
     def save_vhost_properties(self, vhost):
         self.vhost = vhost
         
-        if self.checkbutton_ssl_enable.get_active():
+        if self.active_cert:
              vhost.set_value("SSLEngine", "on" )
              vhost.set_value("Port", self.entry_ssl_port.get_text() )
         else:
@@ -320,7 +321,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
              #vhost.set_value("Port", "80" )
 
         vhost.set_value("SSLCertificateFile", self.active_cert)
-        vhost.set_value("SSLCertificateKeyFile", os.path.join(self.ssl_path, self.vhost.get_value("ServerName") + '.pkey'))
+        vhost.set_value("SSLCertificateKeyFile", os.path.join("/etc/ssl/private/", self.vhost.get_value("ServerName") + '.pkey'))
 
         return True, None
 

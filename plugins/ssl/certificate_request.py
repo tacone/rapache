@@ -358,15 +358,14 @@ class CertificateRequestWindow:
         
         # Generate a key for the vhost
         self.cert = None
-        path = os.path.join(self.path)
+
         timestamp = time.strftime("%y-%m-%d %H:%M:%S", time.localtime() )
-        privatekey_path = os.path.join(path, self.combobox_domain.get_active_text() + '.pkey')
-        certreq_path = os.path.join(path, self.combobox_domain.get_active_text() +  ' ' + timestamp +'.csr')
-        cert_path = os.path.join(path, self.combobox_domain.get_active_text() +  ' ' + timestamp +'.cert')
+        privatekey_path = os.path.join("/etc/ssl/private", self.combobox_domain.get_active_text() + '.pkey')
+        certreq_path = os.path.join("/etc/ssl/request/", self.combobox_domain.get_active_text() +  ' ' + timestamp +'.csr')
+        cert_path = os.path.join("/etc/ssl/certs/", self.combobox_domain.get_active_text() +  ' ' + timestamp +'.crt')
        
         pkey = crypto.PKey()
         if not Shell.command.exists(privatekey_path):
-            Shell.command.create_complete_path(path)
             pkey.generate_key(crypto.TYPE_RSA, 1024)
             Shell.command.write_file( privatekey_path, crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey))
         else:
@@ -387,7 +386,7 @@ class CertificateRequestWindow:
 
         req.set_pubkey(pkey)
         req.sign(pkey, "md5")
-
+        print "Created cert " + certreq_path
         Shell.command.write_file( certreq_path, crypto.dump_certificate_request(crypto.FILETYPE_PEM, req))
 
 
@@ -400,6 +399,7 @@ class CertificateRequestWindow:
             cert.set_subject(req.get_subject())
             cert.set_pubkey(req.get_pubkey())
             cert.sign(pkey, "md5")
+            print "Created cert " + cert_path
             Shell.command.write_file( cert_path, crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
             self.cert = cert_path
         else:
@@ -410,8 +410,7 @@ class CertificateRequestWindow:
         return
     
 
-    def load (self, domains, email, path):
-        self.path = path
+    def load (self, domains, email):
         
         # Attempt to detect country code
         code, enc = locale.getdefaultlocale()
