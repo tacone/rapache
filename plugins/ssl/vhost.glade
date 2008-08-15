@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Fri Aug 15 10:53:44 2008 -->
+<!--Generated with glade3 3.4.5 on Fri Aug 15 11:25:37 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -117,26 +117,6 @@
                           </widget>
                         </child>
                         <child>
-                          <widget class="GtkButton" id="button_log_location">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="response_id">0</property>
-                            <signal name="clicked" handler="on_button_log_location_clicked"/>
-                            <child>
-                              <widget class="GtkImage" id="image10">
-                                <property name="visible">True</property>
-                                <property name="stock">gtk-directory</property>
-                              </widget>
-                            </child>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
                           <widget class="GtkButton" id="button_log_reset">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
@@ -153,7 +133,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">2</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                       </widget>
@@ -795,6 +775,7 @@
                           <widget class="GtkLabel" id="label_path">
                             <property name="visible">True</property>
                             <property name="label" translatable="yes">label</property>
+                            <property name="selectable">True</property>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
