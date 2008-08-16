@@ -442,8 +442,7 @@ class ApacheParserTest ( unittest.TestCase ):
         source = p.get_source()
         basic_regexp = r'^(\s*)<s*(VirtualHost)\s+[^>]*\s*>.*'
         result = re.search( basic_regexp, source, re.MULTILINE | re.IGNORECASE )    
-        self.assertNotEqual( result, None )
-        
+        self.assertNotEqual( result, None )    
         
 if __name__ == "__main__":
     outt = ""
