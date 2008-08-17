@@ -1,6 +1,6 @@
 #TODO: remove this
 import ApacheConf
-
+from lxml import etree
 
 class ListWrapper (object):
     
@@ -60,50 +60,10 @@ class ListWrapper (object):
         del options[index]
         self._set_list(options)
         
-    """
-    ##
-    # Returns a list containing subelements in the given range.
-    #
-    # @param start The first subelement to return.
-    # @param stop The first subelement that shouldn't be returned.
-    # @return A sequence object containing subelements.
-
-    def __getslice__(self, start, stop):
-        return self._get_list()[start:stop]
-
-    ##
-    # Replaces a number of subelements with elements from a sequence.
-    #
-    # @param start The first subelement to replace.
-    # @param stop The first subelement that shouldn't be replaced.
-    # @param elements A sequence object with zero or more elements.
-    # @exception AssertionError If a sequence member is not a valid object.
-
-    def __setslice__(self, start, stop, elements):
-        for element in elements:
-            assert iselement(element)
-        self._get_list()[start:stop] = list(elements)
-
-    ##
-    # Deletes a number of subelements.
-    #
-    # @param start The first subelement to delete.
-    # @param stop The first subelement to leave in there.
-
-    def __delslice__(self, start, stop):
-        del self._get_list()[start:stop]
-
-    ##
-    # Adds a subelement to the end of this element.
-    #
-    # @param element The element to add.
-    # @exception AssertionError If a sequence member is not a valid object.
-    """
     def append(self, element):
         options = self._get_list()
         options.append(element)
         self._set_list(options)
-        
 
     ##
     # Inserts a subelement at the given position in this element.
@@ -143,29 +103,84 @@ class Options (ListWrapper):
         return options
     def _set_list(self, options):
         if options is None: options = []
-        self.parent.value = " ".join( options )    
+        self.parent.set_raw_value(" ".join( options ))
 class Line (object):
+    parser = None
     def __init__(self, element = None):
         self.element = None
         self.__value = None
         self.__key = None
-        self.opts = Options( self )
+        self.__opts = Options( self )
         if element is not None: self.element = element
         self.element = element
         self.parser = ApacheConf.LineParser()
+        self.reset()
     def reset(self):
         """resets the instance to an empty state"""        
-        self.element = etree.Element( tag_name )        
+        self.element = etree.Element( 'line' )        
     def is_empty (self):    
         """has the instance loaded a line?"""
         return self is not None
     def _get_value(self):
-        return self.__value
-    def _set_value(self, new_value): 
-        pass
+        if self.element == None : return None
+        #oh, by the way, should be the only element of the list
+        return self.element.get('value')
+    def _set_value(self, value):
+        return self.set_raw_value(value)
     value = property ( _get_value, _set_value )
     def _get_key(self): 
-        pass
-    def _set_key(self, new_value): 
+        if self.element == None : return None
+        #oh, by the way, should be the only element of the list
+        return self.element.get('directive')
+    def _set_key(self, value): 
         pass
     key = property ( _get_key, _set_key )
+    def _get_opts(self): 
+        return self.__opts
+    def _set_opts(self, value): 
+        return self.__opts.set( value )
+    opts = property ( _get_opts, _set_opts )
+    def set_raw_value(self, value):
+        self.element.attrib['value'] = value
+        if self.element.attrib.get('source'): 
+            del self.element.attrib['source']
+    def parse(self, line, set_as_source = True):
+        """parses a configuration line into a <line> xml element"""
+        parser = self.parser
+        self.reset()
+        c = self.element
+        directive = parser.get_directive( line )
+        if directive: 
+            c.attrib['directive'] = directive
+            try:
+                value = parser.get_value( line )
+                c.attrib[ 'value' ] = value
+            except:
+                c.attrib['unparsable' ] = 'unparsable'
+        else:
+            comment = parser.get_comment( line )
+            if comment: c.attrib['comment'] = comment
+            
+        indentation = parser.get_indentation( line )
+        if indentation: c.attrib['indentation'] = indentation
+        if set_as_source: c.attrib[ 'source' ] = line
+
+class AbstractSelection(ListWrapper):
+    def __getattr__(self, name):
+        return getattr(self[-1], name)
+    def __setattr__(self, name, value):
+        return getattr(self[-1], name, value)
+
+class PlainSelection(AbstractSelection):    
+    def __init__(self, caller, xpath):
+        self._xpath = xpath
+        self._caller = xpath
+    def _get_list(self): pass
+    def _set_list(self): pass
+                
+class File:
+    def load(self): pass
+    def set_from_string(self): pass
+    def set_from_element(self): pass
+    
+

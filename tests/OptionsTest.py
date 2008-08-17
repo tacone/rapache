@@ -6,6 +6,7 @@ import re
 
 class FakeLine(object):
     value = None
+    def set_raw_value(self, value): self.value = value
 
 class LineTest ( unittest.TestCase ):
     def test_init(self):
@@ -52,6 +53,11 @@ class OptionsTest ( unittest.TestCase ):
         o.set( ['annodomini.com', 'www.annodomini.com'] )
         o.set( None )
         self.assertEqual( len(o), 0 )
+        #let's test the set() method
+        line = FakeLine()
+        o = Options( line )
+        o.set( ['example.net', 'www.example.net', 'beta.example.net'] )
+        self.assertEquals( list( o ), ['example.net', 'www.example.net', 'beta.example.net'])    
     def test_set_item(self):
         line = FakeLine()
         o = Options( line )
