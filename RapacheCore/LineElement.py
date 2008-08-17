@@ -178,9 +178,49 @@ class PlainSelection(AbstractSelection):
     def _get_list(self): pass
     def _set_list(self): pass
                 
-class File:
-    def load(self): pass
+class Parser:
+    def load(self, filename ):
+        """Loads a configuration file in the parser"""
+        self.filename = filename
+        file = open ( filename, 'r' )
+        content = file.readlines()
+        file.close()
+        self.set_from_list(content)
+    def reset (self):        
+        #tag_name = self.key.lower()
+        self.element = etree.Element( 'root' )
+    def append(self, line):
+        """Parses a line of code and appends it's xml equivalent to
+        self.element"""
+        
+        if self.open_child != None:
+            if self.open_child.open_child == None \
+            and self.is_tag_close(line, self.open_child.key ):
+                self.open_child.close( line )
+                self.element.append( self.open_child.element )
+                self.open_child = None
+            else:
+                self.open_child.append( line )
+        else:    
+            tag_open = self.is_tag_open(line)
+            if tag_open is not False:
+                self.open_child = SubTag( line )
+            else:
+                #unexpected closure ? we will trigger an exception
+                self.is_tag_close(line, False )
+                
+                c = self._parse_line(line, True)
+                self.element.append( c )
     def set_from_string(self): pass
+    def set_from_list(self, list):
+        """uses a (line) list as the configuration file to be parsed"""
+        self.reset()
+        for line in list:
+            #if not line.endswith( "\n" ): line = line.rstrip()+"\n"
+            self.append(line)
+        if self.open_child != None:
+            #something wrong, one tag has been left open in the .conf
+            raise VhostNotFound, 'TagEndExpected: expected end tag for:'+self.open_child.key
     def set_from_element(self): pass
     
 
