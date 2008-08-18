@@ -303,20 +303,24 @@ class AdvancedVhostPlugin(PluginBaseObject):
         else:
             # try and guess correct key, based on cert name then vhost name
             key = os.path.basename(self.active_cert).split(' ')[0]
-            key_path = os.path.join("/etc/apache2/ssl/", key + ".pkey")
-            if os.path.exists(key_path):
+            key_path = os.path.join("/etc/ssl/private/", key + ".pkey")
+            print key_path 
+            if Shell.command.exists(key_path):
                 self.active_key = key_path
             else:
-                key_path = os.path.join("/etc/apache2/ssl/", key + ".key")
-                if os.path.exists(key_path):
+                key_path = os.path.join("/etc/ssl/private/", key + ".key")
+                print key_path 
+                if Shell.command.exists(key_path):
                     self.active_key = key_path
                 else:
-                    key_path = os.path.join("/etc/apache2/ssl/", self.vhost.get_value("ServerName") + '.pkey')
-                    if os.path.exists(key_path):
+                    key_path = os.path.join("/etc/ssl/private/", self.vhost.get_value("ServerName") + '.pkey')
+                    print key_path 
+                    if Shell.command.exists(key_path):
                         self.active_key = key_path
                     else:
-                        key_path = os.path.join("/etc/apache2/ssl/", self.vhost.get_value("ServerName") + '.key')
-                        if os.path.exists(key_path):
+                        key_path = os.path.join("/etc/ssl/private/", self.vhost.get_value("ServerName") + '.key')
+                        print key_path 
+                        if Shell.command.exists(key_path):
                             self.active_key = key_path
 
     # Customise the vhost properties window

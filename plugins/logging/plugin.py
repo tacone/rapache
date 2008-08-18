@@ -93,11 +93,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
         
         
         server_admin = self.entry_admin_email.get_text()
-        
-        if len(server_admin) > 1:
-            return False, "'Server Admin Email' is not a valid email address"
-            
-            
+                    
         return True, None
 
 def register( path ):

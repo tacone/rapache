@@ -52,7 +52,7 @@ class Apache2():
         return
         
     def test_config(self):
-        returncode, output, error = Shell.command.execute(["apache2ctl", "-S"])
+        returncode, output, error = Shell.command.sudo_execute(["apache2ctl", "-S"])
         error = error.strip()
         return error.endswith("Syntax OK"), error
         

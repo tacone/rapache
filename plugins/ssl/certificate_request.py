@@ -360,11 +360,12 @@ class CertificateRequestWindow:
         self.cert = None
 
         timestamp = time.strftime("%y-%m-%d %H:%M:%S", time.localtime() )
-        privatekey_path = os.path.join("/etc/apache2/ssl/", self.combobox_domain.get_active_text() + '.pkey')
+        privatekey_path = os.path.join("/etc/ssl/private/", self.combobox_domain.get_active_text() + '.pkey')
         certreq_path = os.path.join("/etc/apache2/ssl/", self.combobox_domain.get_active_text() +  ' ' + timestamp +'.csr')
         cert_path = os.path.join("/etc/apache2/ssl/", self.combobox_domain.get_active_text() +  ' ' + timestamp +'.crt')
        
         pkey = crypto.PKey()
+        print privatekey_path
         if not Shell.command.exists(privatekey_path):
             pkey.generate_key(crypto.TYPE_RSA, 1024)
             Shell.command.write_file( privatekey_path, crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey))

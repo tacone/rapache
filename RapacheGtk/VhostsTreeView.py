@@ -203,3 +203,66 @@ class ModulesTreeView ( ConfFilesTreeView ):
         self.raise_event( 'please_reload_lists', {}, True ) 
 
 gobject.type_register ( ModulesTreeView )
+
+
+
+class ErrorsTreeView ( ConfFilesTreeView ):
+    def __init__ (self, *args, **kwargs):
+        super (ErrorsTreeView, self).__init__ (*args, **kwargs)
+        #print self.column_checkbox, self.column_description, self.column_icon
+        self.column_checkbox.set_visible( True )        
+              
+    def load(self, apache):    
+        self.items = {}
+        site_template = "<b><big>%s</big></b>"        
+        lstore = self._reset_model()
+        
+        res, text = apache.test_config()
+        if not res:       
+            iter = lstore.append()
+            markup = site_template % "Apache Config Error"
+            
+            pixbuf = self.render_icon(gtk.STOCK_DIALOG_ERROR, gtk.ICON_SIZE_LARGE_TOOLBAR)
+
+            
+            lstore.set(iter,
+                COLUMN_ICON, pixbuf,
+                COLUMN_FIXED, False,
+                COLUMN_SEVERITY, "Apache Config Error",
+                COLUMN_MARKUP, markup + "\n" + text +"\n<small><i>You must resolve this error to restart apache</i></small>"
+                )
+        
+        data = []  
+        dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
+        dirList = [x for x in dirList if self._blacklisted( x ) == False ]
+        #dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]                   
+        for fname in  dirList :
+            site = VirtualHostModel( fname )                        
+            self.items[ fname ] = site
+            site = None
+
+        for idx in sorted( self.items ):            
+            site = self.items[ idx ]
+            normalizable = not is_not_normalizable(site.data['ServerName'])
+            markup = site_template % site.data['ServerName']
+            
+            
+            if ( normalizable == False ):
+                markup = markup + " CANNOT FIX"
+            iter = lstore.append()
+            
+            pixbuf = self.render_icon(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_LARGE_TOOLBAR)
+            
+            lstore.set(iter,
+                COLUMN_ICON, pixbuf,
+                COLUMN_FIXED, normalizable,
+                COLUMN_SEVERITY, site.data['ServerName'],
+                COLUMN_MARKUP, markup +  "\nThe virtual host file is only present inside /etc/apache/sites-enabled.\n<small><i>You must normalize in order to manage this host</i>.</small>"
+                )
+         
+
+            
+                
+    def toggled_callback(self, *args, **kwargs):
+        pass
+gobject.type_register (DenormalizedVhostsTreeView )

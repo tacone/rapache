@@ -341,8 +341,7 @@ class VirtualHostWindow:
         # check apache config
         returncode, error = self.parent.apache.test_config()
         if not returncode:
-            error = error.strip().split(":")
-            error = ":".join(error[2:])
+            error = error.strip()
             md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format=error + "\n\nAre you sure you want to continue, apache will not start until all errors are resolved")
             result = md.run()
             md.destroy()

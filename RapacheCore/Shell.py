@@ -137,6 +137,13 @@ class CommandHandler:
         return False # file dosnt exist and no new content
        
     def read_file(self, path):
+    
+        returncode, output, error = self.sudo_execute( ["cat", path] )
+        if returncode == 0:
+            return output
+        return ""
+        
+    
         if self.verbose >= 1:
             print "READING : " + path
         # TODO: add ssh handler
@@ -166,7 +173,10 @@ class CommandHandler:
             self.sudo_execute( ["cp", local_path, path] )
 
     def listdir(self, path):
-        return os.listdir( path )
+        returncode, output, error = self.sudo_execute( ["ls", "-1", path] )
+        if returncode == 0:
+            return output.split("\n")
+        return []
 
     def create_complete_path ( self, complete_path ):
         if self.verbose >= 1:
@@ -187,7 +197,8 @@ class CommandHandler:
 
 
     def exists(self, path):
-        return os.path.exists(path)
+        returncode, output, error = self.sudo_execute( ["ls", path] )
+        return returncode == 0
         
     def readlink(self, path):
         return os.readlink(path)

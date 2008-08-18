@@ -102,7 +102,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
         self.xml.signal_autoconnect(dic)
         GuiUtils.change_button_label ( self.xml.get_widget( 'restart_apache' ), "Restart Apache" )
-        GuiUtils.change_button_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
+        #GuiUtils.change_button_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
         self.statusbar_server_status =  self.xml.get_widget( 'statusbar_server_status' )
         self.image_apache_status =  self.xml.get_widget( 'image_apache_status' )
         self.main_window = self.xml.get_widget("MainWindow")
@@ -113,13 +113,21 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.refresh_lists()
         
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
-        GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )  
-        GuiUtils.style_as_tooltip( self.xml.get_widget( 'hbox_apache_config_error' ) )   
+        #GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )  
+        #GuiUtils.style_as_tooltip( self.xml.get_widget( 'hbox_apache_config_error' ) )   
        
         # start status update
         self.statusbar_server_status_context_id = self.statusbar_server_status.get_context_id("Apache Server Status") 
         self.statusbar_server_status.push(self.statusbar_server_status_context_id, "Attempting to connect to server")
         self.update_server_status(True)
+        
+        
+        self.treeview_errors = VhostsTreeView.ErrorsTreeView()
+        #treeview.selected_callback = self.row_selected
+        #treeview.connect_after("row-activated", self.edit_button_clicked )
+        #self.vhosts_treeview = treeview        
+        self.xml.get_widget( 'viewport_errors' ).add(self.treeview_errors) 
+        self.xml.get_widget( 'viewport_errors' ).show_all()
         
         self.refresh_config_test()
         
@@ -134,18 +142,13 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
 
+
+  
+
+
     def refresh_config_test(self): 
-        res, text = self.apache.test_config()
-        if not res:
-            self.xml.get_widget('label_apache_error_message').set_text(text.strip())
-            self.xml.get_widget( 'hbox_apache_config_error' ).show()
-            self.xml.get_widget( 'unnormalized_notice' ).show_all()
-            self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).show()
-            self.xml.get_widget( 'notebook' ).set_current_page(2)
-        else:
-            self.xml.get_widget( 'hbox_apache_config_error' ).hide()            
-        
-        
+        self.treeview_errors.load(self.apache)
+
     @threaded    
     def update_server_status(self, loop=False):
         window_status_icons = [ 
@@ -172,7 +175,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
                 image = gtk.STOCK_YES
                 
             gtk.gdk.threads_enter()
-            self.image_apache_status.set_from_stock(image, -1)
+            self.image_apache_status.set_from_stock(image, gtk.ICON_SIZE_MENU)
             self.statusbar_server_status.pop(self.statusbar_server_status_context_id)
             self.statusbar_server_status.push(self.statusbar_server_status_context_id, text)
             gtk.gdk.threads_leave()
@@ -273,13 +276,13 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
         denormalized_treeview = VhostsTreeView.DenormalizedVhostsTreeView()
         self.denormalized_treeview = denormalized_treeview        
-        self.xml.get_widget( 'problems_area' ).add(denormalized_treeview)        
-        self.xml.get_widget( 'problems_area' ).reorder_child( denormalized_treeview, 2)
+        #self.xml.get_widget( 'problems_area' ).add(denormalized_treeview)        
+        #self.xml.get_widget( 'problems_area' ).reorder_child( denormalized_treeview, 2)
         denormalized_treeview.set_sensitive( False )
         denormalized_treeview.show()
         sw.show_all()
         #hidden by default
-        self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+        #self.xml.get_widget( 'unnormalized_notice' ).hide_all()
     
     def create_modules_list(self ):
         sw = self.xml.get_widget( 'modules_scroll_box' )
@@ -301,12 +304,12 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.vhosts_treeview.load()
     def refresh_denormalized_vhosts (self):
         self.denormalized_treeview.load()
-        if ( len( self.denormalized_treeview.items ) > 0 ):
-            self.xml.get_widget( 'unnormalized_notice' ).show_all()
-            self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).show()
-        else:
-            self.xml.get_widget( 'unnormalized_notice' ).hide_all()
-            self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).hide()
+        #if ( len( self.denormalized_treeview.items ) > 0 ):
+            #self.xml.get_widget( 'unnormalized_notice' ).show_all()
+            #self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).show()
+        #else:
+            #self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+            #self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).hide()
     def refresh_modules (self):    
         print "reloading modules.."            
         self.modules_treeview.load()
