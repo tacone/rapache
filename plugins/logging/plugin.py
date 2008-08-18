@@ -54,7 +54,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
     def init_vhost_properties(self):
 
         # Get glade file XML
-        f = open( os.path.join(self.path, "vhost.glade") ,"r")
+        f = open( os.path.join(self.path, "logging.glade") ,"r")
         self.glade_vhost_xml =  f.read()
         f.close()
     

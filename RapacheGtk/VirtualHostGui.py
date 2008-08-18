@@ -139,17 +139,14 @@ class VirtualHostWindow:
         
         
     def on_notebook_switch_page(self, notebook, page, page_num):
-        # Assume for now it always page number 1
+        self.save(self.__previous_active_tab)   
         if page_num == notebook.get_n_pages() - 1:
-            # how to update this.....
-            self.save(self.__previous_active_tab)
             buf = self.text_view_vhost_source.get_buffer()
             text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
             # TODO: Remove this line !! hack to stop double ups from parser
             text = text.replace("\n\n\n", "\n\n").replace("\n\n\n", "\n\n")
             buf.set_text( text )
             buf.set_modified(False) 
-            pass
         else:
             self.reload()
         

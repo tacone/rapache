@@ -39,7 +39,7 @@ class TextDisplayWindow:
         # The path to the plugin
         self.glade_path = path
                   
-        gladefile = os.path.join(path,"vhost.glade")
+        gladefile = os.path.join(path,"ssl.glade")
         wtree = gtk.glade.XML(gladefile)
         
         self.window = wtree.get_widget("dialog_text")
@@ -47,7 +47,7 @@ class TextDisplayWindow:
         self.textview_content = wtree.get_widget("textview_content")
         self.label_help = wtree.get_widget("label_help")
         self.label_path = wtree.get_widget("label_path")
-       
+        self.hbox_table_frame = wtree.get_widget("hbox_table_frame")
         self.button_save = wtree.get_widget("button_save")
         self.button_close = wtree.get_widget("button_closel")
         self.button_apply = wtree.get_widget("button_apply")
@@ -99,7 +99,7 @@ class TextDisplayWindow:
         gtk.main()
         return self.return_value
    
-    def load (self, help_text, path, save_as_button=True, apply_button=False):
+    def load (self, help_text, help_array, path, save_as_button=True, apply_button=False):
         self.path = path
         self.label_help.set_markup(help_text)
         self.label_path.set_text("File : " + path )
@@ -112,6 +112,23 @@ class TextDisplayWindow:
         else:
             self.button_apply.hide()
         
+        # Build table of values
+        if help_array:
+            table = gtk.Table(len(help_text), 2, False)
+            row_count = 0
+            for help_text_line in help_array:
+                
+                title = gtk.Label(help_text_line[0])
+                content = gtk.Label(help_text_line[1])
+                
+                table.attach(title, 0, 1, row_count, row_count+1)
+                table.attach(content, 1, 2, row_count, row_count+1)
+
+                row_count = row_count + 1
+
+            self.hbox_table_frame.pack_start(table)
+            self.hbox_table_frame.show_all()
+
         return
 				
     def on_destroy(self, widget, data=None):

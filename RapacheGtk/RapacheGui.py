@@ -378,7 +378,12 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             server_name = 'localhost'
         else:
             server_name = self.get_current_vhost_directive( 'ServerName' )
-        if ( server_name ): Desktop.open_url( "http://" + server_name )
+            
+        protocol = "http"    
+        if str(self.vhosts_treeview.items[ name ].get_value("port", "80")) == "443":
+            protocol = "https"
+            
+        if ( server_name ): Desktop.open_url( protocol+"://" + server_name )
     def browse_this(self, widget):
         document_root = self.get_current_vhost_directive( 'DocumentRoot' )
         Desktop.open_dir( document_root )

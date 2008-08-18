@@ -309,7 +309,7 @@ class CertificateRequestWindow:
         # The path to the plugin
         self.glade_path = path
                   
-        gladefile = os.path.join(path,"vhost.glade")
+        gladefile = os.path.join(path,"ssl.glade")
         wtree = gtk.glade.XML(gladefile)
         
         self.window = wtree.get_widget("dialog_ssl_certificate_request")
@@ -360,9 +360,9 @@ class CertificateRequestWindow:
         self.cert = None
 
         timestamp = time.strftime("%y-%m-%d %H:%M:%S", time.localtime() )
-        privatekey_path = os.path.join("/etc/ssl/private", self.combobox_domain.get_active_text() + '.pkey')
-        certreq_path = os.path.join("/etc/ssl/request/", self.combobox_domain.get_active_text() +  ' ' + timestamp +'.csr')
-        cert_path = os.path.join("/etc/ssl/certs/", self.combobox_domain.get_active_text() +  ' ' + timestamp +'.crt')
+        privatekey_path = os.path.join("/etc/apache2/ssl/", self.combobox_domain.get_active_text() + '.pkey')
+        certreq_path = os.path.join("/etc/apache2/ssl/", self.combobox_domain.get_active_text() +  ' ' + timestamp +'.csr')
+        cert_path = os.path.join("/etc/apache2/ssl/", self.combobox_domain.get_active_text() +  ' ' + timestamp +'.crt')
        
         pkey = crypto.PKey()
         if not Shell.command.exists(privatekey_path):
@@ -383,7 +383,7 @@ class CertificateRequestWindow:
             setattr(subj, "OU", self.entry_organisation_unit.get_text()) 
         if self.entry_state.get_text():
             setattr(subj, "ST", self.entry_state.get_text())    
-
+            
         req.set_pubkey(pkey)
         req.sign(pkey, "md5")
         print "Created cert " + certreq_path
@@ -392,7 +392,7 @@ class CertificateRequestWindow:
 
         if self.checkbutton_self_sign.get_active():
             cert = crypto.X509()
-            cert.set_serial_number(0)
+            cert.set_serial_number( int(time.strftime("%m%d%H%M%S", time.localtime())) )
             cert.gmtime_adj_notBefore(0)
             cert.gmtime_adj_notAfter(60*60*24*365*5) # five years
             cert.set_issuer(req.get_subject())
@@ -405,7 +405,7 @@ class CertificateRequestWindow:
         else:
         
             tdw = TextDisplayWindow(self.glade_path)
-            tdw.load( "You will need to send this certificate request, proof of your company's identity, and payment to a Certificate Authority (CA). The CA verifies the certificate request and your identity, and then sends back a certificate for your secure server.", certreq_path)
+            tdw.load( "You will need to send this certificate request, proof of your company's identity, and payment to a Certificate Authority (CA). The CA verifies the certificate request and your identity, and then sends back a certificate for your secure server.", None, certreq_path)
             tdw.run()
         return
     

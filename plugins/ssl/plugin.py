@@ -78,7 +78,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
 
     def init_vhost_properties(self):
         # Get glade file XML
-        f = open( os.path.join(self.path, "vhost.glade") ,"r")
+        f = open( os.path.join(self.path, "ssl.glade") ,"r")
         self.glade_vhost_xml =  f.read()
         f.close()
     
@@ -141,7 +141,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
             cert = crypto.load_certificate(crypto.FILETYPE_PEM, text) 
             timestamp = time.strftime("%y-%m-%d %H:%M:%S", time.localtime() )
 
-            cert_path = os.path.join("/etc/ssl/certs/", cert.get_subject().commonName + ' ' + timestamp +'.pem')
+            cert_path = os.path.join("/etc/apache2/ssl/", cert.get_subject().commonName + ' ' + timestamp +'.pem')
             
             Shell.command.write_file(cert_path, text)
             
@@ -164,29 +164,29 @@ class AdvancedVhostPlugin(PluginBaseObject):
             
             cert = crypto.load_certificate_request(crypto.FILETYPE_PEM, Shell.command.read_file(path)) 
              
-            text = "<big><b>SSL Certificate Request</b></big>\n" 
-
+            text = "<big><b>SSL Certificate Request</b></big>" 
+            help_array = []
+            
             if cert.get_subject().organizationName:
-                text += "Organisation:\t" + cert.get_subject().organizationName + "\n"
+                help_array.append( ["Organisation:", cert.get_subject().organizationName] )
 
             if cert.get_subject().organizationalUnitName:
-                text += "Organisation Unit:\t" + cert.get_subject().organizationalUnitName + "\n"
+                help_array.append( ["Organisation Unit:", cert.get_subject().organizationalUnitName] )
 
             if cert.get_subject().localityName:
-                text += "Locality:\t\t" + cert.get_subject().localityName + "\n"
+                help_array.append( ["Locality:", cert.get_subject().localityName] )
                 
             if cert.get_subject().stateOrProvinceName:
-                text += "State:\t\t\t" + cert.get_subject().stateOrProvinceName + "\n"
+                help_array.append( ["State:", cert.get_subject().stateOrProvinceName] )
                 
             if cert.get_subject().countryName:
-                text += "Country:\t\t" + cert.get_subject().countryName + "\n"
+                help_array.append( ["Country:", cert.get_subject().countryName] )
                  
-            text += "Domain:\t\t" + cert.get_subject().commonName + "\n"
+            help_array.append( ["Domain:", cert.get_subject().commonName] )
             
             text +=  "\nYou will need to send this certificate request, proof of your company's identity, and payment to a Certificate Authority (CA). The CA verifies the certificate request and your identity, and then sends back a certificate for your secure server."
-            
-            
-            tdw.load(text, path)
+
+            tdw.load(text,help_array, path)
             tdw.run()
         if path.endswith(".crt"):
             tdw = TextDisplayWindow(self.path)
@@ -196,29 +196,31 @@ class AdvancedVhostPlugin(PluginBaseObject):
             start = self.get_start_date_hack(cert, path)
             if cert.has_expired() : expired = "<b>Expired " + expired +"</b>"
             
-            text = "<big><b>SSL Certificate</b></big>\n" + \
-                "Starts:\t\t" +  start + "\n" + \
-                "Expires:\t\t" +  expired + "\n"
+            text = "<big><b>SSL Certificate</b></big>" 
+
+            help_array = []
+            help_array.append( ["Starts:", start] )
+            help_array.append( ["Expires:", expired] )
 
             if cert.get_subject().organizationName:
-                text += "Organisation:\t" + cert.get_subject().organizationName + "\n"
+                help_array.append( ["Organisation:", cert.get_subject().organizationName] )
 
             if cert.get_subject().organizationalUnitName:
-                text += "Organisation Unit:\t" + cert.get_subject().organizationalUnitName + "\n"
+                help_array.append( ["Organisation Unit:", cert.get_subject().organizationalUnitName] )
 
             if cert.get_subject().localityName:
-                text += "Locality:\t\t" + cert.get_subject().localityName + "\n"
+                help_array.append( ["Locality:", cert.get_subject().localityName] )
                 
             if cert.get_subject().stateOrProvinceName:
-                text += "State:\t\t\t" + cert.get_subject().stateOrProvinceName + "\n"
+                 help_array.append( ["State:", cert.get_subject().stateOrProvinceName] )
                 
             if cert.get_subject().countryName:
-                text += "Country:\t\t" + cert.get_subject().countryName + "\n"
-                 
-            text += "Domain:\t\t" + cert.get_subject().commonName + "\n"+ \
-                "Issued by:\t\t" + cert.get_issuer().commonName
+                help_array.append( ["Country:", cert.get_subject().countryName] )
+              
+            help_array.append( ["Domain:", cert.get_subject().commonName] )   
+            help_array.append( ["Issued by:", cert.get_issuer().commonName] )   
             
-            tdw.load( text, path, True, self.active_cert != path)
+            tdw.load( text, help_array, path, True, self.active_cert != path)
             result = tdw.run()
             
             if result == gtk.RESPONSE_OK:
@@ -252,10 +254,10 @@ class AdvancedVhostPlugin(PluginBaseObject):
         self.treeview_requests_store = gtk.ListStore(gtk.gdk.Pixbuf,str, str, str, str)
         self.treeview_requests.set_model(self.treeview_requests_store)
         
-        files = Shell.command.listdir("/etc/ssl/certs")
+        files = Shell.command.listdir("/etc/apache2/ssl/")
         files.sort()
         for path in files: 
-            full_path = os.path.join("/etc/ssl/certs", path)     
+            full_path = os.path.join("/etc/apache2/ssl/", path)     
 
             if path.endswith(".crt"):
                 
@@ -274,10 +276,10 @@ class AdvancedVhostPlugin(PluginBaseObject):
             #if path.endswith(".pkey"):
             #    self.treeview_requests_store.append((auth_icon, "Key", path, path)) 
 
-        files = Shell.command.listdir("/etc/ssl/request")
+        files = Shell.command.listdir("/etc/apache2/ssl/")
         files.sort()
         for path in files: 
-            full_path = os.path.join("/etc/ssl/request", path)     
+            full_path = os.path.join("/etc/apache2/ssl/", path)     
             if path.endswith(".csr"):
                 cert_req = crypto.load_certificate_request(crypto.FILETYPE_PEM, Shell.command.read_file(full_path)) 
                 self.treeview_requests_store.append((file_icon, "Request", cert_req.get_subject().commonName, "",  full_path))
@@ -290,19 +292,38 @@ class AdvancedVhostPlugin(PluginBaseObject):
         cert = w.run()
         
         if cert:
-             self.update_active_cert( cert)
+             self.update_active_cert( cert )
         
         self.update_treeview()
 
-    def update_active_cert(self, cert):
+    def update_active_cert(self, cert, key=None):
         self.active_cert = cert
-        #self.linkbutton_active_cert.set_label(os.path.basename(cert))
+        if key:
+            self.active_key = key
+        else:
+            # try and guess correct key, based on cert name then vhost name
+            key = os.path.basename(self.active_cert).split(' ')[0]
+            key_path = os.path.join("/etc/apache2/ssl/", key + ".pkey")
+            if os.path.exists(key_path):
+                self.active_key = key_path
+            else:
+                key_path = os.path.join("/etc/apache2/ssl/", key + ".key")
+                if os.path.exists(key_path):
+                    self.active_key = key_path
+                else:
+                    key_path = os.path.join("/etc/apache2/ssl/", self.vhost.get_value("ServerName") + '.pkey')
+                    if os.path.exists(key_path):
+                        self.active_key = key_path
+                    else:
+                        key_path = os.path.join("/etc/apache2/ssl/", self.vhost.get_value("ServerName") + '.key')
+                        if os.path.exists(key_path):
+                            self.active_key = key_path
 
     # Customise the vhost properties window
     def load_vhost_properties(self, vhost):
         self.vhost = vhost
                   
-        self.update_active_cert(vhost.get_value("SSLCertificateFile", ""))
+        self.update_active_cert(vhost.get_value("SSLCertificateFile", ""), vhost.get_value("SSLCertificateKeyFile", ""))
         self.update_treeview()      
 
         if vhost.get_value("SSLEngine", "Off").lower() == "on":
@@ -312,6 +333,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
     # Perform action on vhost properties save
     def save_vhost_properties(self, vhost):
         self.vhost = vhost
+        error = None
         
         if self.active_cert:
              vhost.set_value("SSLEngine", "on" )
@@ -321,9 +343,9 @@ class AdvancedVhostPlugin(PluginBaseObject):
              #vhost.set_value("Port", "80" )
 
         vhost.set_value("SSLCertificateFile", self.active_cert)
-        vhost.set_value("SSLCertificateKeyFile", os.path.join("/etc/ssl/private/", self.vhost.get_value("ServerName") + '.pkey'))
-
-        return True, None
+        vhost.set_value("SSLCertificateKeyFile", self.active_key)
+              
+        return True, error
 
 
 def register( path ):
