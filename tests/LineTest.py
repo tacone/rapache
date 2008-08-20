@@ -12,6 +12,16 @@ class LineTest( unittest.TestCase ):
         self.assertEqual( len( l.opts ), 0 )
         self.assertTrue( isinstance(l.opts, Options))
         pass
+    def test_element__init (self):
+        c = etree.Element("line")
+        c.set('directive','DocumentRoot')
+        c.set('value', '/var/www')
+        l = Line( c )
+        self.assertEqual( l.element.attrib['directive'], 'DocumentRoot' )
+        self.assertEqual( l.element.attrib['value'], '/var/www' )
+        self.assertEqual( l.key, 'DocumentRoot' )
+        self.assertEqual( l.value, '/var/www' )
+        
     def test_value_get_set(self):
         l = Line()
         self.assertEqual( l.value, None )

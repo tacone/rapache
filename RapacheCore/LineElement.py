@@ -1,6 +1,7 @@
 #TODO: remove this
 import ApacheConf
 from lxml import etree
+import re
 
 class ListWrapper (object):
     
@@ -111,10 +112,13 @@ class Line (object):
         self.__value = None
         self.__key = None
         self.__opts = Options( self )
-        if element is not None: self.element = element
-        self.element = element
+        
+        if element is not None: 
+            self.element = element
+        else:
+            self.reset()
         self.parser = ApacheConf.LineParser()
-        self.reset()
+        
     def reset(self):
         """resets the instance to an empty state"""        
         self.element = etree.Element( 'line' )        
@@ -166,19 +170,43 @@ class Line (object):
         if set_as_source: c.attrib[ 'source' ] = line
 
 class AbstractSelection(ListWrapper):
-    def __getattr__(self, name):
+    def __getattr__(self, name):        
         return getattr(self[-1], name)
     def __setattr__(self, name, value):
         return getattr(self[-1], name, value)
 
 class PlainSelection(AbstractSelection):    
-    def __init__(self, caller, xpath):
-        self._xpath = xpath
-        self._caller = xpath
-    def _get_list(self): pass
+    def __init__(self, caller, name ):
+        self.__dict__['_name'] = name
+        self.__dict__['_caller'] = caller
+    def _get_list(self): 
+               
+        name = self._name.lower()
+        directive_attr = 'translate(@directive, "ABCDEFGHIJKLMNOPQRSTUVWXYZ",'\
+        +'"abcdefghijklmnopqrstuvwxyz")'
+        query = '*[%s="%s"]' % (directive_attr, name)    
+        return self._caller.xpath( query )
     def _set_list(self): pass
                 
-class Parser:
+class Parser(object):
+    def __init__(self, element=None):
+        
+        self.__dict__['open_child'] = None
+        self.__dict__['parser'] = ApacheConf.LineParser()
+        self.__dict__['element'] = None
+        if element is not None:
+            self.__dict__['element'] = element
+        else:
+            self.reset()
+    def __getattr__(self, name):
+        return PlainSelection(self, name)
+    def _get_key(self): 
+        if self.element == None : return None
+        return self.element.get('directive')
+    def _set_key(self, value): 
+        if self.element == None : return False
+        self.element.set('directive', value)
+    key = property ( _get_key, _set_key )
     def load(self, filename ):
         """Loads a configuration file in the parser"""
         self.filename = filename
@@ -188,8 +216,8 @@ class Parser:
         self.set_from_list(content)
     def reset (self):        
         #tag_name = self.key.lower()
-        self.element = etree.Element( 'root' )
-    def append(self, line):
+        self.__dict__['element'] = etree.Element( 'root' )
+    def _append_string(self, line):
         """Parses a line of code and appends it's xml equivalent to
         self.element"""
         
@@ -200,27 +228,105 @@ class Parser:
                 self.element.append( self.open_child.element )
                 self.open_child = None
             else:
-                self.open_child.append( line )
+                self.open_child._append_string( line )
         else:    
             tag_open = self.is_tag_open(line)
             if tag_open is not False:
-                self.open_child = SubTag( line )
+                self.open_child = Section()
+                self.open_child.key = tag_open[0]
+                self.open_child.value = tag_open[1]
             else:
                 #unexpected closure ? we will trigger an exception
                 self.is_tag_close(line, False )
                 
-                c = self._parse_line(line, True)
-                self.element.append( c )
+                lineobj = Line()
+                lineobj.parse(line)
+                self.element.append(lineobj.element)
+    def is_tag_open( self, line ):
+        basic_regexp = r'^(\s*)<s*([A-Z0-9\-.]+)(\s+[^>]*)*>.*'
+        result = re.match( basic_regexp, line, re.IGNORECASE )    
+        if ( result == None or result == False ): return False
+        result_list = list( result.groups() )
+        indentation = result_list[0]
+        
+        line = line.strip().lstrip( '<' ).rstrip( '>' ).strip()
+        key = self.parser.get_directive( line )
+        try:
+            value = self.parser.get_value( line )
+        except AttributeError:
+            value = None
+            pass#value may not be a string
+        #        return indentation, key," ",value
+        return key, value
+    def is_tag_close (self, line, name):
+        basic_regexp = r'^\s*<s*(/[A-Z0-9\-._]+)\s*>.*'
+        result = re.match( basic_regexp, line, re.IGNORECASE )
+        if result == None or result == False:
+            return False
+        if name == False:
+            raise VhostNotFound \
+                , 'TagEndUnexpected, Unexpected closure found: %s, there\'s no open tag in the current context node.' \
+                % line.strip()
+        else:
+            basic_regexp = r'^\s*<s*(/'+name+r')\s*>.*'
+            result = re.match( basic_regexp, line, re.IGNORECASE )
+            if ( result != None and result != False ): 
+                return True
+            else:
+                raise VhostNotFound \
+                    , 'TagEndUnexpected, Unexpected closure found: %s, expecting %s' \
+                    % ( line.strip(), '</%s>' % name )
+        return False
+    def _raw_xpath(self, query):
+        xpath = etree.XPath( query )
+        selection = xpath( self.element )
+        #oh, by the way, should be the only element of the list
+        if not selection : return []
+        return selection
+    def xpath(self, query):
+        selection = []
+        for element in self._raw_xpath(query):
+            if element.tag == 'line':
+                selection.append(Line(element))
+            else:
+                selection.append( Section(element) )
+        return selection
+    def linescount(self):
+        """returns line count, Sections lines excluded"""
+        
+        query = './line'
+        xpath = etree.XPath( query )
+        selection = xpath( self.element )
+        #oh, by the way, should be the only element of the list
+        if not selection : return 0
+        return len( selection )
+        #return len( self.element )
+    def close (self, line):
+        """Sets source for closing the tag"""
+        self.element.attrib[ 'close_source' ] = line
     def set_from_string(self): pass
     def set_from_list(self, list):
         """uses a (line) list as the configuration file to be parsed"""
         self.reset()
         for line in list:
             #if not line.endswith( "\n" ): line = line.rstrip()+"\n"
-            self.append(line)
+            self._append_string(line)
         if self.open_child != None:
             #something wrong, one tag has been left open in the .conf
             raise VhostNotFound, 'TagEndExpected: expected end tag for:'+self.open_child.key
-    def set_from_element(self): pass
-    
-
+    def set_element (self, element):
+        self.element = element        
+    def dump_xml (self, include_comments = False):
+        """prints out the internal xml structure"""
+        if include_comments:
+            print etree.tostring( self.element, pretty_print = True )
+        else:
+            #hackish
+            selection = etree.XPath( './line[attribute::directive]' )
+            for el in selection(self.element):
+                print etree.tostring( el, pretty_print = True )
+    #useful for debug
+class Section(Parser):
+    def reset (self):        
+        #tag_name = self.key.lower()
+        self.__dict__['element'] = etree.Element( 'section' )
