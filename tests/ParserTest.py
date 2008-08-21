@@ -52,7 +52,16 @@ class ParserTest( unittest.TestCase ):
         'ErrorLog /var/log/apache2/error.log'
       , '#    <LocationMatch .*/pl/stream/[0-9]+/[0-9]+>'
     ]
-    
+    def test_get_set_key(self):
+        p = Parser()
+        self.assertEqual(p.key,  None)
+        p.key = 'test'
+        self.assertEqual(p.key,  'test')
+    def test_get_set_value(self):
+        p = Parser()
+        self.assertEqual(p.value,  None)
+        p.value = 'test'
+        self.assertEqual(p.value,  'test')
     def test_load(self):
         p = Parser()
         p.load( self.apache2conf )
@@ -68,6 +77,13 @@ class ParserTest( unittest.TestCase ):
         self.assertEqual ( len( p.include ), 6 )
         #nonexisting
         self.assertEqual ( len( p.mexico ), 0 )
+        
+    def test_load(self):       
+        p = Parser()
+        p.load( self.optionsconf )
+        p.load( self.vhostconf )
+        p.load( self.fromtemplateconf )
+        p.load( self.defaultssl )
     def test_get_value(self):
         expected = [
               '/etc/apache2/mods-enabled/*.load'
@@ -85,6 +101,16 @@ class ParserTest( unittest.TestCase ):
         #p.dump_xml(True)    
         #testing subtag retrieval
         self.assertEqual( len( p.IfModule ), 2 )
+        
+        #the key of a section is the name of the tag
+        self.assertEqual( p.ifmodule.key,  'IfModule' )
+        #the value shuold be relative to the last section found of that kind
+        self.assertEqual( p.ifmodule.value,  'mpm_worker_module' )
+        #we can get the value of the first section found
+        self.assertEqual( p.ifmodule[0].value,  'mpm_prefork_module' )
+        #we can also specify explicitly we want the last (or any other idx)
+        self.assertEqual( p.ifmodule[-1].value,  'mpm_worker_module' )
+        
         #last Options from last <Directory>, plus case insensitive
         self.assertEqual( p.ifmodule.threadsperchild.value, '25')
         #ThreadPerChild is not present in the first <IfModule>
@@ -95,5 +121,81 @@ class ParserTest( unittest.TestCase ):
             pass
         #it is in the last one
         self.assertEqual( p.ifmodule[-1].threadsperchild.value, '25')
+        #=========================================
+        #old parser tests
+        p = Parser()
+        p.load( self.apache2conf )
+        
+        for key in self.apache2conf_expected :
+            expected = self.apache2conf_expected[ key ]
+            if expected == '#ERROR':
+                print "Please cover parsing of ",key," in apache2.conf with tests"
+            else:
+                self.assertEqual( getattr(p,key).value, expected )
+        
+        if p.Include:
+            pass
+        else:
+            self.assertTrue(False)
+            
+        #cool, let's try to get a non-existant directive
+        try:
+            p.IDontExist.value
+            self.assertTrue(False)
+        except IndexError:
+            pass
+        
+        if not p.IDontExist:
+            pass
+        else:
+            self.assertTrue(False)
+        #self.assertEqual( p.get(key), expected  )
+    def test_lines(self):
+        """'lines' property returns a selection of all the
+        non-section directives in the current (or root) 
+        section."""
+        p = Parser()
+        p.load( self.vhostconf )
+        self.assertEqual( len( p.lines ),  3 )
+        #test for errors interating and retrieving
+        for l in p.lines:
+            tempval = l.value
+        self.assertEqual( p.lines[1].value ,  'On' )
+    """   
+    def test_set_value (self):
+        p = Parser()
+        p.load( self.apache2conf )
+        length = p.linescount()
+        
+        for key in self.apache2conf_expected:
+            self.assertFalse( getattr(p,  key).changed() )
+        
+        for key in self.apache2conf_expected :
+            if self.apache2conf_expected[ key ] == '#ERROR':
+                print "Please cover parsing of ",key," in apache2.conf with tests"
+            else:
+                setattr( p,  key, 'NULLIFIED' )
+        #number of lines shuoldn't be changed
+        self.assertEqual( p.linescount(), length )
+        dict = p.dump_values()
+        
+        for key in dict: 
+            #print key,dict[key]
+            #print key,"-->",dict[key]
+            res = self.assertTrue(dict[ key ]=='NULLIFIED' or dict[ key ]=='#ERROR' )
+            if dict[ key ]=='NULLIFIED':
+                self.assertTrue( p.is_modified( key ))
+            else:
+                self.assertFalse( p.is_modified( key ))
+                
+        p.set_value( 'DocumentRoot', '/var/www/htdocs' )
+        #DocumentRoot is not present in the file, should add a new line
+        self.assertEqual( p.linescount(), length +1 )
+        #try setting a value with spaces
+        p.set_value( 'DocumentRoot', '/var/www/my htdocs' )
+        #length should be the same as before
+        self.assertEqual( p.linescount(), length +1 )        
+        self.assertEqual( p.get_value( 'DocumentRoot' ), '/var/www/my htdocs' )  
+        """
 if __name__ == "__main__":
     unittest.main()  

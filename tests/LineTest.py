@@ -22,6 +22,7 @@ class LineTest( unittest.TestCase ):
         self.assertEqual( l.key, 'DocumentRoot' )
         self.assertEqual( l.value, '/var/www' )
         
+        
     def test_value_get_set(self):
         l = Line()
         self.assertEqual( l.value, None )
@@ -64,5 +65,21 @@ class LineTest( unittest.TestCase ):
         
         l.parse('ServerAlias www.example.com beta.example.com ')
         self.assertEqual(list(l.opts),['www.example.com','beta.example.com'])
+    def test_changed(self):
+        c = etree.Element("line")
+        c.set('directive','DocumentRoot')
+        c.set('value', '/var/www')
+        l = Line( c )
+        self.assertTrue ( l.changed() )
+        l = Line(c)
+        l.parse('DocumentRoot /var/www')
+        self.assertFalse ( l.changed() )
+        l.value = '/srv/www'
+        self.assertTrue ( l.changed() )
+        l = Line(c)
+        l.parse('DocumentRoot /var/www')
+        self.assertFalse ( l.changed() )
+        l.key = 'ServerAlias'
+        self.assertTrue ( l.changed() )
 if __name__ == "__main__":
     unittest.main()  
