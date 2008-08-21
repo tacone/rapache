@@ -171,7 +171,8 @@ class Line (object):
         indentation = parser.get_indentation( line )
         if indentation: c.attrib['indentation'] = indentation
         if set_as_source: c.attrib[ 'source' ] = line
-
+    def dump_xml(self):
+        print etree.tostring( self.element, pretty_print = True )
 """"
 class NotALine(object):
     def __error ( name ):
@@ -197,7 +198,7 @@ class AbstractSelection(ListWrapper):
     def __getattr__(self, name):        
         return getattr(self[-1], name)
     def __setattr__(self, name, value):
-        return getattr(self[-1], name, value)
+        return setattr(self[-1], name, value)
 
 class PlainSelection(AbstractSelection):    
     def __init__(self, caller, name ):
@@ -213,10 +214,12 @@ class PlainSelection(AbstractSelection):
     def _set_list(self): pass
        
 class TypeSelection(AbstractSelection):    
-    def __init__(self, caller ):        
+    def __init__(self, caller,  name ):
+        self.__dict__['_name'] = name
         self.__dict__['_caller'] = caller
-    def _get_list(self):                        
-        query = './line'
+    def _get_list(self):
+        name = self._name.lower()        
+        query = './' + name
         return self._caller.xpath( query )
     def _set_list(self): pass
     
@@ -235,7 +238,8 @@ class Parser(Line):
     def __getattr__(self, name):
         return PlainSelection(self, name)
     def _get_lines(self):
-        return TypeSelection(self)
+        return TypeSelection(self,  'line')
+    """Lines returns all non-section elements"""
     lines= property ( _get_lines )
     """""
     def _get_key(self): 
@@ -335,17 +339,7 @@ class Parser(Line):
                 selection.append(Line(element))
             else:
                 selection.append( Section(element) )
-        return selection
-    def linescount(self):
-        """returns line count, Sections lines excluded"""
-        
-        query = './line'
-        xpath = etree.XPath( query )
-        selection = xpath( self.element )
-        #oh, by the way, should be the only element of the list
-        if not selection : return 0
-        return len( selection )
-        #return len( self.element )
+        return selection    
     def close (self, line):
         """Sets source for closing the tag"""
         self.element.attrib[ 'close_source' ] = line

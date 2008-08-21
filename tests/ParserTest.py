@@ -65,7 +65,7 @@ class ParserTest( unittest.TestCase ):
     def test_load(self):
         p = Parser()
         p.load( self.apache2conf )
-        self.assertTrue( p.linescount() > 0 )
+        self.assertTrue( len( p.lines )> 0 )
     def test_getdirective(self):
         p = Parser()
         p.load( self.apache2conf )
@@ -155,17 +155,18 @@ class ParserTest( unittest.TestCase ):
         non-section directives in the current (or root) 
         section."""
         p = Parser()
+        self.assertEqual( len(p.lines),  0 )
         p.load( self.vhostconf )
         self.assertEqual( len( p.lines ),  3 )
         #test for errors interating and retrieving
         for l in p.lines:
             tempval = l.value
         self.assertEqual( p.lines[1].value ,  'On' )
-    """   
+    
     def test_set_value (self):
         p = Parser()
         p.load( self.apache2conf )
-        length = p.linescount()
+        length = len(p.lines)
         
         for key in self.apache2conf_expected:
             self.assertFalse( getattr(p,  key).changed() )
@@ -174,28 +175,32 @@ class ParserTest( unittest.TestCase ):
             if self.apache2conf_expected[ key ] == '#ERROR':
                 print "Please cover parsing of ",key," in apache2.conf with tests"
             else:
-                setattr( p,  key, 'NULLIFIED' )
+                getattr( p,  key ).value = 'NULLIFIED'
         #number of lines shuoldn't be changed
-        self.assertEqual( p.linescount(), length )
-        dict = p.dump_values()
-        
-        for key in dict: 
+        self.assertEqual( len(p.lines), length )
+                
+        for key in self.apache2conf_expected :
+            line = getattr(p,  key)
+            print line.dump_xml()
             #print key,dict[key]
             #print key,"-->",dict[key]
-            res = self.assertTrue(dict[ key ]=='NULLIFIED' or dict[ key ]=='#ERROR' )
-            if dict[ key ]=='NULLIFIED':
-                self.assertTrue( p.is_modified( key ))
+            
+            if line.value is not None and line.value != '#ERROR':
+                res = self.assertEqual(line.value, 'NULLIFIED' )
+            
+            if  line.value=='NULLIFIED':
+                self.assertTrue( line.changed() )
             else:
-                self.assertFalse( p.is_modified( key ))
+                self.assertFalse( line.changed() )
                 
         p.set_value( 'DocumentRoot', '/var/www/htdocs' )
         #DocumentRoot is not present in the file, should add a new line
-        self.assertEqual( p.linescount(), length +1 )
+        self.assertEqual( len(p.lines), length +1 )
         #try setting a value with spaces
         p.set_value( 'DocumentRoot', '/var/www/my htdocs' )
         #length should be the same as before
-        self.assertEqual( p.linescount(), length +1 )        
+        self.assertEqual( len(p.lines), length +1 )        
         self.assertEqual( p.get_value( 'DocumentRoot' ), '/var/www/my htdocs' )  
-        """
+        
 if __name__ == "__main__":
     unittest.main()  

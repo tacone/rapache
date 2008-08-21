@@ -36,5 +36,12 @@ class AbstractSelectionTest( unittest.TestCase ):
             self.assertTrue(False)
         except IndexError:
             pass
+    def test_set_value(self):
+        s = SimpleSelection()
+        s.append(FakeLine("a"))
+        s.append(FakeLine("b"))
+        s.append(FakeLine("c"))
+        s.value = 'z'
+        self.assertEquals( s.value,  'z' )
 if __name__ == "__main__":
     unittest.main()  
