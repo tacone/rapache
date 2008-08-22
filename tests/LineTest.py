@@ -35,6 +35,12 @@ class LineTest( unittest.TestCase ):
         #l.opts should still be an Options instance, not a list
         self.assertTrue( isinstance(l.opts, Options))
         self.assertEqual( list(l.opts), ['a','b'])
+        #again, but using a tuple
+        l = Line()
+        l.opts = ('a','b')
+        #l.opts should still be an Options instance, not a list
+        self.assertTrue( isinstance(l.opts, Options))
+        self.assertEqual( list(l.opts), ['a','b'])
     def test_parse(self):
         l = Line()
         expected_values =[
