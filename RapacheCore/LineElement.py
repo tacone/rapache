@@ -215,34 +215,35 @@ class AbstractSelection( ListWrapper):
         return setattr(self[-1], name, value)
 
 class PlainSelection(AbstractSelection):    
-    def __init__(self, caller, name ):
-        self.__dict__['_name'] = name
+    def __init__(self, caller, query ):
+        self.__dict__['_query'] = query
         self.__dict__['_caller'] = caller
     def _get_list(self): 
         #print "query for", self._name, "in", self._caller
-        name = self._name.lower()
+        name = self._query.lower()
         directive_attr = 'translate(@directive, "ABCDEFGHIJKLMNOPQRSTUVWXYZ",'\
         +'"abcdefghijklmnopqrstuvwxyz")'
         query = '*[%s="%s"]' % (directive_attr, name)    
         return self._caller.xpath( query )        
     def _set_list(self): pass
-    
+    def search(self,  query):
+        return SimpleSearch( self,  query )
     def __setattr__(self, name, value):
         if len(self) == 0:
             self._create_new()
         return setattr(self[-1], name, value)
     def _create_new(self ):
         line = Line()
-        line.key = self._name                
+        line.key = self._query                
         self._caller.element.append(line.element)                
 class TypeSelection(PlainSelection):    
     
     def _get_list(self):
-        name = self._name.lower()        
+        name = self._query.lower()        
         query = './' + name
         return self._caller.xpath( query )
     def create(self,  key,  value = None):
-        if self._name == 'line':
+        if self._query == 'line':
             obj = Line()
         else:
             obj = Section()
@@ -250,7 +251,24 @@ class TypeSelection(PlainSelection):
         if value is not None: obj.value = value
         self._caller.element.append(obj.element)        
         return obj
-    
+class SimpleSearch(PlainSelection):
+    def _get_list(self):
+        if not self._query: return []
+        if isinstance( self._query,  str ):
+            result = [line for line in self._caller if line.value == self._query]
+        elif isinstance( self._query,  list ):
+            terms = [ (idx,  str(term) ) for idx,  term in enumerate(self._query) if term ]
+            result = []
+            for line in self._caller:
+                opts = list( line.opts )
+                try:
+                    found = [ term for term in terms if term[1] == opts[ term[0] ] ]                    
+                    if len( found ) == len( terms ): result.append( line )
+                except IndexError:
+                    pass
+        return result
+    def _create_new(self ):
+        return self._caller._create_new()
 class Parser(Line):
     def __init__(self, element=None):
         super (Parser, self).__init__( element )
@@ -267,12 +285,17 @@ class Parser(Line):
         return PlainSelection(self, name)
     def _get_lines(self):
         return TypeSelection(self,  'line')
-    """Lines returns all non-section elements"""
+    """Lines returns all the line elements"""
     lines= property ( _get_lines )
     def _get_sections(self):
         return TypeSelection(self,  'section')
-    """Lines returns all non-section elements"""
+    """section returns all section elements"""
     sections= property ( _get_sections )
+    
+    """def search(self,  *args,  **kwargs):
+        return SearchSelection(self,  *args,  **kwargs)    
+    search = property ( _search )"""
+    
     """""
     def _get_key(self): 
         if self.element == None : return None

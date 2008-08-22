@@ -40,6 +40,7 @@ class ParserTest( unittest.TestCase ):
     optionsconf = 'datafiles/options.conf'
     vhostconf = 'datafiles/vhost.conf'
     fromtemplateconf = 'datafiles/fromtemplate.conf'
+    errordocumentsconf= 'datafiles/errordocuments.conf'
     defaultssl = 'datafiles/default-ssl'
     valid_tags = {
         '<VirtualHost *>' : ('VirtualHost', '*')
@@ -241,5 +242,25 @@ class ParserTest( unittest.TestCase ):
         self.assertEqual( len(v.lines),  linescount + 1)
         #ensure a line object is returned
         self.assertEqual( line.key,  'CustomDirective' )
+    def test_search(self):
+        p = Parser()        
+        p.load( self.errordocumentsconf ) 
+        self.assertEqual( len( p.ServerAlias ),  2)
+        self.assertEqual( len( p.ServerAlias.search( 'www.example.net' ) ),  1)
+        self.assertEqual( p.ServerAlias.search( 'www.example.net' ).value,  'www.example.net')
+        self.assertEqual( p.ServerAlias.search( 'www.example.com' ).value,  'www.example.com')
+        #searching for first option
+        self.assertEqual( len( p.ErrorDocument.search( [404] ) ),  1 )
+        #searching for second option only
+        self.assertEqual( len( p.ErrorDocument.search( [None,  '/error/HTTP_BAD_GATEWAY.html.var' ] ) ),  1 )
+        #searching for two terms
+        self.assertEqual( len( p.ErrorDocument.search([404 ,'/error/HTTP_NOT_FOUND.html.var'] ) ), 1)
+        #trying to change the url for 404 error code
+        p.ErrorDocument.search( [404] ).opts[1] = '/var/error/404.html'
+        self.assertEqual( p.ErrorDocument.search( [404] ).opts[1],  '/var/error/404.html')
+        #searching for the number of the beast
+        self.assertEqual( len( p.ErrorDocument.search( [666] ) ),  0)
+        #trying to set a new line 
+        p.ErrorDocument.search( [666] ).opts = [666,  '/var/number/of/the/beast.html']
 if __name__ == "__main__":
     unittest.main()  
