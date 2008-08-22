@@ -104,7 +104,11 @@ class Options (ListWrapper):
         return options
     def _set_list(self, options):
         if options is None: options = []
-        self.parent.set_raw_value(" ".join( options ))
+        sanitized = []
+        for o in options:
+            if isinstance( o,  int ): o = str(o)
+            sanitized.append(o)
+        self.parent.set_raw_value(" ".join( sanitized ))
 class Line (object):
     parser = None
     def __init__(self, element = None):
@@ -216,8 +220,10 @@ class AbstractSelection( ListWrapper):
 
 class PlainSelection(AbstractSelection):    
     def __init__(self, caller, query ):
-        self.__dict__['_query'] = query
+        self.__dict__['_query'] = self._sanitize_query(query)
         self.__dict__['_caller'] = caller
+    def _sanitize_query(self,  query):
+        return query
     def _get_list(self): 
         #print "query for", self._name, "in", self._caller
         name = self._query.lower()
@@ -230,12 +236,14 @@ class PlainSelection(AbstractSelection):
         return SimpleSearch( self,  query )
     def __setattr__(self, name, value):
         if len(self) == 0:
-            self._create_new()
+            obj = self._create_new()
+            return setattr(obj, name, value)
         return setattr(self[-1], name, value)
     def _create_new(self ):
         line = Line()
         line.key = self._query                
         self._caller.element.append(line.element)                
+        return line
 class TypeSelection(PlainSelection):    
     
     def _get_list(self):
@@ -252,9 +260,15 @@ class TypeSelection(PlainSelection):
         self._caller.element.append(obj.element)        
         return obj
 class SimpleSearch(PlainSelection):
+    def _sanitize_query(self,  query):
+        if isinstance( query,  int ): query = str(query)
+        if isinstance( query,  tuple ): query = list(query)
+        return query
     def _get_list(self):
-        if not self._query: return []
+        if not self._query: return []        
         if isinstance( self._query,  str ):
+            print '==========='
+            for line in self._caller: print self._query, '==',  line.value, ':', line.value == self._query
             result = [line for line in self._caller if line.value == self._query]
         elif isinstance( self._query,  list ):
             terms = [ (idx,  str(term) ) for idx,  term in enumerate(self._query) if term ]

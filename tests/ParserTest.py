@@ -261,6 +261,27 @@ class ParserTest( unittest.TestCase ):
         #searching for the number of the beast
         self.assertEqual( len( p.ErrorDocument.search( [666] ) ),  0)
         #trying to set a new line 
-        p.ErrorDocument.search( [666] ).opts = [666,  '/var/number/of/the/beast.html']
+        linescount = len( p.ErrorDocument )
+        p.ErrorDocument.search( ["666"] ).opts = ["666",  '/var/number/of/the/beast.html']
+        self.assertEqual( p.ErrorDocument.search( ["666"] ).opts[1],  '/var/number/of/the/beast.html')
+        self.assertEqual( len( p.ErrorDocument ) ,  linescount+1)
+        #as before, but using an int
+        p = Parser()        
+        p.load( self.errordocumentsconf ) 
+        linescount = len( p.ErrorDocument )
+        p.ErrorDocument.search( [ 666 ] ).opts = [666,  '/var/number/of/the/beast.html']
+        self.assertEqual( p.ErrorDocument.search( [666] ).opts[1],  '/var/number/of/the/beast.html')
+        self.assertEqual( p.ErrorDocument.search( [666] ).opts[0],  '666' ) #should be string
+        self.assertEqual( len( p.ErrorDocument ) ,  linescount+1)
+        #searching for sections
+        p = Parser()        
+        p.load( self.defaultssl ) 
+        v = p.ifmodule.virtualhost        
+        self.assertEqual( len(v.directory),  5)        
+        self.assertEqual( len(v.directory.search( "/usr/lib/cgi-bin")),  2)
+        self.assertEqual( len(v.directory.search( ["/usr/lib/cgi-bin"] )),  2)
+        #changing the value of the last found directory we now shuold have a count of 1 on the search
+        v.directory.search( "/usr/lib/cgi-bin").value = '/usr/lib/s-cgi'
+        self.assertEqual( len(v.directory.search( "/usr/lib/cgi-bin")),  1)
 if __name__ == "__main__":
     unittest.main()  

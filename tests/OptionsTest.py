@@ -31,6 +31,12 @@ class OptionsTest ( unittest.TestCase ):
         self.assertEqual( len(o), 0 )        
         
     def test_get_item(self):
+        #building from scratch
+        line = FakeLine()
+        o = Options( line )
+        o.append( 'example.net' )
+        self.assertEqual( o[0], 'example.net' )        
+        #existing value
         line = FakeLine()
         o = Options( line )
         line.value = 'example.net www.example.net beta.example.net'
@@ -42,12 +48,12 @@ class OptionsTest ( unittest.TestCase ):
     def test_get_set_options (self):
         line = FakeLine()
         o = Options( line )
-        self.assertEquals( list( o ), [])
+        self.assertEqual( list( o ), [])
         line.value = 'example.net www.example.net beta.example.net'
-        self.assertEquals( list( o ), ['example.net', 'www.example.net', 'beta.example.net'])
+        self.assertEqual( list( o ), ['example.net', 'www.example.net', 'beta.example.net'])
         o.set( ['annodomini.com', 'www.annodomini.com'] )
         self.assertEqual( len(o), 2 )
-        self.assertEquals( list( o ), ['annodomini.com', 'www.annodomini.com'] )
+        self.assertEqual( list( o ), ['annodomini.com', 'www.annodomini.com'] )
         o.set( [] )
         self.assertEqual( len(o), 0 )
         o.set( ['annodomini.com', 'www.annodomini.com'] )
@@ -57,7 +63,14 @@ class OptionsTest ( unittest.TestCase ):
         line = FakeLine()
         o = Options( line )
         o.set( ['example.net', 'www.example.net', 'beta.example.net'] )
-        self.assertEquals( list( o ), ['example.net', 'www.example.net', 'beta.example.net'])    
+        self.assertEqual( list( o ), ['example.net', 'www.example.net', 'beta.example.net'])
+    def test_get_set_int_options(self):
+        #options shuold always be strings, int are nowhere to be found
+        line = FakeLine()
+        line.value = 'ErrorDocument'
+        o = Options( line )
+        o[0] = 666
+        self.assertEqual( o[0],  "666")
     def test_set_item(self):
         line = FakeLine()
         o = Options( line )
