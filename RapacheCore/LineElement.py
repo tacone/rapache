@@ -173,28 +173,42 @@ class Line (object):
         if set_as_source: c.attrib[ 'source' ] = line
     def dump_xml(self):
         print etree.tostring( self.element, pretty_print = True )
-""""
+
+"""
 class NotALine(object):
-    def __error ( name ):
+    def _unified_get ( self,  name ):
+        raise AttributeError, "'NotALine' Object has no attribute "+name
+    def _unified_set(self,  name,  value ):
         raise AttributeError, "'NotALine' Object has no attribute "+name
     def _get_value(self):
-       self__error( 'value' )
+       return self._unified_get( 'value' )
     def _set_value(self, value):
-        self__error( 'value' )
+        return self._unified_set( 'value',  value )
     value = property ( _get_value, _set_value )
     def _get_key(self): 
-        self__error( 'key' )
+        return self._unified_get( 'key' )
     def _set_key(self, value): 
-        self__error( 'key' )
+        return self._unified_set( 'key',  value )
     key = property ( _get_key, _set_key )
     def _get_opts(self): 
-        self__error( 'opts' )
+        return self._unified_get( 'opts' )
     def _set_opts(self, value): 
-        self__error( 'opts' )
+        return self._unified_set( 'opts',  value )
     opts = property ( _get_opts, _set_opts )
-"""
-
-class AbstractSelection(ListWrapper):
+    def changed(self):
+        return self._unified_get( 'changed' )
+        
+class LineGroup( NotALine ):
+    def _unified_get(self,  name):
+        return getattr(self[-1], name)
+    def _unified_set(self,  name,  value):
+        return setattr(self[-1], name, value)
+"""        
+class AbstractSelection( ListWrapper):
+    """def _unified_get(self,  name):
+        return getattr(self[-1], name)
+    def _unified_set(self,  name,  value):
+        return setattr(self[-1], name, value)"""
     def __getattr__(self, name):        
         return getattr(self[-1], name)
     def __setattr__(self, name, value):
@@ -205,23 +219,29 @@ class PlainSelection(AbstractSelection):
         self.__dict__['_name'] = name
         self.__dict__['_caller'] = caller
     def _get_list(self): 
-               
+        #print "query for", self._name, "in", self._caller
         name = self._name.lower()
         directive_attr = 'translate(@directive, "ABCDEFGHIJKLMNOPQRSTUVWXYZ",'\
         +'"abcdefghijklmnopqrstuvwxyz")'
         query = '*[%s="%s"]' % (directive_attr, name)    
-        return self._caller.xpath( query )
+        return self._caller.xpath( query )        
     def _set_list(self): pass
-       
-class TypeSelection(AbstractSelection):    
-    def __init__(self, caller,  name ):
-        self.__dict__['_name'] = name
-        self.__dict__['_caller'] = caller
+    
+    def __setattr__(self, name, value):
+        if len(self) == 0:
+            self._create_new()
+        return setattr(self[-1], name, value)
+    def _create_new(self ):
+        line = Line()
+        line.key = self._name                
+        self._caller.element.append(line.element)                
+class TypeSelection(PlainSelection):    
+    
     def _get_list(self):
         name = self._name.lower()        
         query = './' + name
         return self._caller.xpath( query )
-    def _set_list(self): pass
+    
     
 class Parser(Line):
     def __init__(self, element=None):

@@ -8,14 +8,13 @@ class FakeLine:
     def __init__(self, v = None):
         self.value = v
 class SimpleSelection(AbstractSelection):
-    def __init__(self):
-        #self._list = []
+    def __init__(self):        
         self.__dict__['_list'] = []
     def _get_list( self ):    
         return self._list
     def _set_list(self, list):
         if list is None: list = []
-        self._list = []
+        self._list = list
         
 class AbstractSelectionTest( unittest.TestCase ):
     def test_init (self):
@@ -36,6 +35,15 @@ class AbstractSelectionTest( unittest.TestCase ):
             self.assertTrue(False)
         except IndexError:
             pass
+    def test_list_wrapped (self):
+        s = SimpleSelection()
+        first = FakeLine("a")
+        s.append(first)
+        second = FakeLine("b")
+        s.append(second)
+        third = FakeLine("c")
+        s.append(third)
+        self.assertEquals( third,  s[2])
     def test_set_value(self):
         s = SimpleSelection()
         s.append(FakeLine("a"))

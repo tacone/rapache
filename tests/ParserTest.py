@@ -167,7 +167,6 @@ class ParserTest( unittest.TestCase ):
         p = Parser()
         p.load( self.apache2conf )
         length = len(p.lines)
-        
         for key in self.apache2conf_expected:
             self.assertFalse( getattr(p,  key).changed() )
         
@@ -180,8 +179,7 @@ class ParserTest( unittest.TestCase ):
         self.assertEqual( len(p.lines), length )
                 
         for key in self.apache2conf_expected :
-            line = getattr(p,  key)
-            print line.dump_xml()
+            line = getattr(p,  key)            
             #print key,dict[key]
             #print key,"-->",dict[key]
             
@@ -193,14 +191,14 @@ class ParserTest( unittest.TestCase ):
             else:
                 self.assertFalse( line.changed() )
                 
-        p.set_value( 'DocumentRoot', '/var/www/htdocs' )
+        p.DocumentRoot.value ='/var/www/htdocs' 
         #DocumentRoot is not present in the file, should add a new line
         self.assertEqual( len(p.lines), length +1 )
         #try setting a value with spaces
-        p.set_value( 'DocumentRoot', '/var/www/my htdocs' )
+        p.DocumentRoot.value ='/var/www/my htdocs'
         #length should be the same as before
         self.assertEqual( len(p.lines), length +1 )        
-        self.assertEqual( p.get_value( 'DocumentRoot' ), '/var/www/my htdocs' )  
+        self.assertEqual( p.DocumentRoot.value, '/var/www/my htdocs' )
         
 if __name__ == "__main__":
     unittest.main()  
