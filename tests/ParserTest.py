@@ -234,5 +234,12 @@ class ParserTest( unittest.TestCase ):
         # sections HAVE .sections attribute
         section.sections
         
+        #Parser and Section .create() defaults to .lines.section
+        linescount= len(v.lines)    
+        #creating a line
+        line = v.create( 'CustomDirective',  'On')
+        self.assertEqual( len(v.lines),  linescount + 1)
+        #ensure a line object is returned
+        self.assertEqual( line.key,  'CustomDirective' )
 if __name__ == "__main__":
     unittest.main()  

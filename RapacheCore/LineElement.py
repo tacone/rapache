@@ -396,6 +396,8 @@ class Parser(Line):
             for el in selection(self.element):
                 print etree.tostring( el, pretty_print = True )
     #useful for debug
+    def create(self,  *args,  **kwargs):
+        return self.lines.create( *args,  **kwargs )
 class Section(Parser):
     def reset (self):        
         #tag_name = self.key.lower()
