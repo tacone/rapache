@@ -241,7 +241,15 @@ class TypeSelection(PlainSelection):
         name = self._name.lower()        
         query = './' + name
         return self._caller.xpath( query )
-    
+    def create(self,  key,  value = None):
+        if self._name == 'line':
+            obj = Line()
+        else:
+            obj = Section()
+        obj.key = key
+        if value is not None: obj.value = value
+        self._caller.element.append(obj.element)        
+        return obj
     
 class Parser(Line):
     def __init__(self, element=None):
@@ -261,6 +269,10 @@ class Parser(Line):
         return TypeSelection(self,  'line')
     """Lines returns all non-section elements"""
     lines= property ( _get_lines )
+    def _get_sections(self):
+        return TypeSelection(self,  'section')
+    """Lines returns all non-section elements"""
+    sections= property ( _get_sections )
     """""
     def _get_key(self): 
         if self.element == None : return None
@@ -278,8 +290,7 @@ class Parser(Line):
     value = property ( _get_value, _set_value )
     """
     def load(self, filename ):
-        """Loads a configuration file in the parser"""
-        #self.filename = filename
+        """Loads a configuration file in the parser"""        
         file = open ( filename, 'r' )
         content = file.readlines()
         file.close()

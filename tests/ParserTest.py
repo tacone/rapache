@@ -162,7 +162,12 @@ class ParserTest( unittest.TestCase ):
         for l in p.lines:
             tempval = l.value
         self.assertEqual( p.lines[1].value ,  'On' )
-    
+    def test_sections(self):
+        p = Parser()
+        self.assertEqual( len(p.sections),  0 )
+        p.load( self.vhostconf )          
+        self.assertEqual( len( p.sections ),  1)
+        #test for errors interating and retrieving                
     def test_set_value (self):
         p = Parser()
         p.load( self.apache2conf )
@@ -199,6 +204,35 @@ class ParserTest( unittest.TestCase ):
         #length should be the same as before
         self.assertEqual( len(p.lines), length +1 )        
         self.assertEqual( p.DocumentRoot.value, '/var/www/my htdocs' )
+    def test_create(self):
+        p = Parser()        
+        p.load( self.vhostconf ) 
+        v = p.virtualhost
+        linescount= len(v.lines)    
+        #creating a line
+        line = v.lines.create( 'CustomDirective',  'On')
+        self.assertEqual( len(v.lines),  linescount + 1)
+        self.assertEqual( line.key,  'CustomDirective' )
+        self.assertEqual( line.value,  'On' )
+        #has been correctly attached ?
+        self.assertEqual( v.customdirective.value,  'On' )
+        # is a line ?
+        try: #lines have not .sections attribute
+            line.sections
+            self.assertTrue(False)
+        except AttributeError:
+            pass
+        #creating a section
+        sectioncount = len( v.sections )
+        section = v.sections.create( 'CustomSection',  '*:80')
+        self.assertEqual( len(v.sections),  sectioncount + 1)
+        self.assertEqual( section.key,  'CustomSection' )
+        self.assertEqual( section.value,  '*:80' )
+        #has been correctly attached ?
+        self.assertEqual( v.customsection.value,  '*:80' )
+        # is a section?
+        # sections HAVE .sections attribute
+        section.sections
         
 if __name__ == "__main__":
     unittest.main()  
