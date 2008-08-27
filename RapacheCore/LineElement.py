@@ -231,7 +231,9 @@ class PlainSelection(AbstractSelection):
         +'"abcdefghijklmnopqrstuvwxyz")'
         query = '*[%s="%s"]' % (directive_attr, name)    
         return self._caller.xpath( query )        
-    def _set_list(self): pass
+    def _set_list(self): 
+        #shuold never be called (for now at least)
+        pass
     def search(self,  query):
         return SimpleSearch( self,  query )
     def __setattr__(self, name, value):
@@ -239,6 +241,14 @@ class PlainSelection(AbstractSelection):
             obj = self._create_new()
             return setattr(obj, name, value)
         return setattr(self[-1], name, value)
+    def __delitem__( self,  index ):
+        item = self[index]        
+        parent = item.element.getparent()
+        raw_index = parent.index( item.element )
+        del parent[ raw_index ]
+    #def __delattr___(self,  name):
+    #    while (len(self) > 0 ):
+    #        del(self[0])
     def _create_new(self ):
         line = Line()
         line.key = self._query                
@@ -266,9 +276,7 @@ class SimpleSearch(PlainSelection):
         return query
     def _get_list(self):
         if not self._query: return []        
-        if isinstance( self._query,  str ):
-            print '==========='
-            for line in self._caller: print self._query, '==',  line.value, ':', line.value == self._query
+        if isinstance( self._query,  str ):                        
             result = [line for line in self._caller if line.value == self._query]
         elif isinstance( self._query,  list ):
             terms = [ (idx,  str(term) ) for idx,  term in enumerate(self._query) if term ]

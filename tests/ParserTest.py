@@ -283,5 +283,14 @@ class ParserTest( unittest.TestCase ):
         #changing the value of the last found directory we now shuold have a count of 1 on the search
         v.directory.search( "/usr/lib/cgi-bin").value = '/usr/lib/s-cgi'
         self.assertEqual( len(v.directory.search( "/usr/lib/cgi-bin")),  1)
+        self.assertEqual( len(v.directory.search( "/usr/lib/nonexisting")),  0)
+    def test_delete(self):
+        p = Parser()        
+        p.load( self.errordocumentsconf ) 
+        self.assertEqual( len( p.ErrorDocument ),  17)
+        del p.ErrorDocument[-1]
+        self.assertEqual( len( p.ErrorDocument ),  16)
+        #del p.ErrorDocument
+        #self.assertEqual( len( p.ErrorDocument ),  0)
 if __name__ == "__main__":
     unittest.main()  
