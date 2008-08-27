@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Mon Aug 18 15:32:36 2008 -->
+<!--Generated with glade3 3.4.5 on Tue Aug 26 11:26:52 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -94,7 +94,7 @@
                         <child>
                           <widget class="GtkLabel" id="label11">
                             <property name="visible">True</property>
-                            <property name="label" translatable="yes">SSL certificate history</property>
+                            <property name="label" translatable="yes">Available certificates</property>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
@@ -203,19 +203,6 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkLabel" id="label15">
-                <property name="visible">True</property>
-                <property name="label" translatable="yes">Import SSL Certificate</property>
-              </widget>
-              <packing>
-                <property name="top_attach">3</property>
-                <property name="bottom_attach">4</property>
-                <property name="x_options"></property>
-                <property name="y_options"></property>
-                <property name="x_padding">8</property>
-              </packing>
-            </child>
-            <child>
               <widget class="GtkHBox" id="hbox1">
                 <property name="visible">True</property>
                 <child>
@@ -249,33 +236,6 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkLabel" id="label13">
-                <property name="label" translatable="yes">SSL Enabled</property>
-                <property name="justify">GTK_JUSTIFY_RIGHT</property>
-              </widget>
-              <packing>
-                <property name="x_options"></property>
-                <property name="y_options">GTK_FILL</property>
-                <property name="x_padding">8</property>
-                <property name="y_padding">8</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="GtkCheckButton" id="checkbutton_ssl_enable">
-                <property name="can_focus">True</property>
-                <property name="label" translatable="yes">Enable ssl (https) for this vhost</property>
-                <property name="response_id">0</property>
-                <property name="draw_indicator">True</property>
-              </widget>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="right_attach">2</property>
-                <property name="y_options">GTK_FILL</property>
-                <property name="x_padding">7</property>
-                <property name="y_padding">8</property>
-              </packing>
-            </child>
-            <child>
               <widget class="GtkLabel" id="label3">
                 <property name="visible">True</property>
                 <property name="label" translatable="yes">If you do not have a certificate you will need to generate a certificate request.</property>
@@ -300,38 +260,33 @@
                     <property name="n_rows">3</property>
                     <property name="n_columns">2</property>
                     <child>
-                      <placeholder/>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                    <child>
                       <widget class="GtkLabel" id="label14">
-                        <property name="label" translatable="yes">Config Location</property>
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">SSL Key</property>
                         <property name="justify">GTK_JUSTIFY_RIGHT</property>
                       </widget>
                       <packing>
                         <property name="x_options"></property>
                         <property name="y_options"></property>
                         <property name="x_padding">8</property>
-                        <property name="y_padding">8</property>
                       </packing>
                     </child>
                     <child>
                       <widget class="GtkHBox" id="hbox11">
+                        <property name="visible">True</property>
                         <child>
-                          <widget class="GtkEntry" id="entry_ssl_certificate_location">
+                          <widget class="GtkEntry" id="entry_ssl_key_location">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                           </widget>
                         </child>
                         <child>
-                          <widget class="GtkButton" id="button_log_reset">
+                          <widget class="GtkButton" id="button_key_reset">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
                             <property name="response_id">0</property>
-                            <signal name="clicked" handler="on_button_log_reset_clicked"/>
+                            <signal name="clicked" handler="on_button_key_reset_clicked"/>
                             <child>
                               <widget class="GtkImage" id="image1">
                                 <property name="visible">True</property>
@@ -342,6 +297,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
+                            <property name="padding">8</property>
                             <property name="position">1</property>
                           </packing>
                         </child>
@@ -360,8 +316,8 @@
                         <property name="use_markup">True</property>
                       </widget>
                       <packing>
-                        <property name="top_attach">1</property>
-                        <property name="bottom_attach">2</property>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
                         <property name="x_options"></property>
                         <property name="y_options"></property>
                         <property name="x_padding">8</property>
@@ -376,11 +332,77 @@
                       <packing>
                         <property name="left_attach">1</property>
                         <property name="right_attach">2</property>
+                        <property name="top_attach">2</property>
+                        <property name="bottom_attach">3</property>
+                        <property name="y_options"></property>
+                        <property name="x_padding">8</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkHBox" id="hbox9">
+                        <property name="visible">True</property>
+                        <child>
+                          <widget class="GtkFileChooserButton" id="filechooserbutton_ssl_key">
+                            <property name="visible">True</property>
+                          </widget>
+                        </child>
+                        <child>
+                          <widget class="GtkButton" id="button_import_key">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                            <property name="response_id">0</property>
+                            <signal name="clicked" handler="on_button_import_key_clicked"/>
+                            <child>
+                              <widget class="GtkHBox" id="hbox10">
+                                <property name="visible">True</property>
+                                <child>
+                                  <widget class="GtkImage" id="image4">
+                                    <property name="visible">True</property>
+                                    <property name="stock">gtk-jump-to</property>
+                                  </widget>
+                                </child>
+                                <child>
+                                  <widget class="GtkLabel" id="label17">
+                                    <property name="visible">True</property>
+                                    <property name="label" translatable="yes">Import</property>
+                                  </widget>
+                                  <packing>
+                                    <property name="padding">2</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </widget>
+                            </child>
+                          </widget>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="padding">8</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="right_attach">2</property>
                         <property name="top_attach">1</property>
                         <property name="bottom_attach">2</property>
                         <property name="y_options"></property>
                         <property name="x_padding">8</property>
                         <property name="y_padding">8</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="label16">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Import SSL Key</property>
+                      </widget>
+                      <packing>
+                        <property name="top_attach">1</property>
+                        <property name="bottom_attach">2</property>
+                        <property name="x_options"></property>
+                        <property name="y_options"></property>
+                        <property name="x_padding">8</property>
                       </packing>
                     </child>
                   </widget>
@@ -414,6 +436,52 @@
                 <property name="x_padding">8</property>
               </packing>
             </child>
+            <child>
+              <widget class="GtkLabel" id="label15">
+                <property name="visible">True</property>
+                <property name="label" translatable="yes">Import Certificate</property>
+              </widget>
+              <packing>
+                <property name="top_attach">3</property>
+                <property name="bottom_attach">4</property>
+                <property name="x_options"></property>
+                <property name="y_options"></property>
+                <property name="x_padding">8</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="GtkHBox" id="hbox13">
+                <property name="visible">True</property>
+                <child>
+                  <widget class="GtkImage" id="image6">
+                    <property name="visible">True</property>
+                    <property name="stock">gtk-dialog-warning</property>
+                  </widget>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">False</property>
+                    <property name="padding">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label13">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">&lt;b&gt;Warning: Remember you can only apply one SSL cert per IP / Port&lt;/b&gt;</property>
+                    <property name="use_markup">True</property>
+                  </widget>
+                  <packing>
+                    <property name="padding">8</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </widget>
+              <packing>
+                <property name="right_attach">2</property>
+                <property name="y_options"></property>
+                <property name="x_padding">8</property>
+                <property name="y_padding">8</property>
+              </packing>
+            </child>
           </widget>
           <packing>
             <property name="position">1</property>
@@ -438,14 +506,8 @@
         <child>
           <widget class="GtkTable" id="table1">
             <property name="visible">True</property>
-            <property name="n_rows">8</property>
+            <property name="n_rows">7</property>
             <property name="n_columns">2</property>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
             <child>
               <widget class="GtkExpander" id="expander1">
                 <property name="visible">True</property>
@@ -454,10 +516,34 @@
                   <widget class="GtkVBox" id="vbox3">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkLabel" id="label_warning">
+                      <widget class="GtkHBox" id="hbox12">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Warning: Self-signed certificates should not be used in most production environments. Self-signed certificates are not automatically accepted by a user's browser. Users are prompted by the browser to accept the certificate and create the secure connection. </property>
-                        <property name="wrap">True</property>
+                        <child>
+                          <widget class="GtkImage" id="image5">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-dialog-warning</property>
+                            <property name="icon_size">6</property>
+                          </widget>
+                          <packing>
+                            <property name="padding">8</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="GtkLabel" id="label_warning">
+                            <property name="visible">True</property>
+                            <property name="label" translatable="yes">&lt;b&gt;Warning: Self-signed certificates should not be used in most production environments. &lt;/b&gt;
+
+Self-signed certificates are not automatically accepted by a user's browser. 
+
+Instead users are prompted by the browser to accept the certificate and create the secure connection. </property>
+                            <property name="use_markup">True</property>
+                            <property name="wrap">True</property>
+                          </widget>
+                          <packing>
+                            <property name="padding">8</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
                       </widget>
                       <packing>
                         <property name="padding">8</property>
@@ -475,7 +561,7 @@
                           <widget class="GtkCheckButton" id="checkbutton_self_sign">
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
-                            <property name="label" translatable="yes">Self sign certificate request</property>
+                            <property name="label" translatable="yes">Generate a self signed certificate for this request</property>
                             <property name="response_id">0</property>
                             <property name="draw_indicator">True</property>
                           </widget>

@@ -211,7 +211,7 @@ class ErrorsTreeView ( ConfFilesTreeView ):
         super (ErrorsTreeView, self).__init__ (*args, **kwargs)
         #print self.column_checkbox, self.column_description, self.column_icon
         self.column_checkbox.set_visible( True )        
-              
+        self.column_description.get_cell_renderers()[0].set_property('wrap-width', 500)      
     def load(self, apache):    
         self.items = {}
         site_template = "<b><big>%s</big></b>"        

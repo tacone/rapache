@@ -46,15 +46,18 @@ class AdvancedVhostPlugin(PluginBaseObject):
                                 "SSLCertificateKeyFile" : 0 } # 0 value | 1 options
             
         self.vhost = None
-        
         self.active_cert = None
         
+        # createing a csr will create this key... so dont worry about it existing
+        self.default_key = os.path.join("/etc/ssl/private/default-apache-ssl.pkey")
         
     def on_menu_item_activate(self, widget, main_window):
         #if self.is_module_enabled():
         ssl_vhost = None
         for vhost in VirtualHost.get_all_vhosts():
-            if vhost.get_value("port", "80") == "443": 
+            print vhost.get_value("port", "80")
+            if str(vhost.get_value("port", "80")) == "443": 
+                
                 # TODO: is this the best check... maybe check ssl property?
                 ssl_vhost = vhost
                 break
@@ -72,9 +75,12 @@ class AdvancedVhostPlugin(PluginBaseObject):
             
     # Add item to tools menu
     def init_main_window(self, main_window):
-        self.menu_item = gtk.MenuItem("Create SSL Host")
+    
+   
+        self.menu_item = gtk.MenuItem("New SSL Host")
         self.menu_item.connect("activate", self.on_menu_item_activate, main_window)
-        return self.menu_item
+        main_window.add_new_vhost_menu_item(self.menu_item)
+        #return self.menu_item
 
     def init_vhost_properties(self):
         # Get glade file XML
@@ -87,16 +93,18 @@ class AdvancedVhostPlugin(PluginBaseObject):
         table_ssl = wtree.get_widget("table_ssl")    
         #self.entry_admin_email =  wtree.get_widget("entry_admin_email")    
         #self.entry_log_location = wtree.get_widget("entry_log_location")    
-        self.entry_ssl_certificate_location = wtree.get_widget("entry_ssl_certificate_location")
-        self.checkbutton_ssl_enable = wtree.get_widget("checkbutton_ssl_enable")
         self.treeview_requests =  wtree.get_widget("treeview_requests")
         self.linkbutton_active_cert = wtree.get_widget("linkbutton_active_cert")
         self.filechooserbutton_ssl_cert = wtree.get_widget("filechooserbutton_ssl_cert")
         self.entry_ssl_port = wtree.get_widget("entry_ssl_port")
+        self.entry_ssl_key_location = wtree.get_widget("entry_ssl_key_location")
+        self.filechooserbutton_ssl_key = wtree.get_widget("filechooserbutton_ssl_key")
         signals = {
             "on_button_csr_clicked"                 : self.on_button_csr_clicked,
             "on_treeview_requests_row_activated"    : self.on_treeview_requests_row_activated,
-            "on_button_import_clicked"              : self.on_button_import_clicked
+            "on_button_import_clicked"              : self.on_button_import_clicked,
+            "on_button_import_key_clicked"          : self.on_button_import_key_clicked,
+            "on_button_key_reset_clicked"           : self.on_button_key_reset_clicked
         }
         wtree.signal_autoconnect(signals)   
 
@@ -104,32 +112,64 @@ class AdvancedVhostPlugin(PluginBaseObject):
         # Setup tree
         column = gtk.TreeViewColumn((''))
         column.set_spacing(4)
+        cell = gtk.CellRendererToggle()
+        cell.set_radio(True)
+        cell.connect('toggled', self.treeview_requests_toggled)
+        column.pack_start(cell, False)
+        column.set_attributes(cell, active=0)
+        self.treeview_requests.append_column(column)
+        
+        column = gtk.TreeViewColumn((''))
+        column.set_spacing(4)
         cell = gtk.CellRendererPixbuf()
         column.pack_start(cell, False)
-        column.set_attributes(cell, pixbuf=0)
+        column.set_attributes(cell, pixbuf=1)
         self.treeview_requests.append_column(column)
 
         column = gtk.TreeViewColumn(('Type'))
         cell = gtk.CellRendererText()
         column.pack_start(cell, True)
-        column.set_attributes(cell, markup=1)
+        column.set_attributes(cell, markup=2)
         self.treeview_requests.append_column(column)
         
         column = gtk.TreeViewColumn(('Domain'))
         cell = gtk.CellRendererText()
         column.pack_start(cell, True)
-        column.set_attributes(cell, markup=2)
+        column.set_attributes(cell, markup=3)
         self.treeview_requests.append_column(column)
         
         column = gtk.TreeViewColumn(('Expires'))
         cell = gtk.CellRendererText()
         column.pack_start(cell, True)
-        column.set_attributes(cell, markup=3)
+        column.set_attributes(cell, markup=4)
         self.treeview_requests.append_column(column)
 
         wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "hbox_label")
         return table_ssl, wtree.get_widget("hbox_label")
 
+
+    def on_button_import_key_clicked(self, widget):
+        path = self.filechooserbutton_ssl_key.get_filename()
+        
+        if path:
+            f = open(path, "r")
+            text = f.read()
+            f.close()
+            
+            key_path = os.path.join("/etc/ssl/private/", os.path.basename(path))
+            
+            if not Shell.command.sudo_exists(key_path):
+                Shell.command.write_file(key_path, text)
+                self.entry_ssl_key_location.set_text(key_path)    
+            
+            else:
+                md = gtk.MessageDialog(None, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_CLOSE, message_format="A key with that filename already exists") 
+                result = md.run()
+                md.destroy()
+
+
+    def on_button_key_reset_clicked(self, widget):
+        self.entry_ssl_key_location.set_text(self.default_key)    
 
     def on_button_import_clicked(self, widget):
         path = self.filechooserbutton_ssl_cert.get_filename()
@@ -157,9 +197,17 @@ class AdvancedVhostPlugin(PluginBaseObject):
     def on_treeview_requests_row_activated(self, widget, a, b):
         model, iter =  self.treeview_requests.get_selection().get_selected()
         if not iter: return
-        path = model.get_value(iter, 4)
-        
-        if path.endswith(".csr"):
+        path = model.get_value(iter, 5)
+        self.on_treeview_checked_changed(path)
+    
+    def treeview_requests_toggled(self, cell, path):
+        iter = self.treeview_requests_store.get_iter((int(path),))
+        path = self.treeview_requests_store.get_value(iter, 5)
+        self.on_treeview_checked_changed(path)
+    
+    def on_treeview_checked_changed(self, path):
+
+        if path and path.endswith(".csr"):
             tdw = TextDisplayWindow(self.path)
             
             cert = crypto.load_certificate_request(crypto.FILETYPE_PEM, Shell.command.read_file(path)) 
@@ -188,41 +236,43 @@ class AdvancedVhostPlugin(PluginBaseObject):
 
             tdw.load(text,help_array, path)
             tdw.run()
-        if path.endswith(".crt"):
-            tdw = TextDisplayWindow(self.path)
-            
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, Shell.command.read_file(path)) 
-            expired = self.get_expiry_date_hack(cert, path)
-            start = self.get_start_date_hack(cert, path)
-            if cert.has_expired() : expired = "<b>Expired " + expired +"</b>"
-            
-            text = "<big><b>SSL Certificate</b></big>" 
-
-            help_array = []
-            help_array.append( ["Starts:", start] )
-            help_array.append( ["Expires:", expired] )
-
-            if cert.get_subject().organizationName:
-                help_array.append( ["Organisation:", cert.get_subject().organizationName] )
-
-            if cert.get_subject().organizationalUnitName:
-                help_array.append( ["Organisation Unit:", cert.get_subject().organizationalUnitName] )
-
-            if cert.get_subject().localityName:
-                help_array.append( ["Locality:", cert.get_subject().localityName] )
+        elif not path or path.endswith(".crt"):
+            result = gtk.RESPONSE_OK
+            if path:
+                tdw = TextDisplayWindow(self.path)
                 
-            if cert.get_subject().stateOrProvinceName:
-                 help_array.append( ["State:", cert.get_subject().stateOrProvinceName] )
+                cert = crypto.load_certificate(crypto.FILETYPE_PEM, Shell.command.read_file(path)) 
+                expired = self.get_expiry_date_hack(cert, path)
+                start = self.get_start_date_hack(cert, path)
+                if cert.has_expired() : expired = "<b>Expired " + expired +"</b>"
                 
-            if cert.get_subject().countryName:
-                help_array.append( ["Country:", cert.get_subject().countryName] )
-              
-            help_array.append( ["Domain:", cert.get_subject().commonName] )   
-            help_array.append( ["Issued by:", cert.get_issuer().commonName] )   
-            
-            tdw.load( text, help_array, path, True, self.active_cert != path)
-            result = tdw.run()
-            
+                text = "<big><b>SSL Certificate</b></big>" 
+
+                help_array = []
+                help_array.append( ["Starts:", start] )
+                help_array.append( ["Expires:", expired] )
+
+                if cert.get_subject().organizationName:
+                    help_array.append( ["Organisation:", cert.get_subject().organizationName] )
+
+                if cert.get_subject().organizationalUnitName:
+                    help_array.append( ["Organisation Unit:", cert.get_subject().organizationalUnitName] )
+
+                if cert.get_subject().localityName:
+                    help_array.append( ["Locality:", cert.get_subject().localityName] )
+                    
+                if cert.get_subject().stateOrProvinceName:
+                     help_array.append( ["State:", cert.get_subject().stateOrProvinceName] )
+                    
+                if cert.get_subject().countryName:
+                    help_array.append( ["Country:", cert.get_subject().countryName] )
+                  
+                help_array.append( ["Domain:", cert.get_subject().commonName] )   
+                help_array.append( ["Issued by:", cert.get_issuer().commonName] )   
+                
+                tdw.load( text, help_array, path, True, self.active_cert != path)
+                result = tdw.run()
+                
             if result == gtk.RESPONSE_OK:
                 md = gtk.MessageDialog(None, flags=0, type=gtk.MESSAGE_QUESTION, buttons=gtk.BUTTONS_YES_NO, message_format="Are you sure you want to change the active SSL certificate?") 
                 result = md.run()
@@ -250,12 +300,18 @@ class AdvancedVhostPlugin(PluginBaseObject):
         icon_theme = gtk.icon_theme_get_default()
         file_icon = icon_theme.load_icon(gtk.STOCK_DIALOG_INFO, 24, 0)
         auth_icon = icon_theme.load_icon(gtk.STOCK_DIALOG_AUTHENTICATION, 24, 0)
-        cert_icon = icon_theme.load_icon(gtk.STOCK_ABOUT, 24, 0)
-        self.treeview_requests_store = gtk.ListStore(gtk.gdk.Pixbuf,str, str, str, str)
+        cert_icon = icon_theme.load_icon(gtk.STOCK_DIALOG_WARNING, 24, 0)
+        self.treeview_requests_store = gtk.ListStore(bool, gtk.gdk.Pixbuf,str, str, str, str)
         self.treeview_requests.set_model(self.treeview_requests_store)
         
         files = Shell.command.listdir("/etc/apache2/ssl/")
         files.sort()
+
+        if not self.active_cert:
+            self.treeview_requests_store.append((True, None , "<b><i>No Certificate</i></b>", "", "", None))   
+        else:
+            self.treeview_requests_store.append((False, None, "<i>No Certificate</i>", "", "", None)) 
+
         for path in files: 
             full_path = os.path.join("/etc/apache2/ssl/", path)     
 
@@ -266,29 +322,29 @@ class AdvancedVhostPlugin(PluginBaseObject):
                 if cert.has_expired() : expired = "<b>Expired " + expired +"</b>"
 
                 if full_path == self.active_cert:
-                    self.treeview_requests_store.append((auth_icon, "<b>Active Certificate</b>", "<b>" + cert.get_subject().commonName +"</b>", expired, full_path))     
+                    self.treeview_requests_store.append((True, auth_icon, "<b>Certificate</b>", "<b>" + cert.get_subject().commonName +"</b>",  "<b>" +expired +"</b>", full_path))     
                     select = self.treeview_requests.get_selection()
                     select.select_path(len(self.treeview_requests_store) - 1)
                     self.treeview_requests.scroll_to_cell(len(self.treeview_requests_store) - 1)
                     
                 else: 
-                    self.treeview_requests_store.append((auth_icon, "Certificate", cert.get_subject().commonName , expired, full_path))     
+                    self.treeview_requests_store.append((False, auth_icon, "Certificate", cert.get_subject().commonName , expired, full_path))     
             #if path.endswith(".pkey"):
             #    self.treeview_requests_store.append((auth_icon, "Key", path, path)) 
-
+        """
         files = Shell.command.listdir("/etc/apache2/ssl/")
         files.sort()
         for path in files: 
             full_path = os.path.join("/etc/apache2/ssl/", path)     
             if path.endswith(".csr"):
                 cert_req = crypto.load_certificate_request(crypto.FILETYPE_PEM, Shell.command.read_file(full_path)) 
-                self.treeview_requests_store.append((file_icon, "Request", cert_req.get_subject().commonName, "",  full_path))
+                self.treeview_requests_store.append((file_icon, "Request", cert_req.get_subject().commonName, "",  full_path))"""
 
     def on_button_csr_clicked(self, widget):
 
         w = CertificateRequestWindow(self.path)
         
-        w.load( [self.vhost.get_value("ServerName")] + self.vhost.get_value("ServerAlias", []),  self.vhost.get_value("ServerAdmin", "") )
+        w.load( [self.vhost.get_value("ServerName")] + self.vhost.get_value("ServerAlias", []),  self.vhost.get_value("ServerAdmin", ""), self.entry_ssl_key_location.get_text() )
         cert = w.run()
         
         if cert:
@@ -298,57 +354,33 @@ class AdvancedVhostPlugin(PluginBaseObject):
 
     def update_active_cert(self, cert, key=None):
         self.active_cert = cert
-        if key:
-            self.active_key = key
-        else:
-            # try and guess correct key, based on cert name then vhost name
-            key = os.path.basename(self.active_cert).split(' ')[0]
-            key_path = os.path.join("/etc/ssl/private/", key + ".pkey")
-            print key_path 
-            if Shell.command.exists(key_path):
-                self.active_key = key_path
-            else:
-                key_path = os.path.join("/etc/ssl/private/", key + ".key")
-                print key_path 
-                if Shell.command.exists(key_path):
-                    self.active_key = key_path
-                else:
-                    key_path = os.path.join("/etc/ssl/private/", self.vhost.get_value("ServerName") + '.pkey')
-                    print key_path 
-                    if Shell.command.exists(key_path):
-                        self.active_key = key_path
-                    else:
-                        key_path = os.path.join("/etc/ssl/private/", self.vhost.get_value("ServerName") + '.key')
-                        print key_path 
-                        if Shell.command.exists(key_path):
-                            self.active_key = key_path
 
     # Customise the vhost properties window
     def load_vhost_properties(self, vhost):
         self.vhost = vhost
-                  
-        self.update_active_cert(vhost.get_value("SSLCertificateFile", ""), vhost.get_value("SSLCertificateKeyFile", ""))
+         
+        self.update_active_cert(vhost.get_value("SSLCertificateFile", ""))
+        self.entry_ssl_key_location.set_text(vhost.get_value("SSLCertificateKeyFile", self.default_key  ))
         self.update_treeview()      
 
-        if vhost.get_value("SSLEngine", "Off").lower() == "on":
-            self.checkbutton_ssl_enable.set_active(True)
+
         return
         
     # Perform action on vhost properties save
-    def save_vhost_properties(self, vhost):
+    def update_vhost_properties(self, vhost):
         self.vhost = vhost
         error = None
         
         if self.active_cert:
              vhost.set_value("SSLEngine", "on" )
              vhost.set_value("Port", self.entry_ssl_port.get_text() )
+             vhost.set_value("SSLCertificateKeyFile", self.entry_ssl_key_location.get_text())
         else:
              vhost.set_value("SSLEngine", "off")
-             #vhost.set_value("Port", "80" )
+             vhost.set_value("Port", "80" )
 
         vhost.set_value("SSLCertificateFile", self.active_cert)
-        vhost.set_value("SSLCertificateKeyFile", self.active_key)
-              
+  
         return True, error
 
 

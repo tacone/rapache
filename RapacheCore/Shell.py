@@ -137,13 +137,7 @@ class CommandHandler:
         return False # file dosnt exist and no new content
        
     def read_file(self, path):
-    
-        returncode, output, error = self.sudo_execute( ["cat", path] )
-        if returncode == 0:
-            return output
-        return ""
-        
-    
+
         if self.verbose >= 1:
             print "READING : " + path
         # TODO: add ssh handler
@@ -154,15 +148,19 @@ class CommandHandler:
             return result
         return ""
     
-    def write_file(self, path, content):
+    def write_file(self, path, content, backup=True):
 
-        if self.create_backup(path, content):
+        if not backup or self.create_backup(path, content):
             
             if self.verbose >= 1:
                 print "WRITING : " + path
             
             # Update local backup copy
-            local_path = self.__get_backup_path(path)
+            if backup:
+                local_path = self.__get_backup_path(path)
+            else:
+                f, local_path = tempfile.mkstemp()
+                
             f = open(local_path, "w")
             f.write(content)
             f.close()
@@ -171,34 +169,34 @@ class CommandHandler:
 
             # copy file now using sudo
             self.sudo_execute( ["cp", local_path, path] )
+            
+            # remove the local copy if no backups
+            if not backup:
+                os.remove(local_path)
 
     def listdir(self, path):
-        returncode, output, error = self.sudo_execute( ["ls", "-1", path] )
-        if returncode == 0:
-            return output.split("\n")
-        return []
+        return os.listdir(path)
 
     def create_complete_path ( self, complete_path ):
-        if self.verbose >= 1:
-            print "Creating Path: " + complete_path
-        tokens = complete_path.split( '/' )
-        del tokens[ 0 ]        
-        path = '/'
-        for piece in tokens:
-            path = os.path.join(path, piece)
-            print path
-            if not self.exists( path ):
-                try:
-                    self.sudo_execute( ["mkdir", path] )
-                except:
-                    print "error on creating path"+path
-                    return False                   
-        return True 
+        if not self.exists( complete_path ):
+            if self.verbose >= 1:
+                print "Creating Path: " + complete_path
+            tokens = complete_path.split( '/' )
+            del tokens[ 0 ]        
+            path = '/'
+            for piece in tokens:
+                path = os.path.join(path, piece)
+                if not self.exists( path ):
+                    try:
+                        self.sudo_execute( ["mkdir", path] )
+                    except:
+                        print "error on creating path"+path
+                        return False                   
+            return True 
 
 
     def exists(self, path):
-        returncode, output, error = self.sudo_execute( ["ls", path] )
-        return returncode == 0
+        return os.path.exists( path )
         
     def readlink(self, path):
         return os.readlink(path)
@@ -218,7 +216,7 @@ class CommandHandler:
     def __sudo_popen (self, command, password ): 
         #don't enable the following line
         #print "using password:", password
-        
+
         # prepend sudo to command and allow piping in 
         command.insert(0, "sudo")
         command.insert(1, "-S")
@@ -226,12 +224,15 @@ class CommandHandler:
         #we need a try catch to avoid tracebacks to be printed
         #as they would show the password
         try:    
-            p.stdin.write( password )
+            if p.stdin and not p.stdin.closed:
+                p.stdin.write( password )
+        except IOError:
+            pass # catch the IOError as its meaningless
         except:
             #don't enable the following line as you password
             #will be printed out
             #traceback.print_exc() #<-- CAUTION !
-            
+
             print "ERROR: in __sudo_popen()"
             pass
         return p
@@ -244,12 +245,12 @@ class CommandHandler:
         #http://www.python.org/dev/peps/pep-0263/
         fakepass= 'xxxASAISUHAISGHauyguyagUDBhb2156412-,1-2.,1212'
         #command = [ 'head', '/var/log/syslog', '-n 1' ]
-        command = [ 'sudo', '-v' ]
+        command = [ '-v' ]
         p = self.__sudo_popen( command, fakepass)
         output, error = p.communicate()
         returncode = p.returncode        
         self.__output(command, returncode, output, error)    
-        print "needs login:", returncode
+        #print "needs login:", returncode
         if returncode == 0:
             return False
         else:          
@@ -331,6 +332,22 @@ class CommandHandler:
         #log.error = error
         
         return (returncode, output, error)
+
+    def sudo_read_file(self, path):
+        returncode, output, error = self.sudo_execute( ["cat", path] )
+        if returncode == 0:
+            return output
+        return ""
+
+    def sudo_exists(self, path):
+        returncode, output, error = self.sudo_execute( ["ls", path] )
+        return returncode == 0
+
+    def sudo_listdir(self, path):
+        returncode, output, error = self.sudo_execute( ["ls", "-1", path] )
+        if returncode == 0:
+            return output.split("\n")
+        return []
 
 # Look ma'! A singleton !
 command = CommandHandler()    

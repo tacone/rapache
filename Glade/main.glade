@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Mon Aug 18 23:20:43 2008 -->
+<!--Generated with glade3 3.4.5 on Tue Aug 19 17:29:41 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="MainWindow">
     <property name="width_request">500</property>
@@ -329,7 +329,7 @@ web server is restarted</property>
                             <property name="visible">True</property>
                             <property name="toolbar_style">GTK_TOOLBAR_BOTH_HORIZ</property>
                             <child>
-                              <widget class="GtkToolButton" id="new">
+                              <widget class="GtkMenuToolButton" id="new_button">
                                 <property name="visible">True</property>
                                 <property name="is_important">True</property>
                                 <property name="use_underline">True</property>

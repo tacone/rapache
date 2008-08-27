@@ -67,6 +67,7 @@ class Htpasswd:
 
     def __init__(self):
         self.entries = []
+        self.loaded = False
 
     def load(self, content):
         """Read the htpasswd file into memory."""
@@ -77,7 +78,8 @@ class Htpasswd:
                 username, pwhash = line.split(':')
                 entry = [username, pwhash.rstrip()]
                 self.entries.append(entry)
-
+        self.loaded = True
+        
     def save(self):
         """Write the htpasswd file to disk"""
         return "\n".join(["%s:%s\n" % (entry[0], entry[1]) for entry in self.entries])

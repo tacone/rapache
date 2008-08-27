@@ -78,6 +78,7 @@ def get_all_vhosts(plugin_manager = None):
         for fname in  dirList :                        
             data.append( VirtualHostModel( fname, plugin_manager ) )
         
+        
         return data
 
 # Replacment that has a bit of state

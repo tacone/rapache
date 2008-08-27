@@ -374,6 +374,7 @@ class SubTag ( ApacheParser ):
         if value is None: return None
         tokens = value.split(':')
         if len(tokens) < 2: return None
+        if tokens[-1] =="*": return None
         return int(tokens[-1])
     def set_port(self, portnumber):
         old_port = self.get_port()

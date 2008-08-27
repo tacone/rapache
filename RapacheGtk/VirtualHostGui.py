@@ -119,6 +119,7 @@ class VirtualHostWindow:
         GuiUtils.style_as_tooltip( self.error_area )
         self.on_entry_domain_changed()
         
+        # init enabled plugins
         for plugin in self.parent.plugin_manager.plugins:
         	try:
         	    if plugin.is_enabled():      	        
@@ -139,7 +140,7 @@ class VirtualHostWindow:
         
         
     def on_notebook_switch_page(self, notebook, page, page_num):
-        self.save(self.__previous_active_tab)   
+        self.update(self.__previous_active_tab)   
         if page_num == notebook.get_n_pages() - 1:
             buf = self.text_view_vhost_source.get_buffer()
             text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
@@ -230,11 +231,10 @@ class VirtualHostWindow:
         except "VhostUnparsable":            
             pass
         
-        for plugin in self.parent.plugin_manager.plugins:
+        for plugin in self.plugins:
         	try:
         	    if plugin.is_enabled():          
         	        plugin.load_vhost_properties(self.vhost)
-    	        	self.plugins.append(plugin)
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
 
@@ -323,7 +323,7 @@ class VirtualHostWindow:
         return  
             
     def on_button_save_clicked(self, widget):
-        res = self.save()
+        res = self.update()
         
         if not res:
             md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format="Are you sure you want to continue\n\nThere are incomplete fields to be completed") #TODO: Terrible error text !!!
@@ -332,7 +332,19 @@ class VirtualHostWindow:
             if result != gtk.RESPONSE_OK:
                 return
         
-        
+        # Save plugins
+        if self.plugins:
+            for plugin in self.plugins:
+                try:
+                    if plugin.is_enabled():
+                        res, message = plugin.save_vhost_properties(self.vhost)
+                        if not res:
+                            result = False
+                            if tab_number and plugin._tab_number == tab_number:
+                                self.show_error ( message )
+                except Exception:
+                    traceback.print_exc(file=sys.stdout) 
+                    
         # save over buffer content
         buf = self.text_view_vhost_source.get_buffer()
         text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
@@ -353,7 +365,7 @@ class VirtualHostWindow:
         self.parent.please_restart()
         self.window.destroy()
         
-    def save(self, tab_number=None):
+    def update(self, tab_number=None):
         result = True
 
         if self.entry_location.get_text() == "" and self.vhost.is_new:
@@ -365,12 +377,12 @@ class VirtualHostWindow:
         
         self.hack_hosts = self.checkbutton_hosts.get_active()      
         
-	    # Save plugins
+	    # Update plugins
         if self.plugins:
             for plugin in self.plugins:
                 try:
                     if plugin.is_enabled():
-                        res, message = plugin.save_vhost_properties(self.vhost)
+                        res, message = plugin.update_vhost_properties(self.vhost)
                         if not res:
                             result = False
                             if tab_number and plugin._tab_number == tab_number:

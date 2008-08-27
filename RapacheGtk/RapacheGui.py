@@ -142,12 +142,19 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
 
-
-  
-
-
     def refresh_config_test(self): 
         self.treeview_errors.load(self.apache)
+
+    def add_new_vhost_menu_item(self, menu_item):
+        new_button = self.xml.get_widget( 'new_button')
+        menu = new_button.get_menu()
+        
+        if not menu:
+            menu = gtk.Menu()
+            new_button.set_menu( menu )
+    
+        menu.add(menu_item)
+        menu.show_all()
 
     @threaded    
     def update_server_status(self, loop=False):

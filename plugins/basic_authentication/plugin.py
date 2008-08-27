@@ -30,8 +30,6 @@ try:
 except:
     sys.exit(1)
 
-
-
 class BasicAuthenticationPlugin(PluginBaseObject):
 
     def __init__(self, path):
@@ -52,50 +50,7 @@ class BasicAuthenticationPlugin(PluginBaseObject):
         
         print "NOTE: THIS WILL NOT WORK UNTIL WE CAN SET <Directory /path>"
 
-    def init_vhost_properties(self):
-
-        # Get glade file XML
-        f = open( os.path.join(self.path, "basic_auth.glade") ,"r")
-        self.glade_vhost_xml =  f.read()
-        f.close()
-       
-        wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "hbox_security") 
-        hbox_security = wtree.get_widget("hbox_security")   
-
-        wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "hbox_auth_basic")
-        hbox_auth_basic = wtree.get_widget("hbox_auth_basic") 
-        
-        self.checkbutton_enable_auth_basic = wtree.get_widget("checkbutton_enable_auth_basic") 
-        self.entry_warning_message = wtree.get_widget("entry_warning_message") 
-        self.treeview_users = wtree.get_widget("treeview_users") 
-        self.entry_location = wtree.get_widget("entry_location")      
-        
-        signals = {
-            "on_toolbutton_user_add_clicked"    : self.on_toolbutton_user_add_clicked,
-            "on_toolbutton_user_edit_clicked"   : self.on_toolbutton_user_edit_clicked,
-            "on_toolbutton_user_delete_clicked" : self.on_toolbutton_user_delete_clicked,
-            "on_treeview_users_row_activated"   : self.on_treeview_users_row_activated,
-            "on_button_location_clear_clicked"  : self.on_button_location_clear_clicked
-        }
-        wtree.signal_autoconnect(signals)  
-        
-        # Setup tree
-        column = gtk.TreeViewColumn((''))
-        column.set_spacing(4)
-        cell = gtk.CellRendererToggle()
-        cell.connect('toggled', self.treeview_users_toggled)
-        column.pack_start(cell, False)
-        column.set_attributes(cell, active=0)
-        self.treeview_users.append_column(column)
-
-        column = gtk.TreeViewColumn(('User'))
-        cell = gtk.CellRendererText()
-        column.pack_start(cell, True)
-        column.set_attributes(cell, markup=1)
-        self.treeview_users.append_column(column)
-
-        return hbox_auth_basic, hbox_security
-        
+    
     def treeview_users_toggled(self, cell, path):
         # toggle check box value
         iter = self.treeview_users_store.get_iter((int(path),))
@@ -170,24 +125,73 @@ class BasicAuthenticationPlugin(PluginBaseObject):
         for user in self.users.entries:
             self.treeview_users_store.append((user[0] in self.users_active , user[0], user[0]))         
         
+        
+    def init_vhost_properties(self):
+
+        # Get glade file XML
+        f = open( os.path.join(self.path, "basic_auth.glade") ,"r")
+        self.glade_vhost_xml =  f.read()
+        f.close()
+       
+        wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "hbox_security") 
+        hbox_security = wtree.get_widget("hbox_security")   
+
+        wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "hbox_auth_basic")
+        hbox_auth_basic = wtree.get_widget("hbox_auth_basic") 
+        
+        self.checkbutton_enable_auth_basic = wtree.get_widget("checkbutton_enable_auth_basic") 
+        self.entry_warning_message = wtree.get_widget("entry_warning_message") 
+        self.treeview_users = wtree.get_widget("treeview_users") 
+        self.entry_location = wtree.get_widget("entry_location")      
+        
+        signals = {
+            "on_toolbutton_user_add_clicked"    : self.on_toolbutton_user_add_clicked,
+            "on_toolbutton_user_edit_clicked"   : self.on_toolbutton_user_edit_clicked,
+            "on_toolbutton_user_delete_clicked" : self.on_toolbutton_user_delete_clicked,
+            "on_treeview_users_row_activated"   : self.on_treeview_users_row_activated,
+            "on_button_location_clear_clicked"  : self.on_button_location_clear_clicked
+        }
+        wtree.signal_autoconnect(signals)  
+        
+        # Setup tree
+        column = gtk.TreeViewColumn((''))
+        column.set_spacing(4)
+        cell = gtk.CellRendererToggle()
+        cell.connect('toggled', self.treeview_users_toggled)
+        column.pack_start(cell, False)
+        column.set_attributes(cell, active=0)
+        self.treeview_users.append_column(column)
+
+        column = gtk.TreeViewColumn(('User'))
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, True)
+        column.set_attributes(cell, markup=1)
+        self.treeview_users.append_column(column)
+
+        return hbox_auth_basic, hbox_security
+        
+        
+        
     # Customise the vhost properties window
     def load_vhost_properties(self, vhost):
 
         self.checkbutton_enable_auth_basic.set_active(vhost.get_value("AuthType", "None").lower() == "basic")
-        self.entry_location.set_text(vhost.get_value("AuthUserFile", self.default_location))
+
+        # only load if value changes
+        if vhost.get_value("AuthUserFile", "NONE") != self.entry_location.get_text():
+            self.entry_location.set_text(vhost.get_value("AuthUserFile", self.default_location))
+            content = Shell.command.read_file(self.entry_location.get_text())
+            if content:
+                self.users.load( content )
+
         self.entry_warning_message.set_text(vhost.get_value("AuthName", "Password Required"))
         self.users_active = vhost.get_value("Require", ["user"])[1:]
-        
-        content = Shell.command.read_file(self.entry_location.get_text())
-        if content:
-            self.users.load( content )
-
         self.update_users()    
 
         return
         
-    # Perform action on vhost properties save
-    def save_vhost_properties(self, vhost):
+    # Perform action on vhost properties update request
+    def update_vhost_properties(self, vhost):
         
         if self.checkbutton_enable_auth_basic.get_active():
             vhost.set_value("AuthType", "Basic" )
@@ -205,10 +209,15 @@ class BasicAuthenticationPlugin(PluginBaseObject):
         vhost.set_value("AuthName", self.entry_warning_message.get_text() )    
         vhost.set_value("AuthUserFile", self.entry_location.get_text() )
         vhost.set_value("Require", ["user"] + self.users_active)
-        # should this be happening now??
-        Shell.command.write_file( self.entry_location.get_text(), self.users.save())
-      
         return True, None
+
+    # Perform action on vhost properties save
+    def save_vhost_properties(self, vhost):
+
+        Shell.command.write_file( self.entry_location.get_text(), self.users.save())
+        
+        return True, None
+
 
 def register( path ):
     return BasicAuthenticationPlugin( path )
