@@ -47,7 +47,8 @@ class TextDisplayWindow:
         self.textview_content = wtree.get_widget("textview_content")
         self.label_help = wtree.get_widget("label_help")
         self.label_path = wtree.get_widget("label_path")
-        self.hbox_table_frame = wtree.get_widget("hbox_table_frame")
+        #self.hbox_table_frame = wtree.get_widget("hbox_table_frame")
+        self.treeview_details = wtree.get_widget("treeview_details")
         self.button_save = wtree.get_widget("button_save")
         self.button_close = wtree.get_widget("button_closel")
         self.button_apply = wtree.get_widget("button_apply")
@@ -62,6 +63,18 @@ class TextDisplayWindow:
         self.window.connect("destroy", self.on_destroy)
 
         self.return_value = None
+        
+        column = gtk.TreeViewColumn((''))
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, True)
+        column.set_attributes(cell, markup=0)
+        self.treeview_details.append_column(column)
+        
+        column = gtk.TreeViewColumn((''))
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, True)
+        column.set_attributes(cell, markup=1)
+        self.treeview_details.append_column(column)
         
     def on_button_apply_clicked(self, widget):
         self.return_value = gtk.RESPONSE_OK
@@ -99,7 +112,8 @@ class TextDisplayWindow:
         gtk.main()
         return self.return_value
    
-    def load (self, help_text, help_array, path, save_as_button=True, apply_button=False):
+    def load (self, title, help_text, help_array, path, save_as_button=True, apply_button=False):
+        self.window.set_title(title)
         self.path = path
         self.label_help.set_markup(help_text)
         self.label_path.set_text("File : " + path )
@@ -112,22 +126,16 @@ class TextDisplayWindow:
         else:
             self.button_apply.hide()
         
-        # Build table of values
+        
+        
+        store = gtk.ListStore(str, str, str)
+        self.treeview_details.set_model(store)
+        
         if help_array:
             table = gtk.Table(len(help_text), 2, False)
             row_count = 0
             for help_text_line in help_array:
-                
-                title = gtk.Label(help_text_line[0])
-                content = gtk.Label(help_text_line[1])
-                
-                table.attach(title, 0, 1, row_count, row_count+1)
-                table.attach(content, 1, 2, row_count, row_count+1)
-
-                row_count = row_count + 1
-
-            self.hbox_table_frame.pack_start(table)
-            self.hbox_table_frame.show_all()
+                store.append(("<b>" +help_text_line[0] + "</b>", help_text_line[1], None))
 
         return
 				

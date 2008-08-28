@@ -212,7 +212,6 @@ class AdvancedVhostPlugin(PluginBaseObject):
             
             cert = crypto.load_certificate_request(crypto.FILETYPE_PEM, Shell.command.read_file(path)) 
              
-            text = "<big><b>SSL Certificate Request</b></big>" 
             help_array = []
             
             if cert.get_subject().organizationName:
@@ -232,7 +231,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
                  
             help_array.append( ["Domain:", cert.get_subject().commonName] )
             
-            text +=  "\nYou will need to send this certificate request, proof of your company's identity, and payment to a Certificate Authority (CA). The CA verifies the certificate request and your identity, and then sends back a certificate for your secure server."
+            text =  "<big><b>SSL Certificate Request</b></big>\nYou will need to send this certificate request, proof of your company's identity, and payment to a Certificate Authority (CA). The CA verifies the certificate request and your identity, and then sends back a certificate for your secure server."
 
             tdw.load(text,help_array, path)
             tdw.run()
@@ -244,11 +243,16 @@ class AdvancedVhostPlugin(PluginBaseObject):
                 cert = crypto.load_certificate(crypto.FILETYPE_PEM, Shell.command.read_file(path)) 
                 expired = self.get_expiry_date_hack(cert, path)
                 start = self.get_start_date_hack(cert, path)
-                if cert.has_expired() : expired = "<b>Expired " + expired +"</b>"
+                status = "Valid"
+                if cert.has_expired(): status = "Expired"
                 
-                text = "<big><b>SSL Certificate</b></big>" 
+                text = "<big><b>SSL Certificate for <i>%s</i></b></big>" % (cert.get_subject().commonName )
 
                 help_array = []
+                help_array.append( ["Status:", status ] )
+                help_array.append( ["Domain:", cert.get_subject().commonName ] )
+                help_array.append( ["Serial:", cert.get_serial_number() ] )
+               
                 help_array.append( ["Starts:", start] )
                 help_array.append( ["Expires:", expired] )
 
@@ -267,10 +271,10 @@ class AdvancedVhostPlugin(PluginBaseObject):
                 if cert.get_subject().countryName:
                     help_array.append( ["Country:", cert.get_subject().countryName] )
                   
-                help_array.append( ["Domain:", cert.get_subject().commonName] )   
+                #help_array.append( ["Domain:", cert.get_subject().commonName] )   
                 help_array.append( ["Issued by:", cert.get_issuer().commonName] )   
                 
-                tdw.load( text, help_array, path, True, self.active_cert != path)
+                tdw.load( "SSL Certificate Details", text, help_array, path, True, self.active_cert != path)
                 result = tdw.run()
                 
             if result == gtk.RESPONSE_OK:

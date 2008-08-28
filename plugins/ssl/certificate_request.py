@@ -405,7 +405,30 @@ class CertificateRequestWindow:
         else:
         
             tdw = TextDisplayWindow(self.glade_path)
-            tdw.load( "You will need to send this certificate request, proof of your company's identity, and payment to a Certificate Authority (CA). The CA verifies the certificate request and your identity, and then sends back a certificate for your secure server.", None, certreq_path)
+            
+            help_array = []
+
+            if req.get_subject().organizationName:
+                help_array.append( ["Organisation:", req.get_subject().organizationName] )
+
+            if req.get_subject().organizationalUnitName:
+                help_array.append( ["Organisation Unit:", req.get_subject().organizationalUnitName] )
+
+            if req.get_subject().localityName:
+                help_array.append( ["Locality:", req.get_subject().localityName] )
+                
+            if req.get_subject().stateOrProvinceName:
+                 help_array.append( ["State:", req.get_subject().stateOrProvinceName] )
+                
+            if req.get_subject().countryName:
+                help_array.append( ["Country:", req.get_subject().countryName] )
+              
+            help_array.append( ["Domain:", req.get_subject().commonName] )   
+            
+            tdw.load( "SSL Certificate Request", "<big><b>SSL Certificate Request</b></big>\n\nYou will need to send this certificate request, proof of your company's identity, and payment to a Certificate Authority (CA).\n\nThe CA verifies the certificate request and your identity, and then sends back a certificate for your secure server.", help_array, certreq_path)
+            
+            self.window.hide()
+            
             tdw.run()
         return
     

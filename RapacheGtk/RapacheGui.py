@@ -96,7 +96,9 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "open_doc_button_clicked" : self.open_doc_button_clicked,
             "on_button_hide_warning_clicked" : self.on_button_hide_warning_clicked,
             "quit" : self.quit,
-            "on_menuitem_stop_apache_activate" : self.on_menuitem_stop_apache_activate }
+            "on_menuitem_stop_apache_activate" : self.on_menuitem_stop_apache_activate,
+            "on_button_open_log_clicked" : self.on_button_open_log_clicked
+        }
         
         gtk.window_set_default_icon_from_file(os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle_golden.svg'))
         
@@ -141,6 +143,27 @@ class MainWindow( RapacheCore.Observer.Observable ) :
                         menu_item.show()
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
+
+
+
+        # Add rich edit to log
+        self.text_view_log = GuiUtils.new_apache_sourceview()
+        self.xml.get_widget( 'scroll_window_log' ).add( self.text_view_log )
+        self.text_view_log.show()
+        combobox_log = self.xml.get_widget( 'combobox_log' )
+        files = Shell.command.listdir("/var/log/apache2")
+        for file in files:
+            if file.endswith(".log"):
+                combobox_log.append_text(file)
+        combobox_log.set_active(0)
+        
+    def on_button_open_log_clicked(self, widget):
+        file = self.xml.get_widget( 'combobox_log' ).get_active_text()
+        path = os.path.join("/var/log/apache2", file)
+        text = Shell.command.read_file( path )
+        self.text_view_log.get_buffer().set_text( text )
+        self.text_view_log.set_editable(False)
+        self.xml.get_widget( 'label_log_path').set_text( path )
 
     def refresh_config_test(self): 
         self.treeview_errors.load(self.apache)
