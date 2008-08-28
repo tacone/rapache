@@ -179,11 +179,9 @@ class Line (object):
         indentation = parser.get_indentation( line )
         if indentation: c.attrib['indentation'] = indentation
         if set_as_source: c.attrib[ 'source' ] = line
-    def get_as_list(self):
-        obj_line = self.element
-        
+    def _compile(self,  obj_line):                
         source = obj_line.attrib.get('source')
-        if source: return [source.rstrip()+"\n"]
+        if source: return source.rstrip()+"\n"
         line = ''
         
         indentation = obj_line.attrib.get('indentation')
@@ -211,7 +209,9 @@ class Line (object):
             line += "#" + comment
         #remove traling spaces and assure a newline at the end of the file.
         #line = line.rstrip() + "\n"
-        return [line.rstrip()+"\n"]
+        return line.rstrip()+"\n"
+    def get_as_list(self):
+        return [self._compile( self.element )]
     def dump_xml(self):
         print etree.tostring( self.element, pretty_print = True )
 
@@ -509,6 +509,13 @@ class Parser(Line):
     def create(self,  *args,  **kwargs):
         return self.lines.create( *args,  **kwargs )
 class Section(Parser):
+    def get_as_list (self):
+        # replace compile_line !
+        content = [ self._compile( self.element).rstrip()+"\n" ]
+        content +=  super (Section, self).get_as_list()
+        #content += [ "</%s>\n" % self.key ]
+        content += [ self.element.attrib[ 'close_source' ].rstrip()+"\n" ]
+        return content
     def reset (self):        
         #tag_name = self.key.lower()
         self.__dict__['element'] = etree.Element( 'section' )

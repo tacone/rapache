@@ -318,8 +318,7 @@ class ParserTest( unittest.TestCase ):
     def test_get_content(self):
         p = Parser()
         p.load( self.optionsconf )
-        content = p.get_as_list()
-        print content
+        content = p.get_as_list()        
         self.assertEqual( type(content), type([]) )
         self.assertEqual( len( content), 13 )
         #do lines contain extra  trailing \n ?
@@ -344,6 +343,27 @@ class ParserTest( unittest.TestCase ):
         content = p.get_as_list()
         self.assertEqual( type(content), type([]) )
         self.assertEqual( len( content), 13+2 )
+    """   
+    TODO: find out why this fails
+    def test_get_content_with_nesting(self):
+        " ""tests that the content of subtags is actually rendered in
+        the parent element get_content()"" "
+        file = open ( self.vhostconf, 'r' )
+        original_content = file.readlines()
+        file.close()
         
+        p = Parser()
+        p.load( self.vhostconf )
+        content = p.get_as_list()        
+        for line in content: print line, 
+        #    print "\n".join( content )
+        self.assertEqual( type(content), type([]) )
+        #do lines contain extra  trailing \n ?
+        self.assertEqual( len(original_content), len(content) )
+        for idx, value in enumerate( original_content ):
+            #note rstrip(), we don't preserve trailing spaces yet
+            self.assertEqual( original_content[ idx ].rstrip(), content[ idx].rstrip() )
+            #self.assertEqual( original_content, content )    
+    """
 if __name__ == "__main__":
     unittest.main()  
