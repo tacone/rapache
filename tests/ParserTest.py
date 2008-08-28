@@ -290,7 +290,19 @@ class ParserTest( unittest.TestCase ):
         self.assertEqual( len( p.ErrorDocument ),  17)
         del p.ErrorDocument[-1]
         self.assertEqual( len( p.ErrorDocument ),  16)
-        #del p.ErrorDocument
-        #self.assertEqual( len( p.ErrorDocument ),  0)
+        del p.ErrorDocument
+        self.assertEqual( len( p.ErrorDocument ),  0)
+        #testing in a subelement
+        vhost = p.VirtualHost
+        self.assertEqual( len(vhost.ErrorDocument ),  4)
+        del vhost.ErrorDocument[-1]
+        self.assertEqual( len(vhost.ErrorDocument ),  3)
+        del vhost.ErrorDocument
+        self.assertEqual( len( vhost.ErrorDocument ),  0)
+        #testing from search (!) 
+        p = Parser()        
+        p.load( self.errordocumentsconf )        
+        self.assertEqual( len( p.ErrorDocument.search([404 ,'/error/HTTP_NOT_FOUND.html.var'] ) ), 1)
+
 if __name__ == "__main__":
     unittest.main()  

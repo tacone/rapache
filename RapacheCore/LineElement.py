@@ -246,9 +246,12 @@ class PlainSelection(AbstractSelection):
         parent = item.element.getparent()
         raw_index = parent.index( item.element )
         del parent[ raw_index ]
-    #def __delattr___(self,  name):
-    #    while (len(self) > 0 ):
-    #        del(self[0])
+    def __delattr__(self,  name):                
+        try: 
+                while (1):
+                    del getattr( self,  name)[0] 
+        except IndexError:
+            pass
     def _create_new(self ):
         line = Line()
         line.key = self._query                
@@ -314,6 +317,13 @@ class Parser(Line):
     """section returns all section elements"""
     sections= property ( _get_sections )
     
+    def __delattr__(self,  name):                
+        try: 
+                while (1):
+                    del getattr( self,  name)[0] 
+        except IndexError:
+            pass
+            
     """def search(self,  *args,  **kwargs):
         return SearchSelection(self,  *args,  **kwargs)    
     search = property ( _search )"""
