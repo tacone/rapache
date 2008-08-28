@@ -225,7 +225,7 @@ class ApacheParser( object ):
             return False
         self.element.append( line )
         return True
-    def compile_line(self, obj_line):
+    def get_as_list(self, obj_line):
         source = obj_line.attrib.get('source')
         if source: return source
         line = ''

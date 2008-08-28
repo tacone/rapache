@@ -126,6 +126,10 @@ class Line (object):
     def is_empty (self):    
         """has the instance loaded a line?"""
         return self is not None
+    def delete(self):        
+        parent = self.element.getparent()
+        raw_index = parent.index( self.element )
+        del parent[ raw_index ]
     def _get_value(self):
         if self.element == None : return None
         #oh, by the way, should be the only element of the list
@@ -175,6 +179,39 @@ class Line (object):
         indentation = parser.get_indentation( line )
         if indentation: c.attrib['indentation'] = indentation
         if set_as_source: c.attrib[ 'source' ] = line
+    def get_as_list(self):
+        obj_line = self.element
+        
+        source = obj_line.attrib.get('source')
+        if source: return [source.rstrip()+"\n"]
+        line = ''
+        
+        indentation = obj_line.attrib.get('indentation')
+        if indentation: line += indentation
+        
+        #lets open subtag
+        if obj_line.tag != 'line': line += '<'
+            
+        directive = obj_line.attrib.get('directive')
+        if directive: 
+            #if line != '': line += ' ' #terribly wrong.
+            line += directive
+            
+        value = obj_line.attrib.get('value')
+        if value: 
+            if line != '': line += ' '
+            line += value
+         
+        #lets close subtag
+        if obj_line.tag != 'line': line += '>'    
+        
+        comment = obj_line.attrib.get('comment')
+        if comment: 
+            if line != '': line += ' '
+            line += "#" + comment
+        #remove traling spaces and assure a newline at the end of the file.
+        #line = line.rstrip() + "\n"
+        return [line.rstrip()+"\n"]
     def dump_xml(self):
         print etree.tostring( self.element, pretty_print = True )
 
@@ -242,14 +279,17 @@ class PlainSelection(AbstractSelection):
             return setattr(obj, name, value)
         return setattr(self[-1], name, value)
     def __delitem__( self,  index ):
-        item = self[index]        
-        parent = item.element.getparent()
-        raw_index = parent.index( item.element )
-        del parent[ raw_index ]
+        self[index].delete()
     def __delattr__(self,  name):                
         try: 
                 while (1):
                     del getattr( self,  name)[0] 
+        except IndexError:
+            pass
+    def delete (self):                            
+        try: 
+                while (1):
+                    del self[0] 
         except IndexError:
             pass
     def _create_new(self ):
@@ -417,14 +457,17 @@ class Parser(Line):
         selection = xpath( self.element )
         #oh, by the way, should be the only element of the list
         if not selection : return []
-        return selection
+        return selection 
+    def _element_factory (self,  element):
+        if element.tag == 'line':
+            return Line(element)
+        else:
+            return Section(element)
     def xpath(self, query):
         selection = []
         for element in self._raw_xpath(query):
-            if element.tag == 'line':
-                selection.append(Line(element))
-            else:
-                selection.append( Section(element) )
+            selection.append( self._element_factory (element) )
+            
         return selection    
     def close (self, line):
         """Sets source for closing the tag"""
@@ -439,6 +482,18 @@ class Parser(Line):
         if self.open_child != None:
             #something wrong, one tag has been left open in the .conf
             raise VhostNotFound, 'TagEndExpected: expected end tag for:'+self.open_child.key
+    def get_as_list(self):
+        """returns the content as a list (i.e. for saving)"""
+        content = []
+        for element in self.element:
+            line = self._element_factory( element )
+            content += line.get_as_list()
+        #prevent adding a new newline to the end of file.
+        if len(content) > 0 : content[-1] = content[-1].rstrip()
+        #if self.element.getparent() == None: 
+            #if line.getnext() != None or self.element.getparent() != None:
+            #if len(content) > 0 : content[-1] = content[-1].rstrip()
+        return content
     def set_element (self, element):
         self.element = element        
     def dump_xml (self, include_comments = False):

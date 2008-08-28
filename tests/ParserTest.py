@@ -294,15 +294,56 @@ class ParserTest( unittest.TestCase ):
         self.assertEqual( len( p.ErrorDocument ),  0)
         #testing in a subelement
         vhost = p.VirtualHost
-        self.assertEqual( len(vhost.ErrorDocument ),  4)
+        self.assertEqual( len(vhost.ErrorDocument ),  6)
         del vhost.ErrorDocument[-1]
-        self.assertEqual( len(vhost.ErrorDocument ),  3)
+        self.assertEqual( len(vhost.ErrorDocument ),  5)
         del vhost.ErrorDocument
         self.assertEqual( len( vhost.ErrorDocument ),  0)
+        self.assertEqual( len( p.virtualhost ),  1)
         #testing from search (!) 
         p = Parser()        
         p.load( self.errordocumentsconf )        
-        self.assertEqual( len( p.ErrorDocument.search([404 ,'/error/HTTP_NOT_FOUND.html.var'] ) ), 1)
-
+        vhost = p.VirtualHost
+        self.assertEqual( len( vhost.ErrorDocument.search([666] ) ), 2)
+        vhost.ErrorDocument.search([666] ).delete()
+        self.assertEqual( len( vhost.ErrorDocument.search([666] ) ), 0)
+        #testing delete search subelement
+        p = Parser()        
+        p.load( self.errordocumentsconf )        
+        vhost = p.VirtualHost
+        self.assertEqual( len( vhost.ErrorDocument.search([666] ) ), 2)
+        vhost.ErrorDocument.search([666] )[0].delete()
+        self.assertEqual( len( vhost.ErrorDocument.search([666] ) ), 1)
+        self.assertEqual( vhost.ErrorDocument.search([666]).opts[1],'/error/HTTP_NOT_FOUND.html.var')
+    def test_get_content(self):
+        p = Parser()
+        p.load( self.optionsconf )
+        content = p.get_as_list()
+        print content
+        self.assertEqual( type(content), type([]) )
+        self.assertEqual( len( content), 13 )
+        #do lines contain extra  trailing \n ?
+        self.assertEqual( len( "/n".join( content ).split( "\n" )), 13 )
+        
+        p.DocumentRoot.value = '/var/www/fake'
+        content = p.get_as_list()
+        self.assertEqual( type(content), type([]) )
+        self.assertEqual( len( content), 13 )
+        
+        p.NotYetExistant.value ='value'
+        content = p.get_as_list()
+        self.assertEqual( type(content), type([]) )
+        self.assertEqual( len( content), 13+1 )
+        """
+        p.NewOption.opts.append('option1' )
+        content = p.get_as_list()
+        self.assertEqual( type(content), type([]) )
+        self.assertEqual( len( content), 13+2 )
+        
+        p.add_option( 'NewOption', 'option2' )
+        content = p.get_as_list()
+        self.assertEqual( type(content), type([]) )
+        self.assertEqual( len( content), 13+2 )
+        """
 if __name__ == "__main__":
     unittest.main()  
