@@ -1,0 +1,83 @@
+<h1>Rapache Parser</h1>
+
+The parser is currently in RapacheCore.LineElement. A rename will happen soon.
+
+<h2>Loading a file</h2>
+<pre>
+&gt;&gt;&gt; from RapacheCore.LineElement import Parser
+&gt;&gt;&gt; p = Parser()
+&gt;&gt;&gt; p.load ( 'tests/datafiles/errordocuments.conf' )
+</pre>
+
+<h2>Basics</h2>
+
+The parser instance:
+<pre>
+&gt;&gt;&gt; print p
+&lt;RapacheCore.LineElement.Parser object at 0x822256c&gt;
+</pre>
+The parser allows searching for directives  and sections by its attributes. Every attribute (but .lines, .sections, .value and .opts) returns a selection object.
+<pre>
+&gt;&gt;&gt; print p.ErrorDocument
+&lt;RapacheCore.LineElement.PlainSelection object at 0x825ee2c&gt;
+</pre>
+It is case insensitive, by the way 
+<pre>
+&gt;&gt;&gt; print p.errordocument
+&lt;RapacheCore.LineElement.PlainSelection object at 0x826faec&gt;
+</pre>
+2 specialized selections also exist: .lines and .sections. Everyone of these contains all the lines/sections to be found in the global scope of the loaded file.
+<h2>Selections</h2>
+A selection is an iterable object, which allow iteration on the group of lines/sections it rappresents.
+For example p.ErrorDocument  will return a selection of all the ErrorDocument directives in the global scope of the configuration file.
+<pre>
+&gt;&gt;&gt; print len (p.ErrorDocument)
+17
+</pre>
+Direct access is also allowed.
+<pre>
+&gt;&gt;&gt; print p.ErrorDocument[0]
+&lt;RapacheCore.LineElement.Line object at 0x8273aac&gt;
+&gt;&gt;&gt; for line in p.ErrorDocument[0:3]: print line
+&lt;RapacheCore.LineElement.Line object at 0x82789ac&gt;
+&lt;RapacheCore.LineElement.Line object at 0x82789cc&gt;
+&lt;RapacheCore.LineElement.Line object at 0x827888c&gt;
+</pre>
+<h2>Lines</h2>
+Every directive is reppresented by a Line object.
+<pre>
+line = p.ServerAlias
+&gt;&gt;&gt; line.value
+'www.example.net'
+&gt;&gt;&gt; print line.key
+ServerAlias
+&gt;&gt;&gt; print line.opts
+&lt;RapacheCore.LineElement.Options object at 0x8273d2c&gt;
+</pre>
+The opts attribute treats the value as a list of sub-values separated by a space. It's an iterable object, you can convert it easily to a list and you can set it from a list or a tuple.
+<pre>
+&gt;&gt;&gt;print list(line.opts)
+['www.example.net']
+&gt;&gt;&gt; line.opts = "test.example.net", "beta.example.net", "www.example.net"
+&gt;&gt;&gt; print line.opts
+&lt;RapacheCore.LineElement.Options object at 0x827366c&gt;
+&gt;&gt;&gt; print list(line.opts)
+['test.example.net', 'beta.example.net', 'www.example.net']
+&gt;&gt;&gt; print line.value
+test.example.net beta.example.net www.example.net
+&gt;&gt;&gt; print line.opts[0]
+test.example.net
+</pre>
+You can as well delete elements from .opts as you'd do with a normal list and so on.
+
+<h2>Selections meet lines</h2>
+Every selection object also support the Line interface. .value .key and .opts will work, and will refer to the last line in the selection (given that last line wins in apache configuration files this seems the best policy)
+<pre>
+&gt;&gt;&gt; print p.ErrorDocument.value
+506 /error/HTTP_VARIANT_ALSO_VARIES.html.var
+</pre>
+You still can access the other lines as you would with list items
+<pre>
+&gt;&gt;&gt; print p.ErrorDocument[0].value
+400 /error/HTTP_BAD_REQUEST.html.var
+</pre>
