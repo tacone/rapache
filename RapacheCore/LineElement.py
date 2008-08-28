@@ -494,6 +494,8 @@ class Parser(Line):
             #if line.getnext() != None or self.element.getparent() != None:
             #if len(content) > 0 : content[-1] = content[-1].rstrip()
         return content
+    def get_as_str(self):
+        return "".join( self.get_as_list() )
     def set_element (self, element):
         self.element = element        
     def dump_xml (self, include_comments = False):
