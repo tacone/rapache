@@ -334,16 +334,16 @@ class ParserTest( unittest.TestCase ):
         content = p.get_as_list()
         self.assertEqual( type(content), type([]) )
         self.assertEqual( len( content), 13+1 )
-        """
-        p.NewOption.opts.append('option1' )
+        
+        p.NewOption.opts = ['option1']
         content = p.get_as_list()
         self.assertEqual( type(content), type([]) )
         self.assertEqual( len( content), 13+2 )
         
-        p.add_option( 'NewOption', 'option2' )
+        p.NewOption.opts = ['option2']
         content = p.get_as_list()
         self.assertEqual( type(content), type([]) )
         self.assertEqual( len( content), 13+2 )
-        """
+        
 if __name__ == "__main__":
     unittest.main()  
