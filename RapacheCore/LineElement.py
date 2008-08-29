@@ -472,7 +472,8 @@ class Parser(Line):
     def close (self, line):
         """Sets source for closing the tag"""
         self.element.attrib[ 'close_source' ] = line
-    def set_from_string(self): pass
+    def set_from_str(self,  string): 
+        return self.set_from_list( string.split("\n") )
     def set_from_list(self, list):
         """uses a (line) list as the configuration file to be parsed"""
         self.reset()
@@ -514,7 +515,8 @@ class Section(Parser):
     def get_as_list (self):
         # replace compile_line !
         content = [ self._compile( self.element).rstrip()+"\n" ]
-        content +=  super (Section, self).get_as_list()
+        content +=  super (Section, self).get_as_list()        
+        if len(content) > 0 : content[-1] = content[-1].rstrip()+"\n"
         #content += [ "</%s>\n" % self.key ]
         content += [ self.element.attrib[ 'close_source' ].rstrip()+"\n" ]
         return content
