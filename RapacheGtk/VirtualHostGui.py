@@ -143,9 +143,8 @@ class VirtualHostWindow:
         self.update(self.__previous_active_tab)   
         if page_num == notebook.get_n_pages() - 1:
             buf = self.text_view_vhost_source.get_buffer()
-            text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
-            # TODO: Remove this line !! hack to stop double ups from parser
-            text = text.replace("\n\n\n", "\n\n").replace("\n\n\n", "\n\n")
+            text = self.vhost.get_source_generated()
+
             buf.set_text( text )
             buf.set_modified(False) 
         else:
@@ -189,11 +188,9 @@ class VirtualHostWindow:
         self.window.show()           
         gtk.main()
 
-    def load (self, name ):
-
-        self.vhost = VirtualHostModel( name, self.parent.plugin_manager )
-
-        self._load()
+    def load (self, vhost ):
+        self.vhost = vhost
+        self.__load()
         
         for file in self.vhost.get_backup_files():
             self.combobox_vhost_backups.append_text("Backup " + file[0][-21:-4])
@@ -204,33 +201,29 @@ class VirtualHostWindow:
     
         buf = self.text_view_vhost_source.get_buffer()
         try:
-            self.vhost.load_from_string( buf.get_text(buf.get_start_iter(), buf.get_end_iter()), self.parent.plugin_manager)
+            self.vhost.load_from_string( buf.get_text(buf.get_start_iter(), buf.get_end_iter()))
         except "VhostUnparsable":            
             pass     
          
-        self._load()
+        self.__load()
         
-    def _load(self):
-        print "load"
-        try:
-            #self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
-            server_name = self.vhost.data[ 'ServerName' ] 
-            if ( server_name != None ):
-                self.entry_domain.set_text( server_name )
-            document_root = self.vhost.data[ 'DocumentRoot' ] 
-            if ( document_root != None ):
-                self.entry_location.set_text( document_root )
-            server_alias = None
-            if (self.vhost.data.has_key("ServerAlias")):
-                server_alias = self.vhost.data[ 'ServerAlias' ]
-            self.treeview_domain_store.clear()
-            if ( server_alias != None ): 
-                for domain in server_alias:
-                    self.treeview_domain_store.append((domain, None))            
-            print self.vhost.data
-        except "VhostUnparsable":            
-            pass
-        
+    def __load(self):
+
+        server_name = self.vhost.get_server_name()
+        if ( server_name != None ):
+            self.entry_domain.set_text( server_name )
+        document_root = self.vhost.get_document_root()
+        if ( document_root != None ):
+            self.entry_location.set_text( document_root )
+        server_alias = None
+
+        self.treeview_domain_store.clear()
+        print server_name
+        server_alias = self.vhost.get_server_alias()
+        if server_alias:
+            for domain in server_alias:
+                self.treeview_domain_store.append((domain, None))   
+
         for plugin in self.plugins:
         	try:
         	    if plugin.is_enabled():          
@@ -371,9 +364,9 @@ class VirtualHostWindow:
         if self.entry_location.get_text() == "" and self.vhost.is_new:
             self.set_default_values_from_domain( True )
         
-        self.vhost.data[ 'ServerName' ] = self.entry_domain.get_text()
-        self.vhost.data[ 'DocumentRoot' ] = self.entry_location.get_text()
-        self.vhost.data[ 'ServerAlias' ] = self.get_server_aliases_list()
+        self.vhost.config.ServerName = self.entry_domain.get_text()
+        self.vhost.config.DocumentRoot = self.entry_location.get_text()
+        self.vhost.config.ServerAlias = self.get_server_aliases_list()
         
         self.hack_hosts = self.checkbutton_hosts.get_active()      
         

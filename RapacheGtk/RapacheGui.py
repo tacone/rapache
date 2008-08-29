@@ -249,7 +249,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def open_edit_vhost_window(self, name):
         if ( self.is_vhost_editable( name ) == False ): return False
         new_vhost_window = VirtualHostWindow ( self )
-        new_vhost_window.load( name )
+        new_vhost_window.load( self.get_current_vhost() )
         new_vhost_window.run()    
         self.refresh_config_test()
         
@@ -375,9 +375,9 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             editable = self.is_vhost_editable( name )
             self.xml.get_widget( 'delete_button' ).set_sensitive( editable )
             self.xml.get_widget( 'edit_button' ).set_sensitive( editable )
-            surfable =  self.get_current_vhost_directive( 'ServerName' ) != None
+            surfable =  self.get_current_vhost().get_server_name() != None
             self.xml.get_widget( 'surf_this_button' ).set_sensitive( surfable )
-            browsable =  self.get_current_vhost_directive( 'DocumentRoot' ) != None
+            browsable =  self.get_current_vhost.get_document_root() != None
             self.xml.get_widget( 'browse_button' ).set_sensitive( browsable )
     def module_row_selected( self, widget):
         name = self.modules_treeview.get_selected_line()
@@ -401,16 +401,16 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             site.toggle(True)            
         self.refresh_vhosts()
         self.refresh_denormalized_vhosts()
-    def get_current_vhost_directive (self, directive_name ):
+    def get_current_vhost(self ):
         name = self.vhosts_treeview.get_selected_line()
         if ( name == None ): return None
-        return self.vhosts_treeview.items[ name ].data[ directive_name ]
+        return self.vhosts_treeview.items[ name ]
     def surf_this(self, widget):
         name = self.vhosts_treeview.get_selected_line()
         if name == 'default':
             server_name = 'localhost'
         else:
-            server_name = self.get_current_vhost_directive( 'ServerName' )
+            server_name = self.get_current_vhost().get_server_name()
             
         protocol = "http"    
         if str(self.vhosts_treeview.items[ name ].get_value("port", "80")) == "443":
@@ -418,7 +418,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             
         if ( server_name ): Desktop.open_url( protocol+"://" + server_name )
     def browse_this(self, widget):
-        document_root = self.get_current_vhost_directive( 'DocumentRoot' )
+        document_root = self.get_current_vhost.get_document_root()
         Desktop.open_dir( document_root )
         
 

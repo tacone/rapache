@@ -75,7 +75,7 @@ class PluginBaseObject():
         
     # Tab blurs update vhost object with changes
     def update_vhost_properties(self, vhost):
-        return True
+        return True, ""
         
     # Perform action on vhost properties save, return false if validation fails
     def save_vhost_properties(self, vhost):

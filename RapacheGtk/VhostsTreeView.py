@@ -63,7 +63,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
             site = self.items[ idx ]
             if ( site.parsable ):
                 markup = site_template \
-                % ( site.get_display_name() , site.data[ 'DocumentRoot' ] )
+                % ( site.get_server_name(), site.get_document_root() )
             else:
                 markup = site_unparsable_template % site.get_display_name()
             iter = lstore.append()
@@ -74,7 +74,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
             lstore.set(iter,
                 COLUMN_FIXED, site.enabled,
                 COLUMN_ICON, pixbuf,
-                COLUMN_SEVERITY, site.data['ServerName'],
+                COLUMN_SEVERITY, site.get_server_name(),
                 COLUMN_MARKUP, markup )
 
     def __fixed_toggled(self, cell, path, treeview):        
@@ -243,8 +243,8 @@ class ErrorsTreeView ( ConfFilesTreeView ):
 
         for idx in sorted( self.items ):            
             site = self.items[ idx ]
-            normalizable = not is_not_normalizable(site.data['ServerName'])
-            markup = site_template % site.data['ServerName']
+            normalizable = not is_not_normalizable(site.get_server_name())
+            markup = site_template % site.get_server_name()
             
             
             if ( normalizable == False ):
@@ -256,7 +256,7 @@ class ErrorsTreeView ( ConfFilesTreeView ):
             lstore.set(iter,
                 COLUMN_ICON, pixbuf,
                 COLUMN_FIXED, normalizable,
-                COLUMN_SEVERITY, site.data['ServerName'],
+                COLUMN_SEVERITY, site.get_server_name(),
                 COLUMN_MARKUP, markup +  "\nThe virtual host file is only present inside /etc/apache/sites-enabled.\n<small><i>You must normalize in order to manage this host</i>.</small>"
                 )
          
