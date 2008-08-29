@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Jul 31 14:23:30 2008 -->
+<!--Generated with glade3 3.4.5 on Mon Aug 11 12:52:29 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="vhost_edit_window">
     <property name="border_width">10</property>
@@ -28,6 +28,135 @@
                 <property name="row_spacing">10</property>
                 <child>
                   <placeholder/>
+                </child>
+                <child>
+                  <widget class="GtkEntry" id="domain_name">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="has_focus">True</property>
+                    <property name="is_focus">True</property>
+                    <signal name="delete_from_cursor" handler="domain_name_updated"/>
+                    <signal name="changed" handler="domain_name_updated"/>
+                    <signal name="delete_text" handler="domain_name_updated"/>
+                    <signal name="insert_text" handler="domain_name_updated"/>
+                    <signal name="activate" handler="domain_name_updated"/>
+                    <signal name="paste_clipboard" handler="domain_name_updated"/>
+                    <signal name="copy_clipboard" handler="domain_name_updated"/>
+                    <signal name="cut_clipboard" handler="domain_name_updated"/>
+                    <signal name="insert_at_cursor" handler="domain_name_updated"/>
+                    <signal name="backspace" handler="domain_name_updated"/>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkCheckButton" id="has_www">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="label" translatable="yes">Create _www</property>
+                    <property name="use_underline">True</property>
+                    <property name="response_id">0</property>
+                    <property name="active">True</property>
+                    <property name="draw_indicator">True</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">1</property>
+                    <property name="bottom_attach">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label6">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Domain name:
+(no http:// or www)</property>
+                  </widget>
+                </child>
+                <child>
+                  <widget class="GtkButton" id="cancel_button">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="label" translatable="yes">gtk-cancel</property>
+                    <property name="use_stock">True</property>
+                    <property name="response_id">0</property>
+                    <signal name="clicked" handler="on_cancel"/>
+                    <accelerator key="Escape" modifiers="" signal="activate"/>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">4</property>
+                    <property name="bottom_attach">5</property>
+                    <property name="x_options">GTK_EXPAND</property>
+                    <property name="y_options">GTK_EXPAND</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkButton" id="ok_button">
+                    <property name="visible">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="is_focus">True</property>
+                    <property name="can_default">True</property>
+                    <property name="has_default">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="label" translatable="yes">gtk-save</property>
+                    <property name="use_stock">True</property>
+                    <property name="response_id">0</property>
+                    <signal name="clicked" handler="on_ok"/>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">4</property>
+                    <property name="bottom_attach">5</property>
+                    <property name="x_options">GTK_EXPAND</property>
+                    <property name="y_options">GTK_EXPAND</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label5">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Target folder:</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">3</property>
+                    <property name="bottom_attach">4</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="create_hosts_label">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">To access your Virtual Host 
+you either need a registered
+domain name or an entry in
+&lt;b&gt;/etc/hosts&lt;/b&gt;.</property>
+                    <property name="use_markup">True</property>
+                    <property name="wrap">True</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">2</property>
+                    <property name="bottom_attach">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkCheckButton" id="create_hosts_entry">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="label" translatable="yes">Add an entry to /etc/_hosts</property>
+                    <property name="use_underline">True</property>
+                    <property name="response_id">0</property>
+                    <property name="active">True</property>
+                    <property name="draw_indicator">True</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">2</property>
+                    <property name="bottom_attach">3</property>
+                  </packing>
                 </child>
                 <child>
                   <widget class="GtkVBox" id="vbox1">
@@ -69,136 +198,6 @@
                     <property name="right_attach">2</property>
                     <property name="top_attach">3</property>
                     <property name="bottom_attach">4</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkCheckButton" id="create_hosts_entry">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">Add an entry to /etc/_hosts</property>
-                    <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
-                    <property name="active">True</property>
-                    <property name="draw_indicator">True</property>
-                  </widget>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">2</property>
-                    <property name="bottom_attach">3</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="create_hosts_label">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">To access your Virtual Host 
-you either need a registered
-domain name or an entry in
-&lt;b&gt;/etc/hosts&lt;/b&gt;.</property>
-                    <property name="use_markup">True</property>
-                    <property name="wrap">True</property>
-                  </widget>
-                  <packing>
-                    <property name="top_attach">2</property>
-                    <property name="bottom_attach">3</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label5">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Target folder:</property>
-                  </widget>
-                  <packing>
-                    <property name="top_attach">3</property>
-                    <property name="bottom_attach">4</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkButton" id="ok_button">
-                    <property name="visible">True</property>
-                    <property name="sensitive">False</property>
-                    <property name="can_focus">True</property>
-                    <property name="is_focus">True</property>
-                    <property name="can_default">True</property>
-                    <property name="has_default">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="label" translatable="yes">gtk-save</property>
-                    <property name="use_stock">True</property>
-                    <property name="response_id">0</property>
-                    <signal name="clicked" handler="on_ok"/>
-                    <accelerator key="Return" modifiers="" signal="clicked"/>
-                  </widget>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">4</property>
-                    <property name="bottom_attach">5</property>
-                    <property name="x_options">GTK_EXPAND</property>
-                    <property name="y_options">GTK_EXPAND</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkButton" id="cancel_button">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="label" translatable="yes">gtk-cancel</property>
-                    <property name="use_stock">True</property>
-                    <property name="response_id">0</property>
-                    <signal name="clicked" handler="on_cancel"/>
-                    <accelerator key="Escape" modifiers="" signal="activate"/>
-                  </widget>
-                  <packing>
-                    <property name="top_attach">4</property>
-                    <property name="bottom_attach">5</property>
-                    <property name="x_options">GTK_EXPAND</property>
-                    <property name="y_options">GTK_EXPAND</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label6">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Domain name:
-(no http:// or www)</property>
-                  </widget>
-                </child>
-                <child>
-                  <widget class="GtkCheckButton" id="has_www">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">Create _www</property>
-                    <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
-                    <property name="active">True</property>
-                    <property name="draw_indicator">True</property>
-                  </widget>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">1</property>
-                    <property name="bottom_attach">2</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkEntry" id="domain_name">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="has_focus">True</property>
-                    <property name="is_focus">True</property>
-                    <signal name="delete_from_cursor" handler="domain_name_updated"/>
-                    <signal name="changed" handler="domain_name_updated"/>
-                    <signal name="delete_text" handler="domain_name_updated"/>
-                    <signal name="insert_text" handler="domain_name_updated"/>
-                    <signal name="activate" handler="domain_name_updated"/>
-                    <signal name="paste_clipboard" handler="domain_name_updated"/>
-                    <signal name="copy_clipboard" handler="domain_name_updated"/>
-                    <signal name="cut_clipboard" handler="domain_name_updated"/>
-                    <signal name="insert_at_cursor" handler="domain_name_updated"/>
-                    <signal name="backspace" handler="domain_name_updated"/>
-                  </widget>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
                   </packing>
                 </child>
               </widget>
@@ -348,67 +347,79 @@ domain name or an entry in
                   <placeholder/>
                 </child>
                 <child>
-                  <widget class="GtkHBox" id="hbox5">
+                  <widget class="GtkEntry" id="entry_domain">
                     <property name="visible">True</property>
-                    <child>
-                      <widget class="GtkEntry" id="entry_location">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="truncate_multiline">True</property>
-                      </widget>
-                    </child>
-                    <child>
-                      <widget class="GtkButton" id="button_location">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="response_id">0</property>
-                        <signal name="clicked" handler="on_button_location_clicked"/>
-                        <child>
-                          <widget class="GtkHBox" id="hbox7">
-                            <property name="visible">True</property>
-                            <child>
-                              <widget class="GtkImage" id="image8">
-                                <property name="visible">True</property>
-                                <property name="stock">gtk-directory</property>
-                              </widget>
-                            </child>
-                          </widget>
-                        </child>
-                      </widget>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkButton" id="button_location_clear">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">True</property>
-                        <property name="response_id">0</property>
-                        <signal name="clicked" handler="on_button_location_clear_clicked"/>
-                        <child>
-                          <widget class="GtkImage" id="image4">
-                            <property name="visible">True</property>
-                            <property name="stock">gtk-clear</property>
-                          </widget>
-                        </child>
-                      </widget>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
+                    <property name="can_focus">True</property>
+                    <property name="has_focus">True</property>
+                    <property name="is_focus">True</property>
+                    <signal name="changed" handler="on_entry_domain_changed"/>
+                    <signal name="focus_out_event" handler="on_entry_domain_focus_out_event"/>
+                    <signal name="key_press_event" handler="on_entry_domain_key_press_event"/>
                   </widget>
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">1</property>
-                    <property name="bottom_attach">2</property>
                     <property name="y_options"></property>
                     <property name="x_padding">8</property>
+                    <property name="y_padding">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label3">
+                    <property name="visible">True</property>
+                    <property name="xalign">0</property>
+                    <property name="label" translatable="yes">Domain name:</property>
+                  </widget>
+                  <packing>
+                    <property name="x_options"></property>
+                    <property name="y_options"></property>
+                    <property name="x_padding">8</property>
+                    <property name="y_padding">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label4">
+                    <property name="visible">True</property>
+                    <property name="xalign">0</property>
+                    <property name="label" translatable="yes">Location:</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">1</property>
+                    <property name="bottom_attach">2</property>
+                    <property name="x_options"></property>
+                    <property name="y_options"></property>
+                    <property name="x_padding">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="create_hosts_label1">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">If you have a domain that is not registered you will need an entry in your &lt;b&gt;/etc/hosts&lt;/b&gt; file.</property>
+                    <property name="use_markup">True</property>
+                    <property name="wrap">True</property>
+                  </widget>
+                  <packing>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">3</property>
+                    <property name="bottom_attach">4</property>
+                    <property name="y_options"></property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkCheckButton" id="checkbutton_hosts">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="label" translatable="yes">Add proper entries to /etc/_hosts</property>
+                    <property name="use_underline">True</property>
+                    <property name="response_id">0</property>
+                    <property name="draw_indicator">True</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">4</property>
+                    <property name="bottom_attach">5</property>
+                    <property name="y_options"></property>
                   </packing>
                 </child>
                 <child>
@@ -515,78 +526,67 @@ domain name or an entry in
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkCheckButton" id="checkbutton_hosts">
+                  <widget class="GtkHBox" id="hbox5">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">Add proper entries to /etc/_hosts</property>
-                    <property name="use_underline">True</property>
-                    <property name="response_id">0</property>
-                    <property name="draw_indicator">True</property>
+                    <child>
+                      <widget class="GtkEntry" id="entry_location">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="truncate_multiline">True</property>
+                      </widget>
+                    </child>
+                    <child>
+                      <widget class="GtkButton" id="button_location">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="response_id">0</property>
+                        <signal name="clicked" handler="on_button_location_clicked"/>
+                        <child>
+                          <widget class="GtkHBox" id="hbox7">
+                            <property name="visible">True</property>
+                            <child>
+                              <widget class="GtkImage" id="image8">
+                                <property name="visible">True</property>
+                                <property name="stock">gtk-directory</property>
+                              </widget>
+                            </child>
+                          </widget>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkButton" id="button_location_clear">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="response_id">0</property>
+                        <signal name="clicked" handler="on_button_location_clear_clicked"/>
+                        <child>
+                          <widget class="GtkImage" id="image4">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-clear</property>
+                          </widget>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
                   </widget>
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">4</property>
-                    <property name="bottom_attach">5</property>
-                    <property name="y_options"></property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="create_hosts_label1">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">If you have a domain that is not registered you will need an entry in your &lt;b&gt;/etc/hosts&lt;/b&gt; file.</property>
-                    <property name="use_markup">True</property>
-                    <property name="wrap">True</property>
-                  </widget>
-                  <packing>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">3</property>
-                    <property name="bottom_attach">4</property>
-                    <property name="y_options"></property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label4">
-                    <property name="visible">True</property>
-                    <property name="xalign">0</property>
-                    <property name="label" translatable="yes">Location:</property>
-                  </widget>
-                  <packing>
                     <property name="top_attach">1</property>
                     <property name="bottom_attach">2</property>
-                    <property name="x_options"></property>
                     <property name="y_options"></property>
                     <property name="x_padding">8</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label3">
-                    <property name="visible">True</property>
-                    <property name="xalign">0</property>
-                    <property name="label" translatable="yes">Domain name:</property>
-                  </widget>
-                  <packing>
-                    <property name="x_options"></property>
-                    <property name="y_options"></property>
-                    <property name="x_padding">8</property>
-                    <property name="y_padding">8</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkEntry" id="entry_domain">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="has_focus">True</property>
-                    <property name="is_focus">True</property>
-                    <signal name="changed" handler="on_entry_domain_changed"/>
-                    <signal name="focus_out_event" handler="on_entry_domain_focus_out_event"/>
-                  </widget>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="y_options"></property>
-                    <property name="x_padding">8</property>
-                    <property name="y_padding">8</property>
                   </packing>
                 </child>
               </widget>
@@ -823,15 +823,11 @@ domain name or an entry in
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
-                <property name="is_focus">True</property>
-                <property name="can_default">True</property>
-                <property name="has_default">True</property>
-                <property name="receives_default">True</property>
                 <property name="label" translatable="yes">gtk-save</property>
                 <property name="use_stock">True</property>
                 <property name="response_id">0</property>
                 <signal name="clicked" handler="on_button_save_clicked"/>
-                <accelerator key="Return" modifiers="" signal="clicked"/>
+
               </widget>
               <packing>
                 <property name="position">1</property>

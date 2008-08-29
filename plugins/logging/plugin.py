@@ -54,7 +54,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
     def init_vhost_properties(self):
 
         # Get glade file XML
-        f = open( os.path.join(self.path, "vhost.glade") ,"r")
+        f = open( os.path.join(self.path, "logging.glade") ,"r")
         self.glade_vhost_xml =  f.read()
         f.close()
     
@@ -71,18 +71,18 @@ class AdvancedVhostPlugin(PluginBaseObject):
     # Customise the vhost properties window
     def load_vhost_properties(self, vhost):
                 
-        self.entry_admin_email.set_text(vhost.get_value("ServerAdmin", ""))
-        self.entry_log_location.set_text(vhost.get_value("ErrorLog", ""))
-        if vhost.get_value("LogLevel"):
-            self.combobox_log_level.set_active( self.log_levels.index( vhost.get_value("LogLevel") ) )
-        if vhost.get_value("ServerSignature", "off").lower() != "off":
+        self.entry_admin_email.set_text(vhost.config.ServerAdmin.value)
+        self.entry_log_location.set_text(vhost.config.ErrorLog.value)
+        if vhost.config.LogLevel:
+            self.combobox_log_level.set_active( self.log_levels.index( vhost.config.LogLevel.value ) )
+        if vhost.config.ServerSignature.value.lower() != "off":
             self.checkbutton_server_signature.set_active(True)
 
         return
         
     # Perform action on vhost properties save
-    def save_vhost_properties(self, vhost):
-    
+    def update_vhost_properties(self, vhost):
+        """
         vhost.set_value("ServerAdmin", self.entry_admin_email.get_text())
         vhost.set_value("ErrorLog", self.entry_log_location.get_text())
         vhost.set_value("LogLevel", self.log_levels[ self.combobox_log_level.get_active() ] )
@@ -93,11 +93,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
         
         
         server_admin = self.entry_admin_email.get_text()
-        
-        if len(server_admin) > 1:
-            return False, "'Server Admin Email' is not a valid email address"
-            
-            
+        """       
         return True, None
 
 def register( path ):

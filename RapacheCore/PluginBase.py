@@ -47,6 +47,11 @@ class PluginBaseObject():
         
         return enabled
         
+    # Add item to tools menu
+    def init_main_window(self, MainWindow):
+        return None
+        
+        
     # Customise the module properties window
     def load_module_properties(self, notebook, module):
         return True
@@ -55,14 +60,23 @@ class PluginBaseObject():
     def save_module_properties(self, module):
         return True
 
+
+
+
+
+
     # Init the vhost propertis window
     def init_vhost_properties(self, notebook):
         return True
 
-    # Load the vhost properties window data
-    def load_vhost_properties(self,  vhost_data):
+    # Tab recives focus load properties from vhost object
+    def load_vhost_properties(self,  vhost):
         return True
         
+    # Tab blurs update vhost object with changes
+    def update_vhost_properties(self, vhost):
+        return True, ""
+        
     # Perform action on vhost properties save, return false if validation fails
-    def save_vhost_properties(self, vhost_data):
+    def save_vhost_properties(self, vhost):
         return True

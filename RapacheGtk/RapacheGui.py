@@ -49,7 +49,7 @@ import RapacheCore.Observer
 from RapacheGtk.EventDispatcher import Master
 import subprocess
 import RapacheGtk.DesktopEnvironment as Desktop
-
+import traceback
 data = \
 [(False, "Loading", "please wait" )]
 
@@ -96,13 +96,15 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "open_doc_button_clicked" : self.open_doc_button_clicked,
             "on_button_hide_warning_clicked" : self.on_button_hide_warning_clicked,
             "quit" : self.quit,
-            "on_menuitem_stop_apache_activate" : self.on_menuitem_stop_apache_activate }
+            "on_menuitem_stop_apache_activate" : self.on_menuitem_stop_apache_activate,
+            "on_button_open_log_clicked" : self.on_button_open_log_clicked
+        }
         
         gtk.window_set_default_icon_from_file(os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle_golden.svg'))
         
         self.xml.signal_autoconnect(dic)
         GuiUtils.change_button_label ( self.xml.get_widget( 'restart_apache' ), "Restart Apache" )
-        GuiUtils.change_button_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
+        #GuiUtils.change_button_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
         self.statusbar_server_status =  self.xml.get_widget( 'statusbar_server_status' )
         self.image_apache_status =  self.xml.get_widget( 'image_apache_status' )
         self.main_window = self.xml.get_widget("MainWindow")
@@ -113,28 +115,70 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.refresh_lists()
         
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
-        GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )  
-        GuiUtils.style_as_tooltip( self.xml.get_widget( 'hbox_apache_config_error' ) )   
+        #GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )  
+        #GuiUtils.style_as_tooltip( self.xml.get_widget( 'hbox_apache_config_error' ) )   
        
         # start status update
         self.statusbar_server_status_context_id = self.statusbar_server_status.get_context_id("Apache Server Status") 
         self.statusbar_server_status.push(self.statusbar_server_status_context_id, "Attempting to connect to server")
         self.update_server_status(True)
         
+        
+        self.treeview_errors = VhostsTreeView.ErrorsTreeView()
+        #treeview.selected_callback = self.row_selected
+        #treeview.connect_after("row-activated", self.edit_button_clicked )
+        #self.vhosts_treeview = treeview        
+        self.xml.get_widget( 'viewport_errors' ).add(self.treeview_errors) 
+        self.xml.get_widget( 'viewport_errors' ).show_all()
+        
         self.refresh_config_test()
         
+        self.menu_tools = self.xml.get_widget( 'menu_tools' )
+        for plugin in self.plugin_manager.plugins:
+        	try:
+        	    if plugin.is_enabled():      	        
+        	        menu_item = plugin.init_main_window(self)
+                    if menu_item != None:
+                        self.menu_tools.add(menu_item)
+                        menu_item.show()
+        	except Exception:
+        		traceback.print_exc(file=sys.stdout)
+
+
+
+        # Add rich edit to log
+        self.text_view_log = GuiUtils.new_apache_sourceview()
+        self.xml.get_widget( 'scroll_window_log' ).add( self.text_view_log )
+        self.text_view_log.show()
+        combobox_log = self.xml.get_widget( 'combobox_log' )
+        files = Shell.command.listdir("/var/log/apache2")
+        for file in files:
+            if file.endswith(".log"):
+                combobox_log.append_text(file)
+        combobox_log.set_active(0)
+        
+    def on_button_open_log_clicked(self, widget):
+        file = self.xml.get_widget( 'combobox_log' ).get_active_text()
+        path = os.path.join("/var/log/apache2", file)
+        text = Shell.command.read_file( path )
+        self.text_view_log.get_buffer().set_text( text )
+        self.text_view_log.set_editable(False)
+        self.xml.get_widget( 'label_log_path').set_text( path )
+
     def refresh_config_test(self): 
-        res, text = self.apache.test_config()
-        if not res:
-            self.xml.get_widget('label_apache_error_message').set_text(text.strip())
-            self.xml.get_widget( 'hbox_apache_config_error' ).show()
-            self.xml.get_widget( 'unnormalized_notice' ).show_all()
-            self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).show()
-            self.xml.get_widget( 'notebook' ).set_current_page(2)
-        else:
-            self.xml.get_widget( 'hbox_apache_config_error' ).hide()            
+        self.treeview_errors.load(self.apache)
+
+    def add_new_vhost_menu_item(self, menu_item):
+        new_button = self.xml.get_widget( 'new_button')
+        menu = new_button.get_menu()
         
-        
+        if not menu:
+            menu = gtk.Menu()
+            new_button.set_menu( menu )
+    
+        menu.add(menu_item)
+        menu.show_all()
+
     @threaded    
     def update_server_status(self, loop=False):
         window_status_icons = [ 
@@ -161,7 +205,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
                 image = gtk.STOCK_YES
                 
             gtk.gdk.threads_enter()
-            self.image_apache_status.set_from_stock(image, -1)
+            self.image_apache_status.set_from_stock(image, gtk.ICON_SIZE_MENU)
             self.statusbar_server_status.pop(self.statusbar_server_status_context_id)
             self.statusbar_server_status.push(self.statusbar_server_status_context_id, text)
             gtk.gdk.threads_leave()
@@ -199,10 +243,13 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
     def edit_button_clicked(self, widget, notused = None, notused2 = None):         
         name = self.vhosts_treeview.get_selected_line()
+        self.open_edit_vhost_window( name )
+
         
+    def open_edit_vhost_window(self, name):
         if ( self.is_vhost_editable( name ) == False ): return False
         new_vhost_window = VirtualHostWindow ( self )
-        new_vhost_window.load( name )
+        new_vhost_window.load( self.get_current_vhost() )
         new_vhost_window.run()    
         self.refresh_config_test()
         
@@ -259,13 +306,13 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
         denormalized_treeview = VhostsTreeView.DenormalizedVhostsTreeView()
         self.denormalized_treeview = denormalized_treeview        
-        self.xml.get_widget( 'problems_area' ).add(denormalized_treeview)        
-        self.xml.get_widget( 'problems_area' ).reorder_child( denormalized_treeview, 2)
+        #self.xml.get_widget( 'problems_area' ).add(denormalized_treeview)        
+        #self.xml.get_widget( 'problems_area' ).reorder_child( denormalized_treeview, 2)
         denormalized_treeview.set_sensitive( False )
         denormalized_treeview.show()
         sw.show_all()
         #hidden by default
-        self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+        #self.xml.get_widget( 'unnormalized_notice' ).hide_all()
     
     def create_modules_list(self ):
         sw = self.xml.get_widget( 'modules_scroll_box' )
@@ -287,12 +334,12 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.vhosts_treeview.load()
     def refresh_denormalized_vhosts (self):
         self.denormalized_treeview.load()
-        if ( len( self.denormalized_treeview.items ) > 0 ):
-            self.xml.get_widget( 'unnormalized_notice' ).show_all()
-            self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).show()
-        else:
-            self.xml.get_widget( 'unnormalized_notice' ).hide_all()
-            self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).hide()
+        #if ( len( self.denormalized_treeview.items ) > 0 ):
+            #self.xml.get_widget( 'unnormalized_notice' ).show_all()
+            #self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).show()
+        #else:
+            #self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+            #self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).hide()
     def refresh_modules (self):    
         print "reloading modules.."            
         self.modules_treeview.load()
@@ -328,9 +375,9 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             editable = self.is_vhost_editable( name )
             self.xml.get_widget( 'delete_button' ).set_sensitive( editable )
             self.xml.get_widget( 'edit_button' ).set_sensitive( editable )
-            surfable =  self.get_current_vhost_directive( 'ServerName' ) != None
+            surfable =  self.get_current_vhost().get_server_name() != None
             self.xml.get_widget( 'surf_this_button' ).set_sensitive( surfable )
-            browsable =  self.get_current_vhost_directive( 'DocumentRoot' ) != None
+            browsable =  self.get_current_vhost.get_document_root() != None
             self.xml.get_widget( 'browse_button' ).set_sensitive( browsable )
     def module_row_selected( self, widget):
         name = self.modules_treeview.get_selected_line()
@@ -354,19 +401,24 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             site.toggle(True)            
         self.refresh_vhosts()
         self.refresh_denormalized_vhosts()
-    def get_current_vhost_directive (self, directive_name ):
+    def get_current_vhost(self ):
         name = self.vhosts_treeview.get_selected_line()
         if ( name == None ): return None
-        return self.vhosts_treeview.items[ name ].data[ directive_name ]
+        return self.vhosts_treeview.items[ name ]
     def surf_this(self, widget):
         name = self.vhosts_treeview.get_selected_line()
         if name == 'default':
             server_name = 'localhost'
         else:
-            server_name = self.get_current_vhost_directive( 'ServerName' )
-        if ( server_name ): Desktop.open_url( "http://" + server_name )
+            server_name = self.get_current_vhost().get_server_name()
+            
+        protocol = "http"    
+        if str(self.vhosts_treeview.items[ name ].get_value("port", "80")) == "443":
+            protocol = "https"
+            
+        if ( server_name ): Desktop.open_url( protocol+"://" + server_name )
     def browse_this(self, widget):
-        document_root = self.get_current_vhost_directive( 'DocumentRoot' )
+        document_root = self.get_current_vhost.get_document_root()
         Desktop.open_dir( document_root )
         
 

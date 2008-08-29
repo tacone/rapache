@@ -119,6 +119,7 @@ class VirtualHostWindow:
         GuiUtils.style_as_tooltip( self.error_area )
         self.on_entry_domain_changed()
         
+        # init enabled plugins
         for plugin in self.parent.plugin_manager.plugins:
         	try:
         	    if plugin.is_enabled():      	        
@@ -132,18 +133,20 @@ class VirtualHostWindow:
 
         self.__previous_active_tab = 0
         
+        self.accel_group = gtk.AccelGroup()
+        self.window.add_accel_group(self.accel_group)
+        
+        self.button_save.add_accelerator("clicked", self.accel_group, 13, 0, 0)
+        
+        
     def on_notebook_switch_page(self, notebook, page, page_num):
-        # Assume for now it always page number 1
+        self.update(self.__previous_active_tab)   
         if page_num == notebook.get_n_pages() - 1:
-            # how to update this.....
-            self.save(self.__previous_active_tab)
             buf = self.text_view_vhost_source.get_buffer()
-            text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
-            # TODO: Remove this line !! hack to stop double ups from parser
-            text = text.replace("\n\n\n", "\n\n").replace("\n\n\n", "\n\n")
+            text = self.vhost.get_source_generated()
+
             buf.set_text( text )
             buf.set_modified(False) 
-            pass
         else:
             self.reload()
         
@@ -185,11 +188,9 @@ class VirtualHostWindow:
         self.window.show()           
         gtk.main()
 
-    def load (self, name ):
-
-        self.vhost = VirtualHostModel( name, self.parent.plugin_manager )
-
-        self._load()
+    def load (self, vhost ):
+        self.vhost = vhost
+        self.__load()
         
         for file in self.vhost.get_backup_files():
             self.combobox_vhost_backups.append_text("Backup " + file[0][-21:-4])
@@ -200,38 +201,33 @@ class VirtualHostWindow:
     
         buf = self.text_view_vhost_source.get_buffer()
         try:
-            self.vhost.load_from_string( buf.get_text(buf.get_start_iter(), buf.get_end_iter()), self.parent.plugin_manager)
+            self.vhost.load_from_string( buf.get_text(buf.get_start_iter(), buf.get_end_iter()))
         except "VhostUnparsable":            
             pass     
          
-        self._load()
+        self.__load()
         
-    def _load(self):
-        print "load"
-        try:
-            #self._get( 'has_www' ).set_active( site.data[ 'has_www' ] )
-            server_name = self.vhost.data[ 'ServerName' ] 
-            if ( server_name != None ):
-                self.entry_domain.set_text( server_name )
-            document_root = self.vhost.data[ 'DocumentRoot' ] 
-            if ( document_root != None ):
-                self.entry_location.set_text( document_root )
-            server_alias = None
-            if (self.vhost.data.has_key("ServerAlias")):
-                server_alias = self.vhost.data[ 'ServerAlias' ]
-            self.treeview_domain_store.clear()
-            if ( server_alias != None ): 
-                for domain in server_alias:
-                    self.treeview_domain_store.append((domain, None))            
-            print self.vhost.data
-        except "VhostUnparsable":            
-            pass
-        
-        for plugin in self.parent.plugin_manager.plugins:
+    def __load(self):
+
+        server_name = self.vhost.get_server_name()
+        if ( server_name != None ):
+            self.entry_domain.set_text( server_name )
+        document_root = self.vhost.get_document_root()
+        if ( document_root != None ):
+            self.entry_location.set_text( document_root )
+        server_alias = None
+
+        self.treeview_domain_store.clear()
+        print server_name
+        server_alias = self.vhost.get_server_alias()
+        if server_alias:
+            for domain in server_alias:
+                self.treeview_domain_store.append((domain, None))   
+
+        for plugin in self.plugins:
         	try:
         	    if plugin.is_enabled():          
         	        plugin.load_vhost_properties(self.vhost)
-    	        	self.plugins.append(plugin)
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
 
@@ -320,7 +316,7 @@ class VirtualHostWindow:
         return  
             
     def on_button_save_clicked(self, widget):
-        res = self.save()
+        res = self.update()
         
         if not res:
             md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format="Are you sure you want to continue\n\nThere are incomplete fields to be completed") #TODO: Terrible error text !!!
@@ -329,7 +325,19 @@ class VirtualHostWindow:
             if result != gtk.RESPONSE_OK:
                 return
         
-        
+        # Save plugins
+        if self.plugins:
+            for plugin in self.plugins:
+                try:
+                    if plugin.is_enabled():
+                        res, message = plugin.save_vhost_properties(self.vhost)
+                        if not res:
+                            result = False
+                            if tab_number and plugin._tab_number == tab_number:
+                                self.show_error ( message )
+                except Exception:
+                    traceback.print_exc(file=sys.stdout) 
+                    
         # save over buffer content
         buf = self.text_view_vhost_source.get_buffer()
         text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
@@ -338,8 +346,7 @@ class VirtualHostWindow:
         # check apache config
         returncode, error = self.parent.apache.test_config()
         if not returncode:
-            error = error.strip().split(":")
-            error = ":".join(error[2:])
+            error = error.strip()
             md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format=error + "\n\nAre you sure you want to continue, apache will not start until all errors are resolved")
             result = md.run()
             md.destroy()
@@ -351,24 +358,24 @@ class VirtualHostWindow:
         self.parent.please_restart()
         self.window.destroy()
         
-    def save(self, tab_number=None):
+    def update(self, tab_number=None):
         result = True
 
         if self.entry_location.get_text() == "" and self.vhost.is_new:
             self.set_default_values_from_domain( True )
         
-        self.vhost.data[ 'ServerName' ] = self.entry_domain.get_text()
-        self.vhost.data[ 'DocumentRoot' ] = self.entry_location.get_text()
-        self.vhost.data[ 'ServerAlias' ] = self.get_server_aliases_list()
+        self.vhost.config.ServerName = self.entry_domain.get_text()
+        self.vhost.config.DocumentRoot = self.entry_location.get_text()
+        self.vhost.config.ServerAlias = self.get_server_aliases_list()
         
         self.hack_hosts = self.checkbutton_hosts.get_active()      
         
-	    # Save plugins
+	    # Update plugins
         if self.plugins:
             for plugin in self.plugins:
                 try:
                     if plugin.is_enabled():
-                        res, message = plugin.save_vhost_properties(self.vhost)
+                        res, message = plugin.update_vhost_properties(self.vhost)
                         if not res:
                             result = False
                             if tab_number and plugin._tab_number == tab_number:

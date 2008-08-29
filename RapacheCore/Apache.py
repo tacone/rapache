@@ -44,7 +44,7 @@ class Apache2():
         return
         
     def stop(self):
-        Shell.command.sudo_execute(["apache2ctl", "graceful-stop"])
+        Shell.command.sudo_execute(["apache2ctl", "-k", "graceful"])
         return
        
     def restart(self):
@@ -55,5 +55,10 @@ class Apache2():
         returncode, output, error = Shell.command.execute(["apache2ctl", "-S"])
         error = error.strip()
         return error.endswith("Syntax OK"), error
-    
+        
+    def enable_site(self, path):
+        Shell.command.execute(["a2ensite", path])
+        
+    def disable_site(self, path):
+        Shell.command.execute(["a2dissite", path])    
 
