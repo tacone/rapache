@@ -235,6 +235,9 @@ class ParserTest( unittest.TestCase ):
         # sections HAVE .sections attribute
         section.sections
         
+        string = v.customsection.get_as_str()
+        
+        
         #Parser and Section .create() defaults to .lines.section
         linescount= len(v.lines)    
         #creating a line
@@ -398,7 +401,7 @@ class ParserTest( unittest.TestCase ):
             p = Parser()
             try:
                 p.set_from_str( source )
-            except AttributeError:
+            except :
                 print "ERROR on this source, at iteration %s" % str(count)
                 print source
                 print "--------------------"

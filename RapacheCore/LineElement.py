@@ -3,6 +3,8 @@ import ApacheConf
 from lxml import etree
 import re
 
+#FIXME: p.ServerAlias should not overwrite the Selection, but trigger an exception
+
 class ListWrapper (object):
     
     def __init__(self):
@@ -518,7 +520,10 @@ class Section(Parser):
         content +=  super (Section, self).get_as_list()        
         if len(content) > 0 : content[-1] = content[-1].rstrip()+"\n"
         #content += [ "</%s>\n" % self.key ]
-        content += [ self.element.attrib[ 'close_source' ].rstrip()+"\n" ]
+        if self.element.get('close_source'):
+            content += [ self.element.attrib[ 'close_source' ].rstrip()+"\n" ]
+        else:
+            content += [ "</%s>\n" % self.element.tag ]
         return content
     def reset (self):        
         #tag_name = self.key.lower()

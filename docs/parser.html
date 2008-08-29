@@ -3,6 +3,44 @@
 The parser is currently in RapacheCore.LineElement. A rename will happen soon.
 
 <h2>Loading a file</h2>
+
+In this tutorial we'll work mostly on this file:
+<pre>
+    ServerAlias www.example.com
+    ServerAlias www.example.net
+
+    ErrorDocument 400 /error/HTTP_BAD_REQUEST.html.var
+    ErrorDocument 401 /error/HTTP_UNAUTHORIZED.html.var
+    ErrorDocument 403 /error/HTTP_FORBIDDEN.html.var
+    ErrorDocument 404 /error/HTTP_NOT_FOUND.html.var
+    ErrorDocument 405 /error/HTTP_METHOD_NOT_ALLOWED.html.var
+    ErrorDocument 408 /error/HTTP_REQUEST_TIME_OUT.html.var
+    ErrorDocument 410 /error/HTTP_GONE.html.var
+    ErrorDocument 411 /error/HTTP_LENGTH_REQUIRED.html.var
+    ErrorDocument 412 /error/HTTP_PRECONDITION_FAILED.html.var
+    ErrorDocument 413 /error/HTTP_REQUEST_ENTITY_TOO_LARGE.html.var
+    ErrorDocument 414 /error/HTTP_REQUEST_URI_TOO_LARGE.html.var
+    ErrorDocument 415 /error/HTTP_UNSUPPORTED_MEDIA_TYPE.html.var
+    ErrorDocument 500 /error/HTTP_INTERNAL_SERVER_ERROR.html.var
+    ErrorDocument 501 /error/HTTP_NOT_IMPLEMENTED.html.var
+    ErrorDocument 502 /error/HTTP_BAD_GATEWAY.html.var
+    ErrorDocument 503 /error/HTTP_SERVICE_UNAVAILABLE.html.var
+    ErrorDocument 506 /error/HTTP_VARIANT_ALSO_VARIES.html.var
+    
+    &lt;VirtualHost *&gt;
+        ServerName example.org
+        DocumentRoot /var/www/example.org/httpdocs
+        ErrorDocument 400 /error/HTTP_BAD_REQUEST.html.var
+        ErrorDocument 401 /error/HTTP_UNAUTHORIZED.html.var
+        ErrorDocument 403 /error/HTTP_FORBIDDEN.html.var
+        ErrorDocument 404 /error/HTTP_NOT_FOUND.html.var
+        
+        ErrorDocument 666 /error/HTTP_FORBIDDEN.html.var
+        ErrorDocument 666 /error/HTTP_NOT_FOUND.html.var
+    &lt;/VirtualHost&gt;
+</pre>
+
+Let's instance the parser and load the file:
 <pre>
 &gt;&gt;&gt; from RapacheCore.LineElement import Parser
 &gt;&gt;&gt; p = Parser()
@@ -27,6 +65,13 @@ It is case insensitive, by the way
 &lt;RapacheCore.LineElement.PlainSelection object at 0x826faec&gt;
 </pre>
 2 specialized selections also exist: .lines and .sections. Everyone of these contains all the lines/sections to be found in the global scope of the loaded file.
+<pre>
+&gt;&gt;&gt; len ( p.lines )
+21
+&gt;&gt;&gt; len ( p.sections )
+1
+</pre>
+
 <h2>Selections</h2>
 A selection is an iterable object, which allow iteration on the group of lines/sections it rappresents.
 For example p.ErrorDocument  will return a selection of all the ErrorDocument directives in the global scope of the configuration file.
@@ -82,4 +127,110 @@ You still can access the other lines as you would with list items
 400 /error/HTTP_BAD_REQUEST.html.var
 </pre>
 Creating a new line is as easy as specifying a new value for a non existing directive. (if the directive already exists it will just be overwritten)
+<pre>
+&gt;&gt;&gt; len(p.lines)
+21
+&gt;&gt;&gt; p.fakeline.value = 'sdoij'
+&gt;&gt;&gt; p.fakeline.value
+'sdoij'
+&gt;&gt;&gt; len(p.lines)
+22
+</pre>
+As affirmed before, trying to create a directive that already exist will just overwrite the last existing line.
+<pre>
+&gt;&gt;&gt; len(p.lines)
+22
+&gt;&gt;&gt; p.ServerAlias.value = "www.example.org"
+&gt;&gt;&gt; len(p.lines)
+22
+</pre>
+As a possible exception to the 'whatever you do on a selection, it'll affect the last line in that selection' rule, deleting a selection will erase all the lines pertaining to it.
+<pre>
+&gt;&gt;&gt; len( p.ServerAlias )
+2
+&gt;&gt;&gt; del p.ServerAlias
+&gt;&gt;&gt; len( p.ServerAlias )
+0
+</pre>
+To be able to delete individual lines, just specify their index:
+<pre>
+&gt;&gt;&gt; len ( p.ErrorDocument )
+17
+&gt;&gt;&gt; p.ErrorDocument[-1].value
+'506 /error/HTTP_VARIANT_ALSO_VARIES.html.var'
+&gt;&gt;&gt; del p.ErrorDocument[-1]
+&gt;&gt;&gt; len ( p.ErrorDocument )
+16
+&gt;&gt;&gt; p.ErrorDocument[-1].value
+'503 /error/HTTP_SERVICE_UNAVAILABLE.html.var'
+</pre>
 
+<h2> Searching </h2>
+As not every directive in Apache configuration files is meant to be unique (ErrorDocument for example), searching may be necessary.
+<br/><br/>
+You can search using the .search() method, specifying a list of searched options as parameters.
+The search will return a Selection so quite everything valid for selections (iterating, last line wins, etc) will be valid for search result
+<pre>
+&gt;&gt;&gt; len( p.ErrorDocument.search([404]) )
+1
+&gt;&gt;&gt; p.ErrorDocument.search([404]).value
+'404 /error/HTTP_NOT_FOUND.html.var'
+</pre>
+It's possible to search for just the second option, just specify None as the first option
+<pre>
+&gt;&gt;&gt; p.ErrorDocument.search([None, '/error/HTTP_NOT_FOUND.html.var']).value
+'404 /error/HTTP_NOT_FOUND.html.var'
+</pre>
+You can modify the value of the searched lines easily:
+<pre>
+&gt;&gt;&gt; p.ErrorDocument.search([404]).opts = [404, '/error/NEW_ERROR.html.var']
+&gt;&gt;&gt; p.ErrorDocument.search([404]).value
+'404 /error/NEW_ERROR.html.var'
+</pre>
+As an exception, deleting all the found lines requires the use of the delete() method.
+<pre>
+&gt;&gt;&gt; p.ErrorDocument.search([404]).delete()
+&gt;&gt;&gt; len( p.ErrorDocument.search([404]) )
+0
+</pre>
+
+<h2>Sections</h2>
+A section is a part of the config file enclosed in some &lt;TAG&gt;&lt;/TAG&gt;. Every directive or sub-section inside a section is not accessible from the outscope selections. (i.e.: p.ErrorDocument won't return the entries inside a &lt;VirtualHost&gt;).
+You can get a selection of sections in the very same way you access lines. Also, the sections behave the precise same way as the Parser class.
+
+<pre>
+&gt;&gt;&gt; len( p.VirtualHost )
+1
+&gt;&gt;&gt; len( p.VirtualHost.ErrorDocument )
+6
+</pre>
+
+Sections also implement the Line interface, which means you that expose .key,.value and .opts attributes you can manipulate
+<pre>
+&gt;&gt;&gt; print p.VirtualHost.key
+VirtualHost
+&gt;&gt;&gt; print p.VirtualHost.value
+*
+</pre>
+
+While sections are deletable the exact same ways as line, they you can't create the same way you do with lines.
+p.Directory.value = ''/var/www", for example, would create a line "Directory /var/www" and not a full section, and that will cause Apache to complain on the next restart. That's because the parser has no way to know that you want to create a section.
+
+To create a section, you should use the following code:
+<pre>
+&gt;&gt;&gt; v.sections.create( 'VirtualHost',  '*:80')
+&gt;&gt;&gt; p.sections.create( 'VirtualHost',  '*:80')
+&lt;RapacheCore.LineElement.Section object at 0x8260f2c&gt;
+&gt;&gt;&gt; p.VirtualHost.get_as_str()
+'&lt;VirtualHost *:80&gt;\n&lt;/section&gt;\n'
+</pre>
+
+<h2> Getting/Setting the content </h2>
+You can get and set the config file into the parser not only via load() but also passing in a list or string.
+
+<ul>
+    <li>p.set_from_str( string ) : sets the content from a string</li>
+    <li>p.set_from_list( list ) : sets the content from a list of individual lines</li>
+    <li>p.get_as_str() : returns content as a string</li>
+    <li>p.get_as_list() : returns content as a list containing individual lines</li>
+</ul>
