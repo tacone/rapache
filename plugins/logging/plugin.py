@@ -37,7 +37,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
         self.path = path
     
         # module this plugin works with
-        self.module = ""
+        self.module = "XXX"
         
         # Define what additional config should be read from vhost file
         self.vhosts_config = { "ServerAdmin" : 0, "LogLevel" : 0, "ErrorLog" : 0, "ServerSignature" : 0 } # 0 value | 1 options

@@ -363,10 +363,17 @@ class AdvancedVhostPlugin(PluginBaseObject):
     def load_vhost_properties(self, vhost):
         self.vhost = vhost
          
-        self.update_active_cert(vhost.get_value("SSLCertificateFile", ""))
-        self.entry_ssl_key_location.set_text(vhost.get_value("SSLCertificateKeyFile", self.default_key  ))
+        if vhost.config.SSLCertificateFile:
+            self.update_active_cert(vhost.config.SSLCertificateFile.value)
+        else:
+            self.update_active_cert("")
+            
+        if vhost.config.SSLCertificateKeyFile:
+            self.entry_ssl_key_location.set_text(vhost.config.SSLCertificateKeyFile.value)
+        else:
+            self.entry_ssl_key_location.set_text(self.default_key)
+        
         self.update_treeview()      
-
 
         return
         
@@ -376,14 +383,14 @@ class AdvancedVhostPlugin(PluginBaseObject):
         error = None
         
         if self.active_cert:
-             vhost.set_value("SSLEngine", "on" )
-             vhost.set_value("Port", self.entry_ssl_port.get_text() )
-             vhost.set_value("SSLCertificateKeyFile", self.entry_ssl_key_location.get_text())
+             vhost.config.SSLEngine.value = "on"
+             #vhost.set_value("Port", self.entry_ssl_port.get_text() )
+             vhost.config.SSLCertificateKeyFile.value = self.entry_ssl_key_location.get_text()
         else:
-             vhost.set_value("SSLEngine", "off")
-             vhost.set_value("Port", "80" )
+             vhost.config.SSLEngine.value = "off"
+             #vhost.set_value("Port", "80" )
 
-        vhost.set_value("SSLCertificateFile", self.active_cert)
+        vhost.config.SSLCertificateFile.value = self.active_cert
   
         return True, error
 

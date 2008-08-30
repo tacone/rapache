@@ -363,13 +363,13 @@ class VirtualHostWindow:
         
     def update(self, tab_number=None):
         result = True
-
+        
         if self.entry_location.get_text() == "" and self.vhost.is_new:
             self.set_default_values_from_domain( True )
         
-        self.vhost.config.ServerName = self.entry_domain.get_text()
-        self.vhost.config.DocumentRoot = self.entry_location.get_text()
-        self.vhost.config.ServerAlias = self.get_server_aliases_list()
+        self.vhost.config.ServerName.value = self.entry_domain.get_text()
+        self.vhost.config.DocumentRoot.value = self.entry_location.get_text()
+        self.vhost.config.ServerAlias.opts = self.get_server_aliases_list()
         
         self.hack_hosts = self.checkbutton_hosts.get_active()      
         
@@ -388,6 +388,8 @@ class VirtualHostWindow:
                     traceback.print_exc(file=sys.stdout) 
         if result:
             self.error_area.hide() 
+        print "UPDATE"
+        print self.vhost.get_source_generated()
         return result
                                
     def on_button_cancel_clicked(self, widget):

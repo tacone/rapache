@@ -3,6 +3,8 @@ import ApacheConf
 from lxml import etree
 import re
 
+#FIXME: p.ServerAlias should not overwrite the Selection, but trigger an exception
+
 class ListWrapper (object):
     
     def __init__(self):
@@ -472,11 +474,8 @@ class Parser(Line):
     def close (self, line):
         """Sets source for closing the tag"""
         self.element.attrib[ 'close_source' ] = line
-    def set_from_string(self, content): 
-        self.reset()
-        print content
-        self.set_from_list(content.split("\n"))
-        
+    def set_from_str(self,  string): 
+        return self.set_from_list( string.split("\n") )
     def set_from_list(self, list):
         """uses a (line) list as the configuration file to be parsed"""
         self.reset()
@@ -485,7 +484,6 @@ class Parser(Line):
             self._append_string(line)
         if self.open_child != None:
             #something wrong, one tag has been left open in the .conf
-            print 'TagEndExpected: expected end tag for:'+self.open_child.key
             raise VhostNotFound, 'TagEndExpected: expected end tag for:'+self.open_child.key
     def get_as_list(self):
         """returns the content as a list (i.e. for saving)"""
@@ -519,9 +517,13 @@ class Section(Parser):
     def get_as_list (self):
         # replace compile_line !
         content = [ self._compile( self.element).rstrip()+"\n" ]
-        content +=  super (Section, self).get_as_list()
+        content +=  super (Section, self).get_as_list()        
+        if len(content) > 0 : content[-1] = content[-1].rstrip()+"\n"
         #content += [ "</%s>\n" % self.key ]
-        content += [ self.element.attrib[ 'close_source' ].rstrip()+"\n" ]
+        if self.element.get('close_source'):
+            content += [ self.element.attrib[ 'close_source' ].rstrip()+"\n" ]
+        else:
+            content += [ "</%s>\n" % self.element.tag ]
         return content
     def reset (self):        
         #tag_name = self.key.lower()

@@ -97,7 +97,7 @@ class VirtualHostModel():
              
     def load_from_string(self, content):
         #try:
-    	self.__parser.set_from_string( content )
+    	self.__parser.set_from_str( content )
     	self.config = self.__parser.virtualhost
     	return True
         #except:
@@ -240,8 +240,10 @@ class VirtualHostModel():
             return None
             
     def get_server_alias(self):
-        return self.config.ServerAlias
-            
+        try:
+            return self.config.ServerAlias
+        except:
+            return []    
 
     def get_icon(self):
         # TODO: This MUST return a local path...
