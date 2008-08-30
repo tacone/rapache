@@ -200,10 +200,12 @@ class VirtualHostWindow:
     def reload(self):
     
         buf = self.text_view_vhost_source.get_buffer()
-        try:
-            self.vhost.load_from_string( buf.get_text(buf.get_start_iter(), buf.get_end_iter()))
-        except "VhostUnparsable":            
-            pass     
+        content = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
+        #try:
+        #print content
+        self.vhost.load_from_string( content )
+        #except "VhostUnparsable":            
+        #    pass     
          
         self.__load()
         
@@ -213,10 +215,11 @@ class VirtualHostWindow:
         if ( server_name != None ):
             self.entry_domain.set_text( server_name )
         document_root = self.vhost.get_document_root()
+        print document_root
         if ( document_root != None ):
             self.entry_location.set_text( document_root )
         server_alias = None
-
+        
         self.treeview_domain_store.clear()
         print server_name
         server_alias = self.vhost.get_server_alias()

@@ -96,13 +96,13 @@ class VirtualHostModel():
              return False
              
     def load_from_string(self, content):
-        try:
-        	self.__parser.set_from_string( content )
-        	self.config = self.__parser.virtualhost
-        	return True
-        except:
-             self.parsable = False
-             return False
+        #try:
+    	self.__parser.set_from_string( content )
+    	self.config = self.__parser.virtualhost
+    	return True
+        #except:
+        #     self.parsable = False
+        #     return False
          
     def save(self, content=None):
         

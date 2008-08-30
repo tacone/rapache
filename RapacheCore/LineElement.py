@@ -472,7 +472,11 @@ class Parser(Line):
     def close (self, line):
         """Sets source for closing the tag"""
         self.element.attrib[ 'close_source' ] = line
-    def set_from_string(self): pass
+    def set_from_string(self, content): 
+        self.reset()
+        print content
+        self.set_from_list(content.split("\n"))
+        
     def set_from_list(self, list):
         """uses a (line) list as the configuration file to be parsed"""
         self.reset()
@@ -481,6 +485,7 @@ class Parser(Line):
             self._append_string(line)
         if self.open_child != None:
             #something wrong, one tag has been left open in the .conf
+            print 'TagEndExpected: expected end tag for:'+self.open_child.key
             raise VhostNotFound, 'TagEndExpected: expected end tag for:'+self.open_child.key
     def get_as_list(self):
         """returns the content as a list (i.e. for saving)"""
