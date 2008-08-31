@@ -34,6 +34,8 @@ import os
 import re
 import threading
 import time
+import copy
+
 
 from RapacheGtk.VirtualHostGui import VirtualHostWindow
 from RapacheGtk.ModuleGui import ModuleWindow
@@ -242,8 +244,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.refresh_config_test()
         
     def edit_button_clicked(self, widget, notused = None, notused2 = None):         
-        name = self.vhosts_treeview.get_selected_line()
-        self.open_edit_vhost_window( name )
+        vhost = self.vhosts_treeview.get_selected_line()
+        self.open_edit_vhost_window( copy.deepcopy(vhost) )
 
         
     def open_edit_vhost_window(self, name):

@@ -196,13 +196,19 @@ class VirtualHostWindow:
             self.combobox_vhost_backups.append_text("Backup " + file[0][-21:-4])
 
         self.label_path.set_text("File : " + self.vhost.get_source_filename() ) 
+        
+        buf = self.text_view_vhost_source.get_buffer()
+        text = self.vhost.get_source_generated()
+
+        buf.set_text( text )
+        buf.set_modified(False) 
          
     def reload(self):
     
         buf = self.text_view_vhost_source.get_buffer()
         content = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
         #try:
-        #print content
+        print content
         self.vhost.load_from_string( content )
         #except "VhostUnparsable":            
         #    pass     
@@ -296,6 +302,7 @@ class VirtualHostWindow:
         if domain:
             self.treeview_domain_store.append((domain, None))
         return
+        
     def  get_server_aliases_list (self ):
         aliases = []
         for row in self.treeview_domain_store: aliases.append( row[0] )

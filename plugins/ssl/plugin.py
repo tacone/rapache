@@ -362,7 +362,9 @@ class AdvancedVhostPlugin(PluginBaseObject):
     # Customise the vhost properties window
     def load_vhost_properties(self, vhost):
         self.vhost = vhost
-         
+        
+        print "BOOM"
+        print vhost.config.SSLCertificateFile
         if vhost.config.SSLCertificateFile:
             self.update_active_cert(vhost.config.SSLCertificateFile.value)
         else:
@@ -374,14 +376,12 @@ class AdvancedVhostPlugin(PluginBaseObject):
             self.entry_ssl_key_location.set_text(self.default_key)
         
         self.update_treeview()      
-
         return
         
     # Perform action on vhost properties save
     def update_vhost_properties(self, vhost):
         self.vhost = vhost
         error = None
-        
         if self.active_cert:
              vhost.config.SSLEngine.value = "on"
              #vhost.set_value("Port", self.entry_ssl_port.get_text() )
@@ -391,7 +391,6 @@ class AdvancedVhostPlugin(PluginBaseObject):
              #vhost.set_value("Port", "80" )
 
         vhost.config.SSLCertificateFile.value = self.active_cert
-  
         return True, error
 
 
