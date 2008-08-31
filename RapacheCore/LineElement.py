@@ -5,6 +5,11 @@ import re
 
 #FIXME: p.ServerAlias should not overwrite the Selection, but trigger an exception
 
+#(12:58:59 AM) tacone: now I have the move thing, recursive search, and exception-on-readonly-setting on my todo list
+#(12:59:35 AM) KillerKiwi2005: can u fix the indenting... low priority
+
+# if p.notexisting.documentroot:pass should not trigger exception
+
 class ListWrapper (object):
     
     def __init__(self):
