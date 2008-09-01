@@ -528,7 +528,7 @@ class Section(Parser):
         if self.element.get('close_source'):
             content += [ self.element.attrib[ 'close_source' ].rstrip()+"\n" ]
         else:
-            content += [ "</%s>\n" % self.element.tag ]
+            content += [ "</%s>\n" % self.element.attrib['directive'] ]
         return content
     def reset (self):        
         #tag_name = self.key.lower()

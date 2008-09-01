@@ -245,6 +245,19 @@ class ParserTest( unittest.TestCase ):
         self.assertEqual( len(v.lines),  linescount + 1)
         #ensure a line object is returned
         self.assertEqual( line.key,  'CustomDirective' )
+        
+        #ensure new section are created correctly
+        p = Parser()
+        p.sections.create( 'VirtualHost',  '/var/www/spoon')
+        source = p.get_as_list()
+        basic_regexp = r'^(\s*)<s*(VirtualHost)\s+[^>]*>.*'
+        result = re.search( basic_regexp, source[0  ], re.MULTILINE | re.IGNORECASE )    
+        self.assertNotEqual( result, None )
+        
+        basic_regexp = r'^(\s*)<\/(VirtualHost)\s*[^>]*>.*'
+        result = re.search( basic_regexp, source[1], re.MULTILINE | re.IGNORECASE )    
+        self.assertNotEqual( result, None )
+        
     def test_search(self):
         p = Parser()        
         p.load( self.errordocumentsconf ) 
@@ -359,8 +372,8 @@ class ParserTest( unittest.TestCase ):
         p = Parser()
         p.load( self.vhostconf )
         content = p.get_as_list()     
-        print p.get_as_str()   
-        for line in content: print line, 
+        #print p.get_as_str()   
+        #for line in content: print line, 
         #    print "\n".join( content )
         self.assertEqual( type(content), type([]) )
         #do lines contain extra  trailing \n ?
@@ -368,8 +381,8 @@ class ParserTest( unittest.TestCase ):
         for idx, value in enumerate( original_content ):
             #note rstrip(), we don't preserve trailing spaces yet
             #TODO: should pass with rstrip() 
-            print original_content[ idx ].strip()
-            print content[ idx].strip()
+            #print original_content[ idx ].strip()
+            #print content[ idx].strip()
             self.assertEqual( original_content[ idx ].strip(), content[ idx].strip() )
             #self.assertEqual( original_content, content )    
     def test_newlines_on_the_last_line(self):
@@ -383,7 +396,7 @@ class ParserTest( unittest.TestCase ):
         self.assertEqual( len( vhost.get_as_list() ), expectedlen +1 )
     def test_newlines_on_get_source(self):
         """yet another test on newlines reliability"""
-        print "====== test_newlines_on_get_source ======="
+        #print "====== test_newlines_on_get_source ======="
         p = Parser()
         p.load( self.fromtemplateconf )
         actuallen = len( p.get_as_str().split("\n" ) );
@@ -403,8 +416,8 @@ class ParserTest( unittest.TestCase ):
                 p.set_from_str( source )
             except :
                 print "ERROR on this source, at iteration %s" % str(count)
-                print source
-                print "--------------------"
+                
+                
             source = p.get_as_str()
             actlen = len(source.split("\n"))
             try:
