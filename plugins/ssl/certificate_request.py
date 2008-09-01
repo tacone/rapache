@@ -334,7 +334,7 @@ class CertificateRequestWindow:
         # add on destroy to quit loop
         self.window.connect("destroy", self.on_destroy)
 
-       
+        self.cert = None
         
     def on_button_ok_clicked(self, widget):
         self.generate_certificate_request()

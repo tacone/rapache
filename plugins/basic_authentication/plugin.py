@@ -168,48 +168,76 @@ class BasicAuthenticationPlugin(PluginBaseObject):
         column.set_attributes(cell, markup=1)
         self.treeview_users.append_column(column)
 
+        self.entry_location.set_text(self.default_location)
+        self.users.load(Shell.command.read_file(self.default_location))
+        self.entry_warning_message.set_text("Enter your password")
+        
+
+        self.update_users()
+
         return hbox_auth_basic, hbox_security
-        
-        
-        
+
     # Customise the vhost properties window
     def load_vhost_properties(self, vhost):
-
-        self.checkbutton_enable_auth_basic.set_active(vhost.get_value("AuthType", "None").lower() == "basic")
-
-        # only load if value changes
-        if vhost.get_value("AuthUserFile", "NONE") != self.entry_location.get_text():
-            self.entry_location.set_text(vhost.get_value("AuthUserFile", self.default_location))
-            content = Shell.command.read_file(self.entry_location.get_text())
-            if content:
-                self.users.load( content )
-
-        self.entry_warning_message.set_text(vhost.get_value("AuthName", "Password Required"))
-        self.users_active = vhost.get_value("Require", ["user"])[1:]
-        self.update_users()    
-
-        return
+        self.users_active = []
+        self.checkbutton_enable_auth_basic.set_active(False)
         
+        ds = vhost.config.Directory.search(  [vhost.get_document_root()]  )
+
+        if len(  ds    ) > 0:
+            d = ds[0]
+            if d.AuthType:
+                self.checkbutton_enable_auth_basic.set_active(d.AuthType.value.lower() == "basic")
+                
+            # only load if value changes
+            if d.AuthUserFile:
+                if d.AuthUserFile.value != self.entry_location.get_text():
+                    self.entry_location.set_text(d.AuthUserFile.value)
+                    content = Shell.command.read_file(self.entry_location.get_text())
+                    if content:
+                        self.users.load( content )
+        
+            if d.AuthName:
+                self.entry_warning_message.set_text(d.AuthName.value)
+                
+            if d.Require:
+                self.users_active = list(d.Require.opts)[1:]
+
+        return True, None
+
+
     # Perform action on vhost properties update request
     def update_vhost_properties(self, vhost):
         
-        if self.checkbutton_enable_auth_basic.get_active():
-            vhost.set_value("AuthType", "Basic" )
+        ds = vhost.config.Directory.search(  [vhost.get_document_root()]  )
+        d = None
+        if len(ds) == 0:
+            d = vhost.config.sections.create("Directory", vhost.get_document_root())
         else:
-            vhost.set_value("AuthType", None)
+            d = ds[0]
         
-        iter = self.treeview_users_store.get_iter_first()
-        self.users_active = []
-        while 1:
-            if not iter: break
-            if self.treeview_users_store.get_value(iter, 0):
-                self.users_active.append( self.treeview_users_store.get_value(iter, 2) )
-            iter = self.treeview_users_store.iter_next(iter)
+        if self.checkbutton_enable_auth_basic.get_active():
+            d.AuthType.value = "Basic"
+            
+            d.AuthName.value = self.entry_warning_message.get_text() 
+            d.AuthUserFile.value =  self.entry_location.get_text()
+            iter = self.treeview_users_store.get_iter_first()
+            self.users_active = []
+            while 1:
+                if not iter: break
+                if self.treeview_users_store.get_value(iter, 0):
+                    self.users_active.append( self.treeview_users_store.get_value(iter, 2) )
+                iter = self.treeview_users_store.iter_next(iter)
+            d.Require.opts = ["user"] + self.users_active
+            
+        else:
+            if d.AuthType : del d.AuthType
+            if d.AuthName : del d.AuthName
+            if d.AuthUserFile : del d.AuthUserFile
+            if d.Require : del d.Require
 
-        vhost.set_value("AuthName", self.entry_warning_message.get_text() )    
-        vhost.set_value("AuthUserFile", self.entry_location.get_text() )
-        vhost.set_value("Require", ["user"] + self.users_active)
         return True, None
+
 
     # Perform action on vhost properties save
     def save_vhost_properties(self, vhost):
