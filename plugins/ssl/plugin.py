@@ -55,8 +55,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
         #if self.is_module_enabled():
         ssl_vhost = None
         for vhost in VirtualHost.get_all_vhosts():
-            print vhost.get_value("port", "80")
-            if str(vhost.get_value("port", "80")) == "443": 
+            if vhost.get_port() == 443: 
                 
                 # TODO: is this the best check... maybe check ssl property?
                 ssl_vhost = vhost
@@ -96,7 +95,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
         self.treeview_requests =  wtree.get_widget("treeview_requests")
         self.linkbutton_active_cert = wtree.get_widget("linkbutton_active_cert")
         self.filechooserbutton_ssl_cert = wtree.get_widget("filechooserbutton_ssl_cert")
-        self.entry_ssl_port = wtree.get_widget("entry_ssl_port")
+        self.spinbutton_port = wtree.get_widget("spinbutton_port")
         self.entry_ssl_key_location = wtree.get_widget("entry_ssl_key_location")
         self.filechooserbutton_ssl_key = wtree.get_widget("filechooserbutton_ssl_key")
         signals = {
@@ -145,6 +144,9 @@ class AdvancedVhostPlugin(PluginBaseObject):
         self.treeview_requests.append_column(column)
 
         wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "hbox_label")
+        
+        self.spinbutton_port.set_value(443)
+        
         return table_ssl, wtree.get_widget("hbox_label")
 
 
@@ -348,7 +350,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
 
         w = CertificateRequestWindow(self.path)
         
-        w.load( [self.vhost.get_value("ServerName")] + self.vhost.get_value("ServerAlias", []),  self.vhost.get_value("ServerAdmin", ""), self.entry_ssl_key_location.get_text() )
+        w.load( [self.vhost.get_server_name()] + list(self.vhost.get_server_alias()),  self.vhost.config.ServerAdmin, self.entry_ssl_key_location.get_text() )
         cert = w.run()
         
         if cert:
@@ -363,8 +365,6 @@ class AdvancedVhostPlugin(PluginBaseObject):
     def load_vhost_properties(self, vhost):
         self.vhost = vhost
         
-        print "BOOM"
-        print vhost.config.SSLCertificateFile
         if vhost.config.SSLCertificateFile:
             self.update_active_cert(vhost.config.SSLCertificateFile.value)
         else:
@@ -375,6 +375,10 @@ class AdvancedVhostPlugin(PluginBaseObject):
         else:
             self.entry_ssl_key_location.set_text(self.default_key)
         
+        port = self.vhost.get_port()
+        if port and not port == 80:
+            self.spinbutton_port.set_value(port)
+        
         self.update_treeview()      
         return
         
@@ -384,13 +388,22 @@ class AdvancedVhostPlugin(PluginBaseObject):
         error = None
         if self.active_cert:
              vhost.config.SSLEngine.value = "on"
-             #vhost.set_value("Port", self.entry_ssl_port.get_text() )
              vhost.config.SSLCertificateKeyFile.value = self.entry_ssl_key_location.get_text()
+             vhost.set_port( self.spinbutton_port.get_value_as_int() )
+             vhost.config.SSLCertificateFile.value = self.active_cert
         else:
-             vhost.config.SSLEngine.value = "off"
-             #vhost.set_value("Port", "80" )
+            if vhost.config.SSLEngine:
+                del vhost.config.SSLEngine
+             
+            if vhost.config.SSLCertificateFile:
+                del vhost.config.SSLCertificateFile
+                
+            if vhost.config.SSLCertificateKeyFile:
+                del vhost.config.SSLCertificateKeyFile             
+             
+            vhost.set_port(80)
 
-        vhost.config.SSLCertificateFile.value = self.active_cert
+        
         return True, error
 
 

@@ -37,7 +37,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
         self.path = path
     
         # module this plugin works with
-        self.module = "XXX"
+        self.module = ""
         
         # Define what additional config should be read from vhost file
         self.vhosts_config = { "ServerAdmin" : 0, "LogLevel" : 0, "ErrorLog" : 0, "ServerSignature" : 0 } # 0 value | 1 options
@@ -59,41 +59,40 @@ class AdvancedVhostPlugin(PluginBaseObject):
         f.close()
     
         # Remember you will need to recreate tree everytime the window loads
-        wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "table_advanced_vhost")
-        table_advanced_vhost = wtree.get_widget("table_advanced_vhost")    
+        wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "vbox_advanced_host")
+        vbox_advanced_host= wtree.get_widget("vbox_advanced_host")    
         self.entry_admin_email =  wtree.get_widget("entry_admin_email")    
         self.entry_log_location = wtree.get_widget("entry_log_location")    
         self.combobox_log_level = wtree.get_widget("combobox_log_level")
         self.checkbutton_server_signature = wtree.get_widget("checkbutton_server_signature")
 
-        return table_advanced_vhost, gtk.Label("Logging")
+        return vbox_advanced_host, gtk.Label("Advanced")
         
     # Customise the vhost properties window
     def load_vhost_properties(self, vhost):
                 
-        self.entry_admin_email.set_text(vhost.config.ServerAdmin.value)
-        self.entry_log_location.set_text(vhost.config.ErrorLog.value)
+        
+        if vhost.config.ServerAdmin: self.entry_admin_email.set_text(vhost.config.ServerAdmin.value)
+        if vhost.config.ErrorLog: self.entry_log_location.set_text(vhost.config.ErrorLog.value)
         if vhost.config.LogLevel:
             self.combobox_log_level.set_active( self.log_levels.index( vhost.config.LogLevel.value ) )
-        if vhost.config.ServerSignature.value.lower() != "off":
+        if vhost.config.ServerSignature and vhost.config.ServerSignature.value.lower() != "off":
             self.checkbutton_server_signature.set_active(True)
 
         return
         
     # Perform action on vhost properties save
     def update_vhost_properties(self, vhost):
-        """
-        vhost.set_value("ServerAdmin", self.entry_admin_email.get_text())
-        vhost.set_value("ErrorLog", self.entry_log_location.get_text())
-        vhost.set_value("LogLevel", self.log_levels[ self.combobox_log_level.get_active() ] )
+     
+        if self.entry_admin_email.get_text(): vhost.config.ServerAdmin.value = self.entry_admin_email.get_text()
+        if self.entry_log_location.get_text() : vhost.config.ErrorLog.value =  self.entry_log_location.get_text()
+        vhost.config.LogLevel.value =  self.log_levels[ self.combobox_log_level.get_active() ]
         if self.checkbutton_server_signature.get_active():
-             vhost.set_value("ServerSignature", "on" )
+             vhost.config.ServerSignature.value = "on"
         else:
-             vhost.set_value("ServerSignature", "off")
-        
+             vhost.config.ServerSignature.value = "off"
         
         server_admin = self.entry_admin_email.get_text()
-        """       
         return True, None
 
 def register( path ):

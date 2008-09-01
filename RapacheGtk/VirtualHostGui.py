@@ -153,7 +153,6 @@ class VirtualHostWindow:
         self.__previous_active_tab = page_num
 
     def on_linkbutton_documentation_clicked(self, widget):
-        print widget.get_uri()
         Desktop.open_url( widget.get_uri() )
         
     def on_button_restore_version_clicked(self, widget):
@@ -208,7 +207,6 @@ class VirtualHostWindow:
         buf = self.text_view_vhost_source.get_buffer()
         content = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
         #try:
-        print content
         self.vhost.load_from_string( content )
         #except "VhostUnparsable":            
         #    pass     
@@ -221,13 +219,12 @@ class VirtualHostWindow:
         if ( server_name != None ):
             self.entry_domain.set_text( server_name )
         document_root = self.vhost.get_document_root()
-        print document_root
         if ( document_root != None ):
             self.entry_location.set_text( document_root )
         server_alias = None
         
         self.treeview_domain_store.clear()
-        print server_name
+
         server_alias = self.vhost.get_server_alias()
         if server_alias:
             for domain in server_alias:
@@ -312,7 +309,7 @@ class VirtualHostWindow:
         model, iter = self.treeview_domain.get_selection().get_selected()
         if not iter: return
         domain = model.get_value(iter, 0)
-        print domain
+
         edw = EditDomainNameWindow( domain )
         result = edw.run()
         if result:
@@ -349,9 +346,7 @@ class VirtualHostWindow:
                     traceback.print_exc(file=sys.stdout) 
                     
         # save over buffer content
-        buf = self.text_view_vhost_source.get_buffer()
-        text = self.vhost.get_source_generated(  buf.get_text(buf.get_start_iter(), buf.get_end_iter() ) )
-        self.vhost.save(text)
+        self.vhost.save()
         
         # check apache config
         returncode, error = self.parent.apache.test_config()
@@ -375,7 +370,16 @@ class VirtualHostWindow:
             self.set_default_values_from_domain( True )
         
         self.vhost.config.ServerName.value = self.entry_domain.get_text()
+        
+        if self.vhost.config.DocumentRoot:
+            old_document_root = self.vhost.config.DocumentRoot.value
+            if old_document_root != self.entry_location.get_text():
+                ds = self.vhost.config.Directory.search( [old_document_root] )
+                if len(ds) > 0:
+                    d = ds[0]
+                    d.value = self.entry_location.get_text()
         self.vhost.config.DocumentRoot.value = self.entry_location.get_text()
+
         self.vhost.config.ServerAlias.opts = self.get_server_aliases_list()
         
         self.hack_hosts = self.checkbutton_hosts.get_active()      
@@ -395,8 +399,6 @@ class VirtualHostWindow:
                     traceback.print_exc(file=sys.stdout) 
         if result:
             self.error_area.hide() 
-        print "UPDATE"
-        print self.vhost.get_source_generated()
         return result
                                
     def on_button_cancel_clicked(self, widget):

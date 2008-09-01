@@ -81,7 +81,7 @@ class VirtualHostModel():
         self.data = None
         self.parsable = True
         self.enabled = self.is_enabled()
-
+        self.hack_hosts = False
         if not self.is_new:
             self.load(None)
 
@@ -148,7 +148,7 @@ class VirtualHostModel():
             old_enabled = self.is_enabled()
             
             new_name = os.path.join(Configuration.SITES_AVAILABLE_DIR, ServerName)
-            old_name = os.path.join(Configuration.SITES_AVAILABLE_DIR, old_name)
+            old_name = os.path.join(Configuration.SITES_AVAILABLE_DIR, self.__name)
             
             print "old name", old_name
             print "new name", new_name
@@ -252,7 +252,37 @@ class VirtualHostModel():
                 if ( os.path.exists( favicon ) ): 
                     return favicon
         return os.path.join( Configuration.GLADEPATH, 'browser.png' )
+    
+    def get_port(self):
+        value = self.config.value
+        if value is None: return None
+        tokens = value.split(':')
+        if len(tokens) < 2: return None
+        if tokens[-1] =="*": return None
+        return int(tokens[-1])
 
+    def set_port(self, portnumber):
+        value = self.config.value
+        old_port = self.get_port()
+        if str(portnumber) == str(old_port):
+            return #no changes needed
+        if portnumber is not None:
+            if old_port is None: 
+                value += ":"+str(portnumber)
+            else:
+                tokens = value.split(':')
+                tokens[-1] = str( portnumber )
+                value = ":".join( tokens )
+        else: 
+            #old_port can't be None because of the condition:
+            #if str(portnumber) == str(old_port)
+            #at the top of this method
+            tokens = value.split(':')
+            tokens[-1] = str( portnumber )
+            value = ":".join( tokens[:-1] )
+        self.config.value = value
+
+        
 # Replacment that has a bit of state
 class VirtualHostModelOld():
     def __init__(self, name = None, plugin_manager = None):
@@ -322,8 +352,6 @@ class VirtualHostModelOld():
                 pass
           
         return False
-
-
 
     def toggle( self, status ):
         "status = True|False"
