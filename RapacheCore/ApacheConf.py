@@ -246,6 +246,7 @@ class LineParser:
         return result_list
     def value_unescape(self, value):
         #value should have no precedig or trailing spaces
+        if value == None: return None
         if value == "" : return value
         char = value[0]
         if char == '"' or char == "'":
@@ -267,9 +268,9 @@ class LineParser:
         """parse a value into a list of multiple options"""
         if s == None or s == False: return []
         s = s.rstrip()
-        s = s.replace ( '\"', '&quot;' )
+        s = s.replace ( '\\"', '&quot;' )
         result = '';    
-        tokens = s.split( '"' )
+        tokens = s.split( '"' )        
         for k, v in enumerate( tokens ):
             # replace spaces in every odd token
             if ( k & 1 ) == 1 : tokens[k] = v.replace( ' ', '&nbsp;' )

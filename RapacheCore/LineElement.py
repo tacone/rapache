@@ -106,7 +106,7 @@ class Options (ListWrapper):
         #TODO: remove this
         self.parser = ApacheConf.LineParser()
     def _get_list( self ):    
-        options = self.parser.parse_options( self.parent.value )
+        options = self.parser.parse_options( self.parent.get_raw_value() )
         if not isinstance( options, list ): return []
         return options
     def _set_list(self, options):
@@ -114,7 +114,7 @@ class Options (ListWrapper):
         sanitized = []
         for o in options:
             if isinstance( o,  int ): o = str(o)
-            sanitized.append(o)
+            sanitized.append( self.parser.value_escape(o) )
         self.parent.set_raw_value(" ".join( sanitized ))
 class Line (object):
     parser = None
@@ -140,9 +140,9 @@ class Line (object):
     def _get_value(self):
         if self.element == None : return None
         #oh, by the way, should be the only element of the list
-        return self.element.get('value')
+        return self.parser.value_unescape( self.get_raw_value() )
     def _set_value(self, value):
-        return self.set_raw_value(value)
+        return self.set_raw_value( self.parser.value_escape( value ))
     value = property ( _get_value, _set_value )
     def _get_key(self): 
         if self.element == None : return None
@@ -159,6 +159,8 @@ class Line (object):
     def _set_opts(self, value): 
         return self._opts.set( value )
     opts = property ( _get_opts, _set_opts )
+    def get_raw_value(self):
+        return self.element.get('value')
     def set_raw_value(self, value):  
         if value != None:
             self.element.attrib['value'] = value
@@ -217,6 +219,8 @@ class Line (object):
         #remove traling spaces and assure a newline at the end of the file.
         #line = line.rstrip() + "\n"
         return line.rstrip()+"\n"
+    def get_as_str(self):
+        return self._compile( self.element )
     def get_as_list(self):
         return [self._compile( self.element )]
     def dump_xml(self):

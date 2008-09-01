@@ -7,6 +7,7 @@ import re
 class FakeLine(object):
     value = None
     def set_raw_value(self, value): self.value = value
+    def get_raw_value(self): return self.value
 
 class LineTest ( unittest.TestCase ):
     def test_init(self):

@@ -71,6 +71,12 @@ class LineTest( unittest.TestCase ):
         
         l.parse('ServerAlias www.example.com beta.example.com ')
         self.assertEqual(list(l.opts),['www.example.com','beta.example.com'])
+        
+        l.parse('AuthName "Enter your password"')
+        self.assertEqual( l.value,  "Enter your password")
+        
+        l.parse('AuthName "Enter your \"password\""')
+        self.assertEqual( l.value,  'Enter your "password"')
     def test_changed(self):
         c = etree.Element("line")
         c.set('directive','DocumentRoot')
@@ -87,5 +93,35 @@ class LineTest( unittest.TestCase ):
         self.assertFalse ( l.changed() )
         l.key = 'ServerAlias'
         self.assertTrue ( l.changed() )
+        
+    def test_get_set_value(self):        
+        l = Line()
+        l.key = 'DocumentRoot'
+        l.value = '/var/www' 
+        self.assertEqual( l.get_as_str(),  'DocumentRoot /var/www\n')
+        self.assertEqual( l.value,  '/var/www' )        
+        self.assertEqual( list(l.opts),  [ '/var/www' ])
+        # let's test quoting
+        l = Line()
+        l.key = 'AuthName'
+        l.value = 'Enter your password' 
+        self.assertEqual( l.get_as_str(),  'AuthName "Enter your password"\n')
+        self.assertEqual( l.value,  'Enter your password' )        
+        self.assertEqual( list(l.opts),  [ 'Enter your password' ])
+        #multiple options
+        l = Line()
+        l.key = 'ServerAlias'
+        l.opts =  'example.org',  'example.net'
+        self.assertEqual( l.get_as_str(),  'ServerAlias example.org example.net\n')
+        self.assertEqual( l.value,  'example.org example.net' )        
+        self.assertEqual( list(l.opts),  [ 'example.org',  'example.net' ] )
+        
+        #multiple with quoted string
+        l = Line()
+        l.key = 'ErrorDocument'
+        l.opts =  '404',  'Not a good idea'
+        self.assertEqual( l.get_as_str(),  'ErrorDocument 404 "Not a good idea"\n')
+        self.assertEqual( l.value,  '404 "Not a good idea"' )        
+        self.assertEqual( list(l.opts),  ['404',  'Not a good idea' ] )
 if __name__ == "__main__":
     unittest.main()  
