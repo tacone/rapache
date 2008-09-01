@@ -34,6 +34,8 @@ import os
 import re
 import threading
 import time
+import copy
+
 
 from RapacheGtk.VirtualHostGui import VirtualHostWindow
 from RapacheGtk.ModuleGui import ModuleWindow
@@ -242,8 +244,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.refresh_config_test()
         
     def edit_button_clicked(self, widget, notused = None, notused2 = None):         
-        name = self.vhosts_treeview.get_selected_line()
-        self.open_edit_vhost_window( name )
+        vhost = self.vhosts_treeview.get_selected_line()
+        self.open_edit_vhost_window( copy.deepcopy(vhost) )
 
         
     def open_edit_vhost_window(self, name):
@@ -377,7 +379,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.xml.get_widget( 'edit_button' ).set_sensitive( editable )
             surfable =  self.get_current_vhost().get_server_name() != None
             self.xml.get_widget( 'surf_this_button' ).set_sensitive( surfable )
-            browsable =  self.get_current_vhost.get_document_root() != None
+            browsable =  self.get_current_vhost().config.DocumentRoot.value != None
             self.xml.get_widget( 'browse_button' ).set_sensitive( browsable )
     def module_row_selected( self, widget):
         name = self.modules_treeview.get_selected_line()
@@ -413,12 +415,13 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             server_name = self.get_current_vhost().get_server_name()
             
         protocol = "http"    
-        if str(self.vhosts_treeview.items[ name ].get_value("port", "80")) == "443":
-            protocol = "https"
+        #FIXME: reimplement this when we have port methods again
+        #if str(self.vhosts_treeview.items[ name ].get_value("port", "80")) == "443":
+        #    protocol = "https"
             
         if ( server_name ): Desktop.open_url( protocol+"://" + server_name )
     def browse_this(self, widget):
-        document_root = self.get_current_vhost.get_document_root()
+        document_root = self.get_current_vhost().config.DocumentRoot.value
         Desktop.open_dir( document_root )
         
 

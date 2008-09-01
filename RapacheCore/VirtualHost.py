@@ -87,22 +87,24 @@ class VirtualHostModel():
 
     # IO Methods
     def load(self, name = False):  
-        try:
-        	self.__parser.load( self.get_source_filename() )
-        	self.config = self.__parser.virtualhost
-        	return True
-        except:
-             self.parsable = False
-             return False
+        #try:
+            self.__parser = Parser()
+            self.__parser.load( self.get_source_filename() )
+            self.config = self.__parser.virtualhost
+            return True
+        #except:
+        #     self.parsable = False
+        #     return False
              
     def load_from_string(self, content):
-        try:
-        	self.__parser.set_from_string( content )
-        	self.config = self.__parser.virtualhost
-        	return True
-        except:
-             self.parsable = False
-             return False
+        #try:
+        self.__parser = Parser()
+        self.__parser.set_from_str( content )
+        self.config = self.__parser.virtualhost
+        return True
+        #except:
+        #     self.parsable = False
+        #     return False
          
     def save(self, content=None):
         
@@ -170,10 +172,6 @@ class VirtualHostModel():
                     
         return True  
 
-    # Returns a label for displaying in UI
-    def get_display_name(self):
-        return self.get_value("ServerName", self.__name)
-
     def get_source ( self ):
         return Shell.command.read_file(self.get_source_filename())
         
@@ -240,8 +238,10 @@ class VirtualHostModel():
             return None
             
     def get_server_alias(self):
-        return self.config.ServerAlias
-            
+        try:
+            return self.config.ServerAlias.opts
+        except:
+            return []    
 
     def get_icon(self):
         # TODO: This MUST return a local path...
@@ -344,8 +344,8 @@ class VirtualHostModelOld():
     def load(self, name = False, plugin_manager = None):  
         parser = Parser()
         try:
-        	parser.load( self.get_source_filename() )
-        	return self.__load( parser, plugin_manager)
+            parser.load( self.get_source_filename() )
+            return self.__load( parser, plugin_manager)
         except VhostNotFound:
              self.parsable = False
              return False
