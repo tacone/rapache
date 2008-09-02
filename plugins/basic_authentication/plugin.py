@@ -47,9 +47,6 @@ class BasicAuthenticationPlugin(PluginBaseObject):
         
         self.users = Htpasswd()
         self.users_active = []
-        
-        print "NOTE: THIS WILL NOT WORK UNTIL WE CAN SET <Directory /path>"
-
     
     def treeview_users_toggled(self, cell, path):
         # toggle check box value

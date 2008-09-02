@@ -36,7 +36,7 @@ class PluginBaseObject():
         if self.module:
             module = ModuleModel(self.module)
             module.load()
-            print "STATUS : " + self.module + " - " + str( module.is_enabled())
+            #print "STATUS : " + self.module + " - " + str( module.is_enabled())
             return module.is_enabled()
         return True
         
