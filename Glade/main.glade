@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Thu Aug 28 16:52:13 2008 -->
+<!--Generated with glade3 3.4.5 on Tue Sep  2 02:15:44 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="MainWindow">
     <property name="width_request">500</property>
@@ -71,7 +71,6 @@
             </child>
             <child>
               <widget class="GtkMenuItem" id="menuitem_view">
-                <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="label" translatable="yes">_View</property>
                 <property name="use_underline">True</property>
@@ -184,7 +183,6 @@
             <property name="visible">True</property>
             <child>
               <widget class="GtkHBox" id="hbox9">
-                <property name="visible">True</property>
                 <child>
                   <widget class="GtkLabel" id="label9">
                     <property name="visible">True</property>
