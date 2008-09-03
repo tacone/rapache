@@ -304,9 +304,10 @@ class AdvancedVhostPlugin(PluginBaseObject):
         
     def update_treeview(self):
         icon_theme = gtk.icon_theme_get_default()
-        file_icon = icon_theme.load_icon(gtk.STOCK_DIALOG_INFO, 24, 0)
-        auth_icon = icon_theme.load_icon(gtk.STOCK_DIALOG_AUTHENTICATION, 24, 0)
-        cert_icon = icon_theme.load_icon(gtk.STOCK_DIALOG_WARNING, 24, 0)
+        #file_icon = icon_theme.load_icon(gtk.STOCK_DIALOG_INFO, 24, 0)
+        #auth_icon = icon_theme.load_icon(gtk.STOCK_DIALOG_AUTHENTICATION, 24, 0)
+        cert_icon = icon_theme.lookup_icon("stock_lock", 24, 0).load_icon() 
+        #cert_icon = icon_theme.load_icon(icon, 24, 0)
         self.treeview_requests_store = gtk.ListStore(bool, gtk.gdk.Pixbuf,str, str, str, str)
         self.treeview_requests.set_model(self.treeview_requests_store)
         
@@ -328,13 +329,13 @@ class AdvancedVhostPlugin(PluginBaseObject):
                 if cert.has_expired() : expired = "<b>Expired " + expired +"</b>"
 
                 if full_path == self.active_cert:
-                    self.treeview_requests_store.append((True, auth_icon, "<b>Certificate</b>", "<b>" + cert.get_subject().commonName +"</b>",  "<b>" +expired +"</b>", full_path))     
+                    self.treeview_requests_store.append((True, cert_icon, "<b>Certificate</b>", "<b>" + cert.get_subject().commonName +"</b>",  "<b>" +expired +"</b>", full_path))     
                     select = self.treeview_requests.get_selection()
                     select.select_path(len(self.treeview_requests_store) - 1)
                     self.treeview_requests.scroll_to_cell(len(self.treeview_requests_store) - 1)
                     
                 else: 
-                    self.treeview_requests_store.append((False, auth_icon, "Certificate", cert.get_subject().commonName , expired, full_path))     
+                    self.treeview_requests_store.append((False, cert_icon, "Certificate", cert.get_subject().commonName , expired, full_path))     
             #if path.endswith(".pkey"):
             #    self.treeview_requests_store.append((auth_icon, "Key", path, path)) 
         """
