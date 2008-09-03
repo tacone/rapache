@@ -308,6 +308,7 @@ class LineParser:
         return self.change_raw_value( line, " ".join( options ))
 
     def value_escape ( self, value ):
+        if not value: return ''
         if ( value.find(' ') != -1 ):
             value = '"'+value.replace( '"', '\\"' )+'"'
         return value;

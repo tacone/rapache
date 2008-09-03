@@ -429,5 +429,9 @@ class ParserTest( unittest.TestCase ):
                 #print "-----> source dump"
                 #print p.get_source()
                 #print "-----> end source dump"
+    def test_recursive_search(self):
+        pass#p = Parser()
+        #p.load( self.defaultssl )
+        #self.assertEqual( len( p.rsearch( 'virtualhost' )),  1)
 if __name__ == "__main__":
     unittest.main()  
