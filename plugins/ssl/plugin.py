@@ -143,11 +143,12 @@ class AdvancedVhostPlugin(PluginBaseObject):
         column.set_attributes(cell, markup=4)
         self.treeview_requests.append_column(column)
 
-        wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "hbox_label")
-        
         self.spinbutton_port.set_value(443)
         
-        return table_ssl, wtree.get_widget("hbox_label")
+        icon_theme = gtk.icon_theme_get_default()
+        pixbuf = icon_theme.lookup_icon("stock_lock", 24, 0).load_icon()
+        
+        return table_ssl, "SSL", pixbuf
 
 
     def on_button_import_key_clicked(self, widget):

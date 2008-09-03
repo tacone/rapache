@@ -129,9 +129,6 @@ class BasicAuthenticationPlugin(PluginBaseObject):
         f = open( os.path.join(self.path, "basic_auth.glade") ,"r")
         self.glade_vhost_xml =  f.read()
         f.close()
-       
-        wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "hbox_security") 
-        hbox_security = wtree.get_widget("hbox_security")   
 
         wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "hbox_auth_basic")
         hbox_auth_basic = wtree.get_widget("hbox_auth_basic") 
@@ -171,8 +168,11 @@ class BasicAuthenticationPlugin(PluginBaseObject):
         
 
         self.update_users()
+        
+        icon_theme = gtk.icon_theme_get_default()
+        pixbuf = icon_theme.lookup_icon("gtk-dialog-authentication", 24, 0).load_icon()
 
-        return hbox_auth_basic, hbox_security
+        return hbox_auth_basic, "Basic Security", pixbuf
 
     # Customise the vhost properties window
     def load_vhost_properties(self, vhost):
