@@ -31,6 +31,7 @@ ALSO:
 import sys
 import re
 
+
 try:
      import pygtk
      pygtk.require("2.0")
@@ -52,12 +53,14 @@ from RapacheGtk import GuiUtils
 from EditDomainNameGui import EditDomainNameWindow
 import RapacheGtk.DesktopEnvironment as Desktop
 
-        
+class UnexpectedCase( Exception ):        
+    pass
+    
 class VirtualHostWindow:
     
     def __init__ ( self, parent = None):
            
-        self.vhost = None
+        
         self.parent = parent
         self.plugins = []
 
@@ -167,15 +170,15 @@ class VirtualHostWindow:
         self.window.add_accel_group(self.accel_group)
         
         self.button_save.add_accelerator("clicked", self.accel_group, 13, 0, 0)
-    
-    
+
+        self.vhost =  VirtualHostModel( "")
+        
     def on_treeview_menu_cursor_changed(self, widget):
         model, iter =  self.treeview_menu.get_selection().get_selected()
         if not iter: return
         page_number = model.get_value(iter, 2)
         self.notebook.set_current_page(page_number)  
- 
-        
+
     def on_notebook_switch_page(self, notebook, page, page_num):
        
         if self.__previous_active_tab == notebook.get_n_pages() - 1:
@@ -221,16 +224,20 @@ class VirtualHostWindow:
         # Load UI Plugins
         if self.vhost:
             site = self.vhost
-        else:
-            # load default  
-            site = VirtualHostModel( "", self.parent.plugin_manager)
+        else:        
+            #this should never happen since now we initialize an empty VirtualHostModel
+            #inside __init__
+            raise UnexpectedCase,  "Internal error, existing VirtualHostModel expected"
+            pass
+            
 
         self.window.show()   
                 
         gtk.main()
 
     def load (self, vhost ):
-        self.vhost = vhost
+        if vhost:
+            self.vhost = vhost
         self.__load()
         
         for file in self.vhost.get_backup_files():
@@ -257,7 +264,8 @@ class VirtualHostWindow:
         
     def __load(self):
 
-        server_name = self.vhost.get_server_name()
+        
+        server_name = self.vhost.config.ServerName.value
         
         self.window.set_title("VirtualHost Editor - " + server_name )
 
