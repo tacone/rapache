@@ -56,11 +56,11 @@ class BasicAuthenticationPlugin(PluginBaseObject):
             
     def on_toolbutton_user_add_clicked(self, widget):
         uc = UserCredentials(self.path)
-        username, password = uc.run()
+        result= uc.run()
         
-        if username:
-            self.users.update( username, password )
-            self.users_active.append( username )
+        if result:
+            self.users.update( result[0], result[1] )
+            self.users_active.append( result[0] )
             self.update_users()
         
         return       
@@ -73,11 +73,11 @@ class BasicAuthenticationPlugin(PluginBaseObject):
 
         uc = UserCredentials(self.path)
         uc.load( username )
-        username, password = uc.run()
+        result = uc.run()
         
-        if username and password:
-            self.users.update( username, password )
-            self.users_active.append( username )
+        if result:
+            self.users.update( result[0], result[1] )
+            self.users_active.append( result[0] )
             self.update_users()
 
         return         
@@ -104,11 +104,11 @@ class BasicAuthenticationPlugin(PluginBaseObject):
 
         uc = UserCredentials(self.path)
         uc.load( username )
-        username, password = uc.run()
+        result = uc.run()
         
-        if username:
-            self.users.update( username, password )
-            self.users_active.append( username )
+        if result:
+            self.users.update( result[0], result[1] )
+            self.users_active.append( result[0] )
             self.update_users()
         
         
@@ -199,7 +199,8 @@ class BasicAuthenticationPlugin(PluginBaseObject):
                 
             if d.Require:
                 self.users_active = list(d.Require.opts)[1:]
-
+                self.update_users()
+                
         return True, None
 
 

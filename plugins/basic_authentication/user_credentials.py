@@ -44,7 +44,7 @@ class UserCredentials:
         
         self.entry_username = wtree.get_widget("entry_username")
         self.entry_password = wtree.get_widget("entry_password")
-        self.entry_password = wtree.get_widget("entry_password")
+        self.entry_password2 = wtree.get_widget("entry_password2")
 
         signals = {
            "on_button_apply_clicked"        : self.on_button_apply_clicked,
@@ -57,7 +57,24 @@ class UserCredentials:
         self.return_value = None
         
     def on_button_apply_clicked(self, widget):
-        self.return_value = gtk.RESPONSE_OK
+        error_text = None
+        # check password etc
+        if len(self.entry_username.get_text().strip()) < 1:
+            error_text = "Sorry your username must be at least 1 character"
+        
+        elif self.entry_password.get_text() != self.entry_password2.get_text():
+            error_text = "Sorry your passwords do not match"
+        
+        elif len(self.entry_password.get_text()) < 4:
+            error_text = "Sorry your password should be at least 4 characters"
+
+        if error_text:
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK, message_format=error_text) 
+            md.run()
+            md.destroy()
+            return
+
+        self.return_value = self.entry_username.get_text().strip(), self.entry_password.get_text()
         self.window.destroy()
         return
         
@@ -67,8 +84,9 @@ class UserCredentials:
 
     def run(self):
         self.window.show()   
+        
         gtk.main()
-        return self.entry_username.get_text().strip(), self.entry_password.get_text()
+        return self.return_value
    
     def load (self, username):
         self.entry_username.set_text( username) 

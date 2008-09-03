@@ -140,16 +140,20 @@ class VirtualHostWindow:
         
         
     def on_notebook_switch_page(self, notebook, page, page_num):
-        self.update(self.__previous_active_tab)   
+       
+        if self.__previous_active_tab == notebook.get_n_pages() - 1:
+            # was on the edit tab update vhost
+            self.reload()
+        else:
+            self.update()
+
         if page_num == notebook.get_n_pages() - 1:
+            # open edit tab update content
             buf = self.text_view_vhost_source.get_buffer()
             text = self.vhost.get_source_generated()
-
             buf.set_text( text )
             buf.set_modified(False) 
-        else:
-            self.reload()
-        
+
         self.__previous_active_tab = page_num
 
     def on_linkbutton_documentation_clicked(self, widget):
@@ -184,7 +188,8 @@ class VirtualHostWindow:
             # load default  
             site = VirtualHostModel( "", self.parent.plugin_manager)
 
-        self.window.show()           
+        self.window.show()   
+                
         gtk.main()
 
     def load (self, vhost ):
@@ -216,6 +221,9 @@ class VirtualHostWindow:
     def __load(self):
 
         server_name = self.vhost.get_server_name()
+        
+        self.window.set_title("VirtualHost Editor - " + server_name )
+
         if ( server_name != None ):
             self.entry_domain.set_text( server_name )
         document_root = self.vhost.get_document_root()
@@ -249,10 +257,6 @@ class VirtualHostWindow:
             self.entry_location.set_text( "/var/www/%s" % (domain +"/httpdocs" ))
         if force_domain and not domain:
             self.entry_location.set_text("")
-
-        # auto create a www entry
-        #if not force_domain and domain and len(self.treeview_domain_store) == 0 and not domain.startswith("www"):
-        #    self.treeview_domain_store.append(("www." + domain, None))
 
     def on_entry_domain_focus_out_event(self, widget, opt):
         self.set_default_values_from_domain()
@@ -323,6 +327,11 @@ class VirtualHostWindow:
         return  
             
     def on_button_save_clicked(self, widget):
+        
+        # Save editor content?
+        if self.__previous_active_tab == self.notebook.get_n_pages() - 1:
+            self.reload()
+        
         res = self.update()
         
         if not res:
@@ -331,7 +340,7 @@ class VirtualHostWindow:
             md.destroy()
             if result != gtk.RESPONSE_OK:
                 return
-        
+
         # Save plugins
         if self.plugins:
             for plugin in self.plugins:
@@ -370,6 +379,7 @@ class VirtualHostWindow:
             self.set_default_values_from_domain( True )
         
         self.vhost.config.ServerName.value = self.entry_domain.get_text()
+        self.window.set_title("VirtualHost Editor - " + self.vhost.get_server_name() )
         
         if self.vhost.config.DocumentRoot:
             old_document_root = self.vhost.config.DocumentRoot.value
