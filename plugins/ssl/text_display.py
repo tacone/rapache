@@ -109,6 +109,7 @@ class TextDisplayWindow:
 
     def run(self):
         self.window.show()   
+        
         gtk.main()
         return self.return_value
    

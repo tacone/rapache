@@ -158,6 +158,14 @@ class AdvancedVhostPlugin(PluginBaseObject):
             text = f.read()
             f.close()
             
+            try:
+                crypto.load_privatekey(crypto.FILETYPE_PEM, text) 
+            except:
+                md = gtk.MessageDialog(None, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK, message_format="Could not import does not appear to be a valid key!") 
+                md.run()
+                md.destroy()
+                return
+                   
             key_path = os.path.join("/etc/ssl/private/", os.path.basename(path))
             
             if not Shell.command.sudo_exists(key_path):
@@ -180,10 +188,19 @@ class AdvancedVhostPlugin(PluginBaseObject):
             f = open(path, "r")
             text = f.read()
             f.close()
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, text) 
+            
+            cert = None
+            try:
+                cert = crypto.load_certificate(crypto.FILETYPE_PEM, text) 
+            except:
+                md = gtk.MessageDialog(None, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK, message_format="Could not import does not appear to be a valid certificate!") 
+                md.run()
+                md.destroy()
+                return
+                
             timestamp = time.strftime("%y-%m-%d %H:%M:%S", time.localtime() )
 
-            cert_path = os.path.join("/etc/apache2/ssl/", cert.get_subject().commonName + ' ' + timestamp +'.pem')
+            cert_path = os.path.join("/etc/apache2/ssl/", cert.get_subject().commonName + ' ' + timestamp +'.crt')
             
             Shell.command.write_file(cert_path, text)
             
