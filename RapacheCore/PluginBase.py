@@ -67,7 +67,7 @@ class PluginBaseObject():
 
     # Init the vhost propertis window
     def init_vhost_properties(self, notebook):
-        return True
+        return None, None, None
 
     # Tab recives focus load properties from vhost object
     def load_vhost_properties(self,  vhost):

@@ -213,13 +213,15 @@ class ErrorsTreeView ( ConfFilesTreeView ):
         self.column_checkbox.set_visible( True )        
         self.column_description.get_cell_renderers()[0].set_property('wrap-width', 500)  
         self.column_checkbox.get_cell_renderers()[0].set_property( 'activatable', False )
-    def load(self, apache):    
+    def load(self, apache):  
+        count = -1 
         self.items = {}
         site_template = "<b><big>%s</big></b>"        
         lstore = self._reset_model()
         
         res, text = apache.test_config()
         if not res:       
+            count = count + 1
             iter = lstore.append()
             markup = site_template % "Apache Config Error"
             
@@ -230,7 +232,7 @@ class ErrorsTreeView ( ConfFilesTreeView ):
                 COLUMN_ICON, pixbuf,
                 COLUMN_FIXED, False,
                 COLUMN_SEVERITY, "Apache Config Error",
-                COLUMN_MARKUP, markup + "\n" + text +"\n<small><i>You must resolve this error to restart apache</i></small>"
+                COLUMN_MARKUP, markup + "\n" + text +"\n<small><i>You may need to resolve this error before starting apache</i></small>"
                 )
         
         data = []  
@@ -250,6 +252,9 @@ class ErrorsTreeView ( ConfFilesTreeView ):
             
             if ( normalizable == False ):
                 markup = markup + " CANNOT FIX"
+            else:
+                count = count + 1
+                
             iter = lstore.append()
             
             pixbuf = self.render_icon(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_LARGE_TOOLBAR)
@@ -260,9 +265,10 @@ class ErrorsTreeView ( ConfFilesTreeView ):
                 COLUMN_SEVERITY, site.get_server_name(),
                 COLUMN_MARKUP, markup +  "\nThe virtual host file is only present inside /etc/apache/sites-enabled.\n<small><i>You must normalize in order to manage this host</i>.</small>"
                 )
+            
          
 
-            
+        return count     
                 
     def toggled_callback(self, *args, **kwargs):
         pass

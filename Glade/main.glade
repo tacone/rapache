@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Sep  2 02:15:44 2008 -->
+<!--Generated with glade3 3.4.5 on Wed Sep  3 15:18:41 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="MainWindow">
     <property name="width_request">500</property>
@@ -317,6 +317,80 @@ web server is restarted</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <child>
+                  <widget class="GtkVBox" id="vbox2">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkToolbar" id="toolbar6">
+                        <property name="visible">True</property>
+                        <property name="toolbar_style">GTK_TOOLBAR_BOTH_HORIZ</property>
+                        <child>
+                          <widget class="GtkToolButton" id="button_resolve_errors">
+                            <property name="visible">True</property>
+                            <property name="sensitive">False</property>
+                            <property name="is_important">True</property>
+                            <property name="label" translatable="yes">Resolve Errors</property>
+                            <property name="stock_id">gtk-apply</property>
+                          </widget>
+                          <packing>
+                            <property name="expand">False</property>
+                          </packing>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="GtkScrolledWindow" id="scrolledwindow1">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
+                        <child>
+                          <widget class="GtkViewport" id="viewport_errors">
+                            <property name="visible">True</property>
+                            <property name="resize_mode">GTK_RESIZE_QUEUE</property>
+                            <child>
+                              <placeholder/>
+                            </child>
+                          </widget>
+                        </child>
+                      </widget>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </widget>
+                </child>
+                <child>
+                  <widget class="GtkHBox" id="hbox3">
+                    <property name="visible">True</property>
+                    <child>
+                      <widget class="GtkImage" id="image5">
+                        <property name="visible">True</property>
+                        <property name="stock">gtk-dialog-warning</property>
+                      </widget>
+                    </child>
+                    <child>
+                      <widget class="GtkLabel" id="label6">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">Errors</property>
+                      </widget>
+                      <packing>
+                        <property name="padding">5</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </widget>
+                  <packing>
+                    <property name="type">tab</property>
+                    <property name="tab_fill">False</property>
+                  </packing>
+                </child>
+                <child>
                   <widget class="GtkVBox" id="vbox4">
                     <property name="visible">True</property>
                     <child>
@@ -442,6 +516,9 @@ web server is restarted</property>
                       </packing>
                     </child>
                   </widget>
+                  <packing>
+                    <property name="position">1</property>
+                  </packing>
                 </child>
                 <child>
                   <widget class="GtkHBox" id="hbox1">
@@ -465,6 +542,7 @@ web server is restarted</property>
                   </widget>
                   <packing>
                     <property name="type">tab</property>
+                    <property name="position">1</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
@@ -582,94 +660,7 @@ web server is restarted</property>
                   </widget>
                   <packing>
                     <property name="type">tab</property>
-                    <property name="position">1</property>
-                    <property name="tab_fill">False</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkVBox" id="vbox2">
-                    <property name="visible">True</property>
-                    <child>
-                      <widget class="GtkToolbar" id="toolbar6">
-                        <property name="visible">True</property>
-                        <property name="toolbar_style">GTK_TOOLBAR_BOTH_HORIZ</property>
-                        <child>
-                          <widget class="GtkToolButton" id="button_resolve_errors">
-                            <property name="visible">True</property>
-                            <property name="sensitive">False</property>
-                            <property name="is_important">True</property>
-                            <property name="label" translatable="yes">Resolve Errors</property>
-                            <property name="stock_id">gtk-apply</property>
-                          </widget>
-                          <packing>
-                            <property name="expand">False</property>
-                          </packing>
-                        </child>
-                      </widget>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <widget class="GtkScrolledWindow" id="scrolledwindow1">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>
-                        <child>
-                          <widget class="GtkViewport" id="viewport_errors">
-                            <property name="visible">True</property>
-                            <property name="resize_mode">GTK_RESIZE_QUEUE</property>
-                            <child>
-                              <placeholder/>
-                            </child>
-                          </widget>
-                        </child>
-                      </widget>
-                      <packing>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <placeholder/>
-                    </child>
-                  </widget>
-                  <packing>
                     <property name="position">2</property>
-                  </packing>
-                </child>
-                <child>
-                  <placeholder/>
-                  <packing>
-                    <property name="type">tab</property>
-                  </packing>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <widget class="GtkHBox" id="hbox3">
-                    <property name="visible">True</property>
-                    <child>
-                      <widget class="GtkImage" id="image5">
-                        <property name="visible">True</property>
-                        <property name="stock">gtk-dialog-warning</property>
-                      </widget>
-                    </child>
-                    <child>
-                      <widget class="GtkLabel" id="label6">
-                        <property name="visible">True</property>
-                        <property name="label" translatable="yes">Errors</property>
-                      </widget>
-                      <packing>
-                        <property name="padding">5</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                  </widget>
-                  <packing>
-                    <property name="type">tab</property>
-                    <property name="position">3</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>
@@ -806,7 +797,7 @@ web server is restarted</property>
                     </child>
                   </widget>
                   <packing>
-                    <property name="position">4</property>
+                    <property name="position">3</property>
                   </packing>
                 </child>
                 <child>
@@ -831,7 +822,7 @@ web server is restarted</property>
                   </widget>
                   <packing>
                     <property name="type">tab</property>
-                    <property name="position">4</property>
+                    <property name="position">3</property>
                     <property name="tab_fill">False</property>
                   </packing>
                 </child>

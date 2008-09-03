@@ -168,7 +168,22 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.xml.get_widget( 'label_log_path').set_text( path )
 
     def refresh_config_test(self): 
-        self.treeview_errors.load(self.apache)
+        total = self.treeview_errors.load(self.apache)
+        notebook = self.xml.get_widget( 'notebook' )
+        button_resolve_errors = self.xml.get_widget( 'button_resolve_errors' )
+        page = notebook.get_nth_page(0)
+        print total
+        if total > -1:
+            page.show()
+            notebook.set_current_page(0)  
+        else:
+            page.hide()
+        
+        # focus tab if we have fixable errors
+        if total > 0:  
+            button_resolve_errors.set_sensitive(True)
+        else:
+            button_resolve_errors.set_sensitive(False)
 
     def add_new_vhost_menu_item(self, menu_item):
         new_button = self.xml.get_widget( 'new_button')
