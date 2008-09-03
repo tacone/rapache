@@ -158,7 +158,7 @@ class VirtualHostWindow:
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
         		
-        store.append((icon_theme.load_icon(gtk.STOCK_EDIT, 24, 0), "Definition File", 0))  
+        store.append((icon_theme.load_icon(gtk.STOCK_EDIT, 24, 0), "Definition File", self.notebook.get_n_pages() - 1))  
         
         select = self.treeview_menu.get_selection()
         select.select_path(0)
