@@ -82,7 +82,11 @@ class VirtualHostModel():
         self.parsable = True
         self.enabled = self.is_enabled()
         self.hack_hosts = False
-        if not self.is_new:
+        if  self.is_new:
+            self.__parser = Parser()
+            self.__parser.set_from_str( VHOST_TEMPLATE )
+            self.config = self.__parser.virtualhost
+        else:
             self.load(None)
 
     # IO Methods
