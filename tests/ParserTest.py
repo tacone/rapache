@@ -430,8 +430,25 @@ class ParserTest( unittest.TestCase ):
                 #print p.get_source()
                 #print "-----> end source dump"
     def test_recursive_search(self):
-        pass#p = Parser()
-        #p.load( self.defaultssl )
-        #self.assertEqual( len( p.rsearch( 'virtualhost' )),  1)
+        p = Parser()
+        p.load( self.defaultssl )
+        self.assertEqual( len( p.rsearch( 'virtualhost' )),  1)
+        self.assertEqual( len( p.rsearch( 'directory' )),  5)
+        self.assertEqual( len( p.rsearch( 'nonex' )),  0)
+        try:
+            p.rsearch( 'notexisting' ).value = '/var/www'            
+            self.assertTrue(False) #exception should be thrown
+        except NotImplementedError:
+            pass
+        p = Parser()
+        p.load( self.errordocumentsconf)
+        self.assertEqual( len( p.rsearch( 'ErrorDocument' )),  23)
+        #testing in various contexts
+        p = Parser()
+        p.load( self.vhostconf)
+        self.assertEqual( len( p.rsearch( 'weird' )),  1)
+        self.assertEqual( len( p.virtualhost.rsearch( 'weird' )),  1)
+        self.assertEqual( len( p.virtualhost.weird.rsearch( 'weird' )),  0)
+        
 if __name__ == "__main__":
     unittest.main()  
