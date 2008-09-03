@@ -90,10 +90,10 @@ class AdvancedVhostPlugin(PluginBaseObject):
         column.set_attributes(cell, markup=0)
         self.treeview_default_document.append_column(column)
 
-        wtree = gtk.glade.xml_new_from_buffer(self.glade_vhost_xml, len(self.glade_vhost_xml), "hbox_tab") 
-        hbox_tab = wtree.get_widget("hbox_tab")  
+        icon_theme = gtk.icon_theme_get_default()
+        pixbuf = icon_theme.load_icon(gtk.STOCK_PROPERTIES, 24, 0)
  
-        return vbox_advanced_host, hbox_tab
+        return vbox_advanced_host, "Advanced", pixbuf
 
 
     def on_toolbutton_document_add_clicked(self, widget):

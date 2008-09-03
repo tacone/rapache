@@ -10,6 +10,9 @@ import re
 
 # if p.notexisting.documentroot:pass should not trigger exception
 
+class ReadOnly( Exception ):
+    pass
+
 class ListWrapper (object):
     
     def __init__(self):
@@ -366,6 +369,14 @@ class Parser(Line):
         """
     def __getattr__(self, name):
         return PlainSelection(self, name)
+    """def __setattr__(self, name,  value):
+        print dir(self)
+        if self.__dict__.has_key(name):
+            self.__dict__[name] = value
+        elif dir(self).has_key(name) and b.a
+        else:
+            raise ReadOnly,  "Selections are read-only. Were you trying to set "+name+".value maybe ?"
+    """
     def _get_lines(self):
         return TypeSelection(self,  'line')
     """Lines returns all the line elements"""

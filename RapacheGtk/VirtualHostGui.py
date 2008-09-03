@@ -83,7 +83,7 @@ class VirtualHostWindow:
         self.label_path = wtree.get_widget("label_path")
         self.message_text = wtree.get_widget("message_text")
         self.error_area = wtree.get_widget("error_area")
-        
+        self.treeview_menu = wtree.get_widget("treeview_menu")
         signals = {
             "on_toolbutton_domain_add_clicked"       : self.on_toolbutton_domain_add_clicked,
             "on_toolbutton_domain_edit_clicked"     : self.on_toolbutton_domain_edit_clicked,
@@ -96,7 +96,8 @@ class VirtualHostWindow:
             "on_button_location_clear_clicked"    : self.on_button_location_clear_clicked,
             "on_button_restore_version_clicked" : self.on_button_restore_version_clicked,
             "on_linkbutton_documentation_clicked" : self.on_linkbutton_documentation_clicked,
-            "on_notebook_switch_page" : self.on_notebook_switch_page
+            "on_notebook_switch_page" : self.on_notebook_switch_page,
+            "on_treeview_menu_cursor_changed"   :   self.on_treeview_menu_cursor_changed
         }
         wtree.signal_autoconnect(signals)
         # add on destroy to quit loop
@@ -122,28 +123,62 @@ class VirtualHostWindow:
         GuiUtils.style_as_tooltip( self.error_area )
         self.on_entry_domain_changed()
         
+        
+        #Setup Menu Tree
+        column = gtk.TreeViewColumn(('Icon'))
+        column.set_spacing(4)
+        cell = gtk.CellRendererPixbuf()
+        column.pack_start(cell, expand=False)
+        column.set_attributes(cell, pixbuf=0)
+        self.treeview_menu.append_column(column)
+        
+        column = gtk.TreeViewColumn(('Title'))
+        column.set_spacing(4)
+        cell = gtk.CellRendererText()
+        column.pack_start(cell, True)
+        column.set_attributes(cell, markup=1)
+        self.treeview_menu.append_column(column)
+        
+        store = gtk.ListStore(gtk.gdk.Pixbuf, str, int)
+        self.treeview_menu.set_model(store)  
+        
+        icon_theme = gtk.icon_theme_get_default()
+        store.append((icon_theme.lookup_icon("applications-internet", 24, 0).load_icon(), "Domain", 0))  
+        
         # init enabled plugins
         for plugin in self.parent.plugin_manager.plugins:
         	try:
         	    if plugin.is_enabled():      	        
-        	        content, tab_label = plugin.init_vhost_properties()
-        	        plugin._tab_number = self.notebook.insert_page(content, tab_label, self.notebook.get_n_pages() - 1)
+        	        content, title, pixbuf = plugin.init_vhost_properties()
+        	        tab_count = self.notebook.get_n_pages() - 1
+        	        plugin._tab_number = self.notebook.insert_page(content, gtk.Label(title), tab_count)
+        	        store.append((pixbuf, title, tab_count))
         	        content.show()
-        	        tab_label.show()
     	        	self.plugins.append(plugin)
         	except Exception:
         		traceback.print_exc(file=sys.stdout)
-
+        		
+        store.append((icon_theme.load_icon(gtk.STOCK_EDIT, 24, 0), "Definition File", self.notebook.get_n_pages() - 1))  
+        
+        select = self.treeview_menu.get_selection()
+        select.select_path(0)
+        
+        
         self.__previous_active_tab = 0
         
         self.accel_group = gtk.AccelGroup()
         self.window.add_accel_group(self.accel_group)
         
         self.button_save.add_accelerator("clicked", self.accel_group, 13, 0, 0)
+
+        self.vhost =  VirtualHostModel( "")
         
-        #initializing an empty model as default
-        self.vhost =  VirtualHostModel( "", self.parent.plugin_manager)
-        
+    def on_treeview_menu_cursor_changed(self, widget):
+        model, iter =  self.treeview_menu.get_selection().get_selected()
+        if not iter: return
+        page_number = model.get_value(iter, 2)
+        self.notebook.set_current_page(page_number)  
+
     def on_notebook_switch_page(self, notebook, page, page_num):
        
         if self.__previous_active_tab == notebook.get_n_pages() - 1:

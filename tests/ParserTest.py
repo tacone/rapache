@@ -449,6 +449,7 @@ class ParserTest( unittest.TestCase ):
         self.assertEqual( len( p.rsearch( 'weird' )),  1)
         self.assertEqual( len( p.virtualhost.rsearch( 'weird' )),  1)
         self.assertEqual( len( p.virtualhost.weird.rsearch( 'weird' )),  0)
-        
+    def test_readonly_properties(self):   
+        pass
 if __name__ == "__main__":
     unittest.main()  
