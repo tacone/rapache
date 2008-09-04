@@ -259,14 +259,14 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.refresh_config_test()
         
     def edit_button_clicked(self, widget, notused = None, notused2 = None):         
-        vhost = self.vhosts_treeview.get_selected_line()
-        self.open_edit_vhost_window( copy.deepcopy(vhost) )
+        name = self.vhosts_treeview.get_selected_line()
+        self.open_edit_vhost_window( VirtualHostModel( name ) )
 
         
-    def open_edit_vhost_window(self, name):
-        if ( self.is_vhost_editable( name ) == False ): return False
+    def open_edit_vhost_window(self, vhost):
+        if not vhost.is_editable(): return False
         new_vhost_window = VirtualHostWindow ( self )
-        new_vhost_window.load( self.get_current_vhost() )
+        new_vhost_window.load( vhost )
         new_vhost_window.run()    
         self.refresh_config_test()
         
@@ -383,19 +383,23 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             editable = mod.data[ 'configurable' ]
         return editable
     def row_selected( self, widget ):
-        name = self.vhosts_treeview.get_selected_line()
-        if ( name == None ):
+        vhost = self.get_current_vhost()
+        if not vhost:
             self.xml.get_widget( 'delete_button' ).set_sensitive( False )
             self.xml.get_widget( 'edit_button' ).set_sensitive( False )
             self.xml.get_widget( 'surf_this_button' ).set_sensitive( False )
         else:
-            editable = self.is_vhost_editable( name )
+            
+            editable = vhost.is_editable()
             self.xml.get_widget( 'delete_button' ).set_sensitive( editable )
             self.xml.get_widget( 'edit_button' ).set_sensitive( editable )
-            surfable =  self.get_current_vhost().get_server_name() != None
-            self.xml.get_widget( 'surf_this_button' ).set_sensitive( surfable )
-            browsable =  self.get_current_vhost().config.DocumentRoot.value != None
+            
+            #surfable =  self.get_current_vhost().get_server_name() != None
+            self.xml.get_widget( 'surf_this_button' ).set_sensitive( True )
+            
+            browsable = vhost.get_document_root() != None
             self.xml.get_widget( 'browse_button' ).set_sensitive( browsable )
+            
     def module_row_selected( self, widget):
         name = self.modules_treeview.get_selected_line()
         editable = self.is_module_editable(name)

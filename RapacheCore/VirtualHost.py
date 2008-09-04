@@ -88,6 +88,7 @@ class VirtualHostModel():
             self.config = self.__parser.virtualhost
         else:
             self.load(None)
+            self.parsable = True
 
     # IO Methods
     def load(self, name = False):  
@@ -95,6 +96,7 @@ class VirtualHostModel():
             self.__parser = Parser()
             self.__parser.load( self.get_source_filename() )
             self.config = self.__parser.virtualhost
+
             return True
         #except:
         #     self.parsable = False
@@ -196,6 +198,12 @@ class VirtualHostModel():
             if ( self.is_enabled() ): 
                 self.toggle( False )
             Shell.command.sudo_execute( [ 'rm', self.get_source_filename() ])
+
+    def is_default( self ):
+        return self.__name == "default"
+
+    def is_editable( self ):
+        return self.parsable
 
     def is_enabled ( self ):
         orig = self.get_source_filename()

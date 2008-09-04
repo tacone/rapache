@@ -63,6 +63,7 @@ class VirtualHostWindow:
         
         self.parent = parent
         self.plugins = []
+        self.vhost = None
 
         gladefile = os.path.join(Configuration.GLADEPATH, "edit_vhost.glade")
         wtree = gtk.glade.XML(gladefile)
@@ -250,6 +251,8 @@ class VirtualHostWindow:
 
         buf.set_text( text )
         buf.set_modified(False) 
+        
+        self.on_entry_domain_changed()
          
     def reload(self):
     
@@ -264,13 +267,15 @@ class VirtualHostWindow:
         
     def __load(self):
 
-        
-        server_name = self.vhost.config.ServerName.value
-        
+        server_name = self.vhost.get_server_name()
         self.window.set_title("VirtualHost Editor - " + server_name )
 
-        if ( server_name != None ):
-            self.entry_domain.set_text( server_name )
+        if not self.vhost.is_default():
+            if ( server_name != None ):
+                self.entry_domain.set_text( server_name )
+        else:
+            self.entry_domain.set_sensitive(False)
+            
         document_root = self.vhost.get_document_root()
         if ( document_root != None ):
             self.entry_location.set_text( document_root )
@@ -309,10 +314,8 @@ class VirtualHostWindow:
     def on_entry_domain_changed(self, unused_widget = None):
         widget = self.entry_domain
         name = widget.get_text()
-        if ( valid_domain_name( name ) ):
+        if valid_domain_name( name ) or (self.vhost and self.vhost.is_default()):
             self.button_save.set_sensitive(True);
-            #if self.create_new :
-            #    self.xml.get_widget( 'default_folder' ).set_text( '/var/www/'+name+'/httpdocs' )
         else:
             self.button_save.set_sensitive(False); 
     
@@ -423,7 +426,9 @@ class VirtualHostWindow:
         if self.entry_location.get_text() == "" and self.vhost.is_new:
             self.set_default_values_from_domain( True )
         
-        self.vhost.config.ServerName.value = self.entry_domain.get_text()
+        if not self.vhost.is_default():
+            self.vhost.config.ServerName.value = self.entry_domain.get_text()
+            
         self.window.set_title("VirtualHost Editor - " + self.vhost.get_server_name() )
         
         if self.vhost.config.DocumentRoot:
@@ -435,8 +440,12 @@ class VirtualHostWindow:
                     d.value = self.entry_location.get_text()
         self.vhost.config.DocumentRoot.value = self.entry_location.get_text()
 
-        self.vhost.config.ServerAlias.opts = self.get_server_aliases_list()
-        
+        aliases = self.get_server_aliases_list()
+        if len(aliases) > 0:
+            self.vhost.config.ServerAlias.opts = self.get_server_aliases_list()
+        elif self.vhost.config.ServerAlias:
+            del self.vhost.config.ServerAlias
+             
         self.hack_hosts = self.checkbutton_hosts.get_active()      
         
 	    # Update plugins
