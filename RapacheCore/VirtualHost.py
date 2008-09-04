@@ -46,11 +46,14 @@ def valid_domain_name ( name ):
 
 def is_denormalized_vhost ( fname ):
     try:   
+        print "---> checking ", fname
         flink = Shell.command.readlink( os.path.join(Configuration.SITES_ENABLED_DIR, fname))
         flink = os.path.join(os.path.dirname( Configuration.SITES_AVAILABLE_DIR ), flink)                        
         #no exceptions ? Means it's a link
+        print "link !"
         return True
     except:
+        print "not a link !"
         return False
     return False
 def is_not_normalizable( fname):
@@ -181,7 +184,9 @@ class VirtualHostModel():
         
     def get_source_generated( self ):
         return self.__parser.get_as_str()
-        
+     
+    def get_name(self):
+        return self.__name
     def get_source_filename(self):
          return os.path.join(Configuration.SITES_AVAILABLE_DIR, self.__name)
 
