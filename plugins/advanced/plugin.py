@@ -70,7 +70,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
         self.combobox_log_level = wtree.get_widget("combobox_log_level")
         self.checkbutton_server_signature = wtree.get_widget("checkbutton_server_signature")
         self.treeview_default_document = wtree.get_widget("treeview_default_document")
-
+        self.combobox_directory = wtree.get_widget("combobox_directory")
         
         signals = {
            "on_toolbutton_document_add_clicked" : self.on_toolbutton_document_add_clicked,
@@ -86,7 +86,8 @@ class AdvancedVhostPlugin(PluginBaseObject):
         column.pack_start(cell, True)
         column.set_attributes(cell, markup=0)
         self.treeview_default_document.append_column(column)
-
+        self.combobox_directory.set_active(0)
+        
         icon_theme = gtk.icon_theme_get_default()
         pixbuf = icon_theme.load_icon(gtk.STOCK_PROPERTIES, 24, 0)
  
@@ -128,6 +129,17 @@ class AdvancedVhostPlugin(PluginBaseObject):
             self.checkbutton_server_signature.set_active(True)
         if vhost.config.DirectoryIndex:
             self.documents = list(vhost.config.DirectoryIndex.opts)
+            
+            
+        ds = vhost.config.Directory.search(  [vhost.get_document_root()]  )
+        if len( ds ) > 0:
+            d = ds[0]
+            if d.Options:
+                opts = list(d.Options.opts)
+                if "Indexes" in opts or "+Indexs" in opts:
+                    self.combobox_directory.set_active(1)
+                else:
+                    self.combobox_directory.set_active(2)
 
         self.update_tree()
         return
@@ -154,6 +166,26 @@ class AdvancedVhostPlugin(PluginBaseObject):
         
         if len(self.documents) == 0:
             del vhost.config.DirectoryIndex
+
+        ds = vhost.config.Directory.search(  [vhost.get_document_root()]  )
+        d = None
+        if len(ds) == 0:
+            d = vhost.config.sections.create("Directory", vhost.get_document_root())
+        else:
+            d = ds[0]
+            opts = []
+            if d.Options:
+                opts = list(d.Options.opts)
+                if "Indexes" in opts: opts.remove("Indexes")
+                if "+Indexes" in opts: opts.remove("+Indexes")
+                if "-Indexes" in opts: opts.remove("-Indexes")
+                
+            if self.combobox_directory.get_active() == 1:
+                opts.append("Indexes")
+            elif self.combobox_directory.get_active() == 2:
+                opts.append("-Indexes")
+
+            d.Options.opts = opts
 
         server_admin = self.entry_admin_email.get_text()
         return True, None

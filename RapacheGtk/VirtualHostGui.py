@@ -273,7 +273,7 @@ class VirtualHostWindow:
         if not self.vhost.is_default():
             if ( server_name != None ):
                 self.entry_domain.set_text( server_name )
-        else:
+        elif self.vhost.config.ServerName:
             self.entry_domain.set_sensitive(False)
             
         document_root = self.vhost.get_document_root()
@@ -426,8 +426,11 @@ class VirtualHostWindow:
         if self.entry_location.get_text() == "" and self.vhost.is_new:
             self.set_default_values_from_domain( True )
         
-        if not self.vhost.is_default():
+        #if not self.vhost.is_default():
+        if self.entry_domain.get_text():
             self.vhost.config.ServerName.value = self.entry_domain.get_text()
+        elif self.vhost.config.ServerName:
+            del self.vhost.config.ServerName 
             
         self.window.set_title("VirtualHost Editor - " + self.vhost.get_server_name() )
         
