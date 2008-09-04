@@ -269,6 +269,7 @@ class VirtualHostWindow:
 
         server_name = self.vhost.get_server_name()
         self.window.set_title("VirtualHost Editor - " + server_name )
+        self.window.set_icon_from_file(self.vhost.get_icon())
 
         if not self.vhost.is_default():
             if ( server_name != None ):
