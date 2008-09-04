@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Wed Sep  3 15:18:41 2008 -->
+<!--Generated with glade3 3.4.5 on Wed Sep  3 16:00:28 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="MainWindow">
     <property name="width_request">500</property>
@@ -764,7 +764,6 @@ web server is restarted</property>
                                 <property name="xalign">1</property>
                                 <child>
                                   <widget class="GtkLinkButton" id="linkbutton_documentation">
-                                    <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
                                     <property name="label" translatable="yes">virtualhost documentation</property>

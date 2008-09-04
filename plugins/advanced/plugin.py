@@ -40,9 +40,6 @@ class AdvancedVhostPlugin(PluginBaseObject):
         # module this plugin works with
         self.module = ""
         
-        # Define what additional config should be read from vhost file
-        self.vhosts_config = { "ServerAdmin" : 0, "LogLevel" : 0, "ErrorLog" : 0, "ServerSignature" : 0 } # 0 value | 1 options
-        
         # Controls
         self.entry_admin_email = None
         self.entry_log_location = None

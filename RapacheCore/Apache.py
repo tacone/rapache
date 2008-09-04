@@ -44,7 +44,8 @@ class Apache2():
         return
         
     def stop(self):
-        Shell.command.sudo_execute(["apache2ctl", "-k", "graceful"])
+        #Shell.command.sudo_execute(["apache2ctl", "-k", "graceful"])
+        Shell.command.sudo_execute(["apache2ctl", "stop"])
         return
        
     def restart(self):

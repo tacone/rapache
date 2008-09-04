@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Wed Sep  3 14:53:08 2008 -->
+<!--Generated with glade3 3.4.5 on Wed Sep  3 16:34:16 2008 -->
 <glade-interface>
   <widget class="GtkDialog" id="dialog_edit_vhost">
     <property name="border_width">5</property>
@@ -478,9 +478,21 @@
                           </packing>
                         </child>
                         <child>
-                          <widget class="GtkLabel" id="label_path">
+                          <widget class="GtkHBox" id="hbox2">
                             <property name="visible">True</property>
-                            <property name="selectable">True</property>
+                            <child>
+                              <widget class="GtkLabel" id="label_path">
+                                <property name="visible">True</property>
+                                <property name="selectable">True</property>
+                              </widget>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">False</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
                           </widget>
                           <packing>
                             <property name="position">1</property>

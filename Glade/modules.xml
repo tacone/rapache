@@ -147,8 +147,8 @@
 	<module name='mod_lua'>Module support LUA Script or html embbed LUA</module>
 	<module name='mod_memcached_cache'>mod_cache provider module for memcached storage</module>
 	<module name='mod_mldap'></module>
-	<module name='mod_mono'>module ASP.NET for Apache</module>
-	<module name='mod_mono'>Runs ASP.NET pages on Unix with Apache and Mono</module>
+	<module name='mod_mono'>FOR ADVANCED USERS : run ASP.NET pages with Mono, requires manual setup</module>
+	<module name='mod_mono_auto'>RECOMMENDED : run ASP.NET pages with Mono</module>
 	<module name='mod_murka'>xml/xsl based web publishing environment</module>
 	<module name='mod_oai'>Open Archives Initiative Protocol for Metadata Harvesting (OAI-PMH) support</module>
 	<module name='mod_pgheader'>Replaces body tags with headers/footers</module>
@@ -204,7 +204,6 @@
 	<module name='mod_xsendfile   '>Serves alternative content by processing X-SENDFILE headers.</module>
 	<module name='mod_xslt'>A Filter to parse xml with an xsl</module>
 	<module name='mod_zrkadlo'>A database-backed mirror redirector</module>
-	<module name='mon_mono'>Running .Net framework in cross-platform</module>
 	<module name='vdbh_SQLite'>virtual host from SQLite3</module>
 	<module name='Vhost Limit Module'>Allow to specify the max clients, per virtual host</module>
 	<module name='xmlns_esi'>Parser for Edge Side Includes</module>

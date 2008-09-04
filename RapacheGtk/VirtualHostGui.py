@@ -243,7 +243,7 @@ class VirtualHostWindow:
         for file in self.vhost.get_backup_files():
             self.combobox_vhost_backups.append_text("Backup " + file[0][-21:-4])
 
-        self.label_path.set_text("File : " + self.vhost.get_source_filename() ) 
+        self.label_path.set_text( self.vhost.get_source_filename() ) 
         
         buf = self.text_view_vhost_source.get_buffer()
         text = self.vhost.get_source_generated()
@@ -406,7 +406,7 @@ class VirtualHostWindow:
         returncode, error = self.parent.apache.test_config()
         if not returncode:
             error = error.strip()
-            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format=error + "\n\nAre you sure you want to continue, apache will not start until all errors are resolved")
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format=error + "\n\nAre you sure you want to continue, apache may not start until all errors are resolved")
             result = md.run()
             md.destroy()
             if result != gtk.RESPONSE_OK:
