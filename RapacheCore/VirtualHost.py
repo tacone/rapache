@@ -82,6 +82,8 @@ class VirtualHostModel():
         self.parsable = True
         self.enabled = self.is_enabled()
         self.hack_hosts = False
+        self.config = None
+        
         if  self.is_new:
             self.__parser = Parser()
             self.__parser.set_from_str( VHOST_TEMPLATE )
@@ -205,7 +207,7 @@ class VirtualHostModel():
         return self.__is_default
 
     def is_editable( self ):
-        return self.parsable
+        return (self.parsable and not self.config == None)
 
     def is_enabled ( self ):
         orig = self.get_source_filename()
