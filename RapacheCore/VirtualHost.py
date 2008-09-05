@@ -95,7 +95,7 @@ class VirtualHostModel():
         #try:
             self.__parser = Parser()
             self.__parser.load( self.get_source_filename() )
-            self.config = self.__parser.virtualhost
+            self.config = self.__parser.rsearch("VirtualHost")[0]
 
             return True
         #except:
@@ -106,7 +106,7 @@ class VirtualHostModel():
         #try:
         self.__parser = Parser()
         self.__parser.set_from_str( content )
-        self.config = self.__parser.virtualhost
+        self.config = self.__parser.rsearch("VirtualHost")[0]
         return True
         #except:
         #     self.parsable = False
