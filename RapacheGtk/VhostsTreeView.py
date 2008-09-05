@@ -278,8 +278,8 @@ class ErrorsTreeView ( ConfFilesTreeView ):
         dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
         dirList = [x for x in dirList if self._blacklisted( x ) == False ]
         dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]    
-        print "=============="
-        print "-->", "denormalized list:",  dirList
+        
+        
         self.items = {}
         fixable_items = 0
         

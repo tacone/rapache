@@ -45,15 +45,12 @@ def valid_domain_name ( name ):
     return valid
 
 def is_denormalized_vhost ( fname ):
-    try:   
-        print "---> checking ", fname
+    try:           
         flink = Shell.command.readlink( os.path.join(Configuration.SITES_ENABLED_DIR, fname))
-        flink = os.path.join(os.path.dirname( Configuration.SITES_AVAILABLE_DIR ), flink)                        
-        #no exceptions ? Means it's a link
-        print "link !"
+        flink = os.path.join(os.path.dirname( Configuration.SITES_AVAILABLE_DIR ), flink)
+        #no exceptions ? Means it's a link        
         return True
-    except:
-        print "not a link !"
+    except:        
         return False
     return False
 def is_not_normalizable( fname):
@@ -244,21 +241,27 @@ class VirtualHostModel():
     # There are a number of fields we will use often, we will add handlers for them
     def get_server_name(self):
         try:
-            return self.config.ServerName.value
+            if self.config.ServerName:
+                return self.config.ServerName.value
         except:
-            return self.__name
+            pass
+        return self.__name
         
     def get_document_root(self):
         try:
-            return self.config.DocumentRoot.value
+            if self.config.DocumentRoot:
+                return self.config.DocumentRoot.value
         except:
-            return None
+            pass
+        return None
             
     def get_server_alias(self):
         try:
-            return self.config.ServerAlias.opts
+            if self.config.ServerAlias:
+                return self.config.ServerAlias.opts
         except:
-            return []    
+            pass
+        return []    
 
     def get_icon(self):
         # TODO: This MUST return a local path...
