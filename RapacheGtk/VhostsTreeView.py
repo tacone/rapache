@@ -96,7 +96,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
         if ( site.changed ):
             self.raise_event( 'please_restart_apache' )                
 gobject.type_register (VhostsTreeView)
-
+"""
 class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
     def __init__ (self, *args, **kwargs):
         super (DenormalizedVhostsTreeView, self).__init__ (*args, **kwargs)
@@ -135,7 +135,7 @@ class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
     def toggled_callback(self, *args, **kwargs):
         pass
 gobject.type_register (DenormalizedVhostsTreeView )
-
+"""
 class ModulesTreeView ( ConfFilesTreeView ):
     def __init__ (self, *args, **kwargs):
         super (ModulesTreeView, self).__init__ (*args, **kwargs)

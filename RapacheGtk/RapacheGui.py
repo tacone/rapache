@@ -315,15 +315,14 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         # moving them in /etc/apache2/sites-available and linking them back
         # from /etc/apache2/sites-enabled
         
-        denormalized_treeview = VhostsTreeView.DenormalizedVhostsTreeView()
-        self.denormalized_treeview = denormalized_treeview        
-        #self.xml.get_widget( 'problems_area' ).add(denormalized_treeview)        
-        #self.xml.get_widget( 'problems_area' ).reorder_child( denormalized_treeview, 2)
-        denormalized_treeview.set_sensitive( False )
-        denormalized_treeview.show()
+        #denormalized_treeview = VhostsTreeView.DenormalizedVhostsTreeView()
+        #self.denormalized_treeview = denormalized_treeview        
+        
+        #denormalized_treeview.set_sensitive( False )
+        #denormalized_treeview.show()
+        
         sw.show_all()
-        #hidden by default
-        #self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+        
         
     def create_errors_list(self):
         self.treeview_errors = VhostsTreeView.ErrorsTreeView()
@@ -354,21 +353,21 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def refresh_vhosts ( self ):
         print "reloading vhosts.."            
         self.vhosts_treeview.load()
-    def refresh_denormalized_vhosts (self):
+    """def refresh_denormalized_vhosts (self):
         self.denormalized_treeview.load()
         #if ( len( self.denormalized_treeview.items ) > 0 ):
             #self.xml.get_widget( 'unnormalized_notice' ).show_all()
             #self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).show()
         #else:
             #self.xml.get_widget( 'unnormalized_notice' ).hide_all()
-            #self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).hide()
+            #self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).hide()"""
     def refresh_modules (self):    
         print "reloading modules.."            
         self.modules_treeview.load()
     def refresh_lists (self):
         self.refresh_vhosts()
         self.refresh_modules()
-        self.refresh_denormalized_vhosts()
+        #self.refresh_denormalized_vhosts()
         self.refresh_config_test()
     def please_restart ( self ):
         self.xml.get_widget( 'restart_apache_notice' ).show()
@@ -427,7 +426,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             site = VirtualHostModel( name )
             site.toggle(True)            
         self.refresh_vhosts()
-        self.refresh_denormalized_vhosts()
+        #self.refresh_denormalized_vhosts()
+        self.refresh_config_test()
     def get_current_vhost(self ):
         name = self.vhosts_treeview.get_selected_line()
         if ( name == None ): return None
