@@ -161,7 +161,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.text_view_log.set_editable(False)
         self.xml.get_widget( 'label_log_path').set_text( path )
 
-    def refresh_config_test(self): 
+    def refresh_config_test(self, focus=False): 
         total = self.treeview_errors.load(self.apache)
         notebook = self.xml.get_widget( 'notebook' )
         button_resolve_errors = self.xml.get_widget( 'button_resolve_errors' )
@@ -169,7 +169,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         print "Errors status:",  total
         if total > -1:
             page.show()
-            notebook.set_current_page(0)  
+            if focus: notebook.set_current_page(0)  
         else:
             page.hide()
         
@@ -377,7 +377,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.update_server_status()
         self.xml.get_widget( 'restart_apache_notice' ).hide()
         self.refresh_lists()
-        self.refresh_config_test()
+        self.refresh_config_test(True)
         
     def is_vhost_editable (self, name):
         return name != 'default'
@@ -432,7 +432,11 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def get_current_vhost(self ):
         name = self.vhosts_treeview.get_selected_line()
         if ( name == None ): return None
-        return self.vhosts_treeview.items[ name ]
+
+        if self.vhosts_treeview.items.has_key( name ):
+            return self.vhosts_treeview.items[ name ]
+        else:
+            return VirtualHostModel( name )
     def surf_this(self, widget):
         name = self.vhosts_treeview.get_selected_line()
         if name == 'default':

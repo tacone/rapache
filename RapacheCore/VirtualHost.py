@@ -87,30 +87,30 @@ class VirtualHostModel():
             self.__parser.set_from_str( VHOST_TEMPLATE )
             self.config = self.__parser.virtualhost
         else:
-            self.load(None)
-            self.parsable = True
-
+            try:
+                self.load(None)
+                self.parsable = True
+            except:
+                pass
     # IO Methods
     def load(self, name = False):  
-        #try:
+        try:
             self.__parser = Parser()
             self.__parser.load( self.get_source_filename() )
-            self.config = self.__parser.virtualhost
-
+            self.config = self.__parser.rsearch("VirtualHost")[0]
             return True
-        #except:
-        #     self.parsable = False
-        #     return False
+        except:
+             self.parsable = False
+             return False
              
     def load_from_string(self, content):
-        #try:
-        self.__parser = Parser()
-        self.__parser.set_from_str( content )
-        self.config = self.__parser.virtualhost
-        return True
-        #except:
-        #     self.parsable = False
-        #     return False
+        try:
+            self.__parser = Parser()
+            self.__parser.set_from_str( content )
+            self.config = self.__parser.rsearch("VirtualHost")[0]
+            return True
+        except:
+             return False
          
     def save(self, content=None):
         
@@ -241,21 +241,27 @@ class VirtualHostModel():
     # There are a number of fields we will use often, we will add handlers for them
     def get_server_name(self):
         try:
-            return self.config.ServerName.value
+            if self.config.ServerName:
+                return self.config.ServerName.value
         except:
-            return self.__name
+            pass
+        return self.__name
         
     def get_document_root(self):
         try:
-            return self.config.DocumentRoot.value
+            if self.config.DocumentRoot:
+                return self.config.DocumentRoot.value
         except:
-            return None
+            pass
+        return None
             
     def get_server_alias(self):
         try:
-            return self.config.ServerAlias.opts
+            if self.config.ServerAlias:
+                return self.config.ServerAlias.opts
         except:
-            return []    
+            pass
+        return []    
 
     def get_icon(self):
         # TODO: This MUST return a local path...

@@ -186,6 +186,8 @@ class AdvancedVhostPlugin(PluginBaseObject):
                 opts.append("-Indexes")
 
             d.Options.opts = opts
+            if len(opts) == 0:
+                del d.Options
 
         server_admin = self.entry_admin_email.get_text()
         return True, None
