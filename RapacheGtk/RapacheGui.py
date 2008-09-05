@@ -91,7 +91,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "edit_button_clicked" : self.edit_button_clicked,
             "edit_module_button_clicked" : self.edit_module_button_clicked,
             "browse_sites_available" : self.browse_sites_available,
-            "fix_vhosts_clicked" : self.fix_vhosts,
+            "on_button_resolve_errors_clicked" : self.fix_vhosts,
             "surf_this_button_clicked" : self.surf_this,
             "browse_button_clicked" : self.browse_this,
             "about_clicked" : self.display_about,
@@ -418,6 +418,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         open_module_doc(name)
         
     def fix_vhosts(self, widget):
+        print "Attempting to fix virtualhosts"
         items = self.denormalized_treeview.get_items()
         for name in items:
             normalize_vhost( name )

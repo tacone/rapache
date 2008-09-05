@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Wed Sep  3 16:00:28 2008 -->
+<!--Generated with glade3 3.4.5 on Fri Sep  5 02:40:45 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="MainWindow">
     <property name="width_request">500</property>
@@ -330,6 +330,7 @@ web server is restarted</property>
                             <property name="is_important">True</property>
                             <property name="label" translatable="yes">Resolve Errors</property>
                             <property name="stock_id">gtk-apply</property>
+                            <signal name="clicked" handler="on_button_resolve_errors_clicked"/>
                           </widget>
                           <packing>
                             <property name="expand">False</property>
