@@ -79,7 +79,7 @@ class VirtualHostModel():
        
         self.__name = name
         self.__parser = Parser() 
-
+        self.__is_default = name == "default"
         self.is_new = name == "" or not Shell.command.exists( self.get_source_filename() )
         self.data = None
         self.parsable = True
@@ -91,6 +91,7 @@ class VirtualHostModel():
             self.config = self.__parser.virtualhost
         else:
             self.load(None)
+            self.parsable = True
 
     # IO Methods
     def load(self, name = False):  
@@ -98,6 +99,7 @@ class VirtualHostModel():
             self.__parser = Parser()
             self.__parser.load( self.get_source_filename() )
             self.config = self.__parser.virtualhost
+
             return True
         #except:
         #     self.parsable = False
@@ -202,6 +204,12 @@ class VirtualHostModel():
                 self.toggle( False )
             Shell.command.sudo_execute( [ 'rm', self.get_source_filename() ])
 
+    def is_default( self ):
+        return self.__is_default
+
+    def is_editable( self ):
+        return self.parsable
+
     def is_enabled ( self ):
         orig = self.get_source_filename()
         dirList = Shell.command.listdir( Configuration.SITES_ENABLED_DIR )
@@ -290,244 +298,3 @@ class VirtualHostModel():
             tokens[-1] = str( portnumber )
             value = ":".join( tokens[:-1] )
         self.config.value = value
-
-        
-# Replacment that has a bit of state
-class VirtualHostModelOld():
-    def __init__(self, name = None, plugin_manager = None):
-        self.data = {
-              'ServerName' : name        
-            , 'DocumentRoot' : None            
-        }
-        self.__content = ""        
-        self.__name = name # save the original name
-        self.changed = False
-        self.is_new = name == "" or not Shell.command.exists( self.get_source_filename() )
-        self.enabled = self.is_enabled()
-        self.hack_hosts = False
-        self.parsable = True
-
-        # Init plugin values so the keys exist
-        if plugin_manager:
-            for plugin in plugin_manager.plugins:
-                for key in plugin.vhosts_config.keys():
-                        self.data[ key ] = None        
-
-        if not self.is_new:
-            self.load(None, plugin_manager)
-
-    # Shorcut for getting data value 
-    def get_value(self, key, default=None):
-        if self.data.has_key( key ):
-            if self.data[key]:
-                return self.data[key]
-        return default
-        
-    def set_value(self, key, value):    
-        self.data[key] = value
-
-    # Returns a label for displaying in UI
-    def get_display_name(self):
-        return self.get_value("ServerName", self.__name)
-
-    def get_source ( self ):
-        return Shell.command.read_file(self.get_source_filename())
-        
-    def get_source_generated( self, content=None ):
-        return self.__update(content)
-        
-    def get_source_filename(self):
-         return os.path.join(Configuration.SITES_AVAILABLE_DIR, self.__name)
-
-    def get_backup_files(self):
-            return Shell.command.get_backup_files(  os.path.join(Configuration.SITES_AVAILABLE_DIR, self.__name))
-    def get_source_version ( self, timestamp ):
-        return Shell.command.read_file_version(self.get_source_filename(), timestamp)
- 
-    def is_enabled ( self ):
-        orig = self.get_source_filename()
-        dirList=Shell.command.listdir( Configuration.SITES_ENABLED_DIR )
-        for fname in dirList:
-            try:                                
-                flink = Shell.command.readlink( os.path.join(Configuration.SITES_ENABLED_DIR, fname) )               
-                flink = os.path.join(os.path.dirname( Configuration.SITES_ENABLED_DIR +"/" ), flink)
-                # please note debian features a nice set of
-                # mixed absolute and relative links. FREAKS !
-                # the added "/" is also necessary
-                flink = os.path.normpath(flink)               
-                if ( flink == orig ):
-                    return True
-            except:
-                pass
-          
-        return False
-
-    def toggle( self, status ):
-        "status = True|False"
-        if status:
-            command = "a2ensite"
-        else :
-            command = "a2dissite"        
-        # set new value
-        Shell.command.sudo_execute( [ command, self.__name ] )
-        self.enabled = self.is_enabled()
-        self.changed = True
-
-    def load_from_string(self, content, plugin_manager = None):
-        parser = Parser()
-        parser.set_content_from_string(content)
-        return self.__load( parser, plugin_manager)
-    
-    def load(self, name = False, plugin_manager = None):  
-        parser = Parser()
-        try:
-            parser.load( self.get_source_filename() )
-            return self.__load( parser, plugin_manager)
-        except VhostNotFound:
-             self.parsable = False
-             return False
-        
-
-    def __load(self, parser, plugin_manager = None):
-        options = {}        
-        piece = VhostParser( parser )        
-        domain_name = piece.get_value( 'ServerName' )
-        if domain_name == None:
-            self.parsable = False
-            if self.__name == "default":  
-                domain_name = self.__name
-             #return False
-        options[ 'ServerName' ] = domain_name
-        options[ 'ServerAlias' ] = piece.get_options( 'ServerAlias' )
-        options[ 'DocumentRoot' ] = piece.get_value('DocumentRoot')
-        hosts = HostsManager()
-        if ( domain_name == None or hosts.find ( domain_name ) == False ):
-            options['hack_hosts'] = False
-        else:
-            options['hack_hosts'] = True
-        self.parsable = True
-        
-        # Load plugin values
-
-        if plugin_manager:
-            for plugin in plugin_manager.plugins:
-                for key in plugin.vhosts_config.keys():
-                    if plugin.vhosts_config[key] == 1:
-                        options[ key ] = piece.get_options( key )
-                    else:
-                        options[ key ] = piece.get_value( key )
-        
-        self.data.update( options )
-        
-        return True
-    
-    def __update(self, content=None):
-        parser = Parser()
-        if not content:
-            if self.is_new:
-                parser.set_content_from_string( VHOST_TEMPLATE )
-            else:
-                 parser.load( self.get_source_filename() )
-        else:
-             parser.set_content_from_string(content)
-
-        piece = VhostParser( parser )
-
-        # Get a bit more dynamic with it
-        for key in self.data.keys():
-            obj = self.data[key]
-            if isinstance(obj, list):
-                #piece.set_value(key, None)
-                for opt in obj:
-                    piece.add_option(key, opt )
-            elif isinstance(obj, str):
-                if obj:
-                    piece.set_value(key, obj)
-                else:
-                    piece.remove_value(key)
-
-
-        
-        return "".join(parser.get_content())      
-                
-    def save(self, content=None):
-        print "Creating virtualhost: "+ self.data['ServerName']
-        print "Folder: " + self.data['DocumentRoot']
-        
-        if ( Shell.command.exists( self.data['DocumentRoot'] ) == False ): 
-            print "Folder " + self.data['DocumentRoot']+" does not exist"        
-            Shell.command.create_complete_path( self.data['DocumentRoot'] )
-            
-        if ( Shell.command.exists( self.data['DocumentRoot'] ) == False ):
-            self.error( "Could not create target folder" ) #TODO fix this
-            return False
-                       
-        if ( valid_domain_name( self.data['ServerName'] ) == False ):
-            self.error ( 'Bad domain name: '+ self.data['ServerName'] )
-            return False
-        
-        # if new then make sure to update name before saving
-        if self.is_new:
-            self.__name = self.data['ServerName']
-
-        Shell.command.write_file(self.get_source_filename(), self.__update(content))
-          
-        if self.hack_hosts:
-            Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, "hosts-manager"), '-a', self.data['ServerName'] ] )
-            for alias_name in self.data[ 'ServerAlias' ]:
-                Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, 'hosts-manager'), '-a',alias_name ])
-        self.changed = True  
-        
-        if self.is_new:      
-            self.toggle( True ) #activate by default 
-            self.is_new = False
-        else:
-            # If already existed may need to rename the file
-            
-            old_enabled = self.is_enabled()
-            
-            new_name = os.path.join(Configuration.SITES_AVAILABLE_DIR, self.data['ServerName'])
-            old_name = os.path.join(Configuration.SITES_AVAILABLE_DIR, self.__name)
-            
-            print "old name", old_name
-            print "new name", new_name
-            
-            if old_name != new_name and Shell.command.exists( new_name ) == False:
-                print "Server name changed, updating conf filename"
-                self.toggle( False )     
-                Shell.command.move( old_name, new_name )
-                if Shell.command.exists( new_name ) == True:
-                    #success ! we need to reload vhost with the new name
-                    
-                    self.__name =  self.data['ServerName']
-                    self.load()
-                    #...so we can toogle it on again
-                    if old_enabled == True: 
-                        print "Re-activating"
-                        self.toggle( True )
-                    else:
-                        print "Skipping activation"
-                else:
-                    print "error! not created:", new_name  
-                    
-        return True  
-        
-    def get_icon(self):
-        # TODO: This MUST return a local path...
-        # TODO: Try url for a favicon as well
-        if self.data['DocumentRoot'] != None:
-                favicon = os.path.join(self.data['DocumentRoot'], "favicon.ico")
-                if ( os.path.exists( favicon ) ): 
-                    return favicon
-        return os.path.join( Configuration.GLADEPATH, 'browser.png' )
-
-    def delete( self ):
-        "Deletes a VirtualHost configuration file"
-        if not self.is_new:
-            if ( self.is_enabled() ): 
-                self.toggle( False )
-            Shell.command.sudo_execute( [ 'rm', self.get_source_filename() ])
-
-
-
-

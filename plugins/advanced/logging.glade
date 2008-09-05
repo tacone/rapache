@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Wed Sep  3 12:50:05 2008 -->
+<!--Generated with glade3 3.4.5 on Fri Sep  5 10:43:21 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="window1">
     <child>
@@ -37,116 +37,33 @@
             <child>
               <widget class="GtkTable" id="table_advanced_vhost">
                 <property name="visible">True</property>
-                <property name="n_rows">4</property>
+                <property name="n_rows">5</property>
                 <property name="n_columns">2</property>
                 <child>
-                  <widget class="GtkCheckButton" id="checkbutton_server_signature">
+                  <widget class="GtkComboBox" id="combobox_directory">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="label" translatable="yes">Include server signature</property>
-                    <property name="response_id">0</property>
-                    <property name="draw_indicator">True</property>
+                    <property name="items" translatable="yes">[ default ]
+Enable
+Disable</property>
                   </widget>
                   <packing>
                     <property name="left_attach">1</property>
                     <property name="right_attach">2</property>
-                    <property name="top_attach">3</property>
-                    <property name="bottom_attach">4</property>
-                    <property name="y_options">GTK_FILL</property>
-                    <property name="x_padding">7</property>
-                    <property name="y_padding">8</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label10">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Error Log Level</property>
-                    <property name="justify">GTK_JUSTIFY_RIGHT</property>
-                  </widget>
-                  <packing>
-                    <property name="top_attach">2</property>
-                    <property name="bottom_attach">3</property>
-                    <property name="x_options">GTK_FILL</property>
-                    <property name="y_options">GTK_FILL</property>
+                    <property name="top_attach">4</property>
+                    <property name="bottom_attach">5</property>
                     <property name="x_padding">8</property>
                     <property name="y_padding">8</property>
                   </packing>
                 </child>
                 <child>
-                  <widget class="GtkComboBox" id="combobox_log_level">
+                  <widget class="GtkLabel" id="label2">
                     <property name="visible">True</property>
-                    <property name="items" translatable="yes">Emergencies - system is unusable
-Action must be taken immediately
-Critical Conditions
-Error conditions
-Warning conditions
-Normal but significant condition
-Informational
-Debug-level messages</property>
+                    <property name="label" translatable="yes">Directory Listing</property>
                   </widget>
                   <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="top_attach">2</property>
-                    <property name="bottom_attach">3</property>
-                    <property name="y_options">GTK_FILL</property>
-                    <property name="x_padding">8</property>
-                    <property name="y_padding">8</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkEntry" id="entry_admin_email">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                  </widget>
-                  <packing>
-                    <property name="left_attach">1</property>
-                    <property name="right_attach">2</property>
-                    <property name="y_options"></property>
-                    <property name="x_padding">8</property>
-                    <property name="y_padding">8</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label11">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Server Admin Email</property>
-                  </widget>
-                  <packing>
-                    <property name="x_options">GTK_FILL</property>
-                    <property name="y_options"></property>
-                    <property name="x_padding">8</property>
-                    <property name="y_padding">8</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label13">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Server signature</property>
-                    <property name="justify">GTK_JUSTIFY_RIGHT</property>
-                  </widget>
-                  <packing>
-                    <property name="top_attach">3</property>
-                    <property name="bottom_attach">4</property>
-                    <property name="x_options">GTK_FILL</property>
-                    <property name="y_options">GTK_FILL</property>
-                    <property name="x_padding">8</property>
-                    <property name="y_padding">8</property>
-                  </packing>
-                </child>
-                <child>
-                  <widget class="GtkLabel" id="label14">
-                    <property name="visible">True</property>
-                    <property name="label" translatable="yes">Log File Location</property>
-                    <property name="justify">GTK_JUSTIFY_RIGHT</property>
-                  </widget>
-                  <packing>
-                    <property name="top_attach">1</property>
-                    <property name="bottom_attach">2</property>
-                    <property name="x_options">GTK_FILL</property>
-                    <property name="y_options"></property>
-                    <property name="x_padding">8</property>
-                    <property name="y_padding">8</property>
+                    <property name="top_attach">4</property>
+                    <property name="bottom_attach">5</property>
+                    <property name="x_options"></property>
                   </packing>
                 </child>
                 <child>
@@ -186,6 +103,116 @@ Debug-level messages</property>
                     <property name="bottom_attach">2</property>
                     <property name="y_options">GTK_FILL</property>
                     <property name="x_padding">8</property>
+                    <property name="y_padding">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label14">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Log File Location</property>
+                    <property name="justify">GTK_JUSTIFY_RIGHT</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">1</property>
+                    <property name="bottom_attach">2</property>
+                    <property name="x_options">GTK_FILL</property>
+                    <property name="y_options"></property>
+                    <property name="x_padding">8</property>
+                    <property name="y_padding">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label13">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Server signature</property>
+                    <property name="justify">GTK_JUSTIFY_RIGHT</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">3</property>
+                    <property name="bottom_attach">4</property>
+                    <property name="x_options">GTK_FILL</property>
+                    <property name="y_options">GTK_FILL</property>
+                    <property name="x_padding">8</property>
+                    <property name="y_padding">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label11">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Server Admin Email</property>
+                  </widget>
+                  <packing>
+                    <property name="x_options">GTK_FILL</property>
+                    <property name="y_options"></property>
+                    <property name="x_padding">8</property>
+                    <property name="y_padding">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkEntry" id="entry_admin_email">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="y_options"></property>
+                    <property name="x_padding">8</property>
+                    <property name="y_padding">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkComboBox" id="combobox_log_level">
+                    <property name="visible">True</property>
+                    <property name="items" translatable="yes">Emergencies - system is unusable
+Action must be taken immediately
+Critical Conditions
+Error conditions
+Warning conditions
+Normal but significant condition
+Informational
+Debug-level messages</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">2</property>
+                    <property name="bottom_attach">3</property>
+                    <property name="y_options">GTK_FILL</property>
+                    <property name="x_padding">8</property>
+                    <property name="y_padding">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkLabel" id="label10">
+                    <property name="visible">True</property>
+                    <property name="label" translatable="yes">Error Log Level</property>
+                    <property name="justify">GTK_JUSTIFY_RIGHT</property>
+                  </widget>
+                  <packing>
+                    <property name="top_attach">2</property>
+                    <property name="bottom_attach">3</property>
+                    <property name="x_options">GTK_FILL</property>
+                    <property name="y_options">GTK_FILL</property>
+                    <property name="x_padding">8</property>
+                    <property name="y_padding">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkCheckButton" id="checkbutton_server_signature">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="label" translatable="yes">Include server signature</property>
+                    <property name="response_id">0</property>
+                    <property name="draw_indicator">True</property>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="right_attach">2</property>
+                    <property name="top_attach">3</property>
+                    <property name="bottom_attach">4</property>
+                    <property name="y_options">GTK_FILL</property>
+                    <property name="x_padding">7</property>
                     <property name="y_padding">8</property>
                   </packing>
                 </child>

@@ -121,7 +121,9 @@ class CertificateRequestWindow:
         cert_path = os.path.join("/etc/apache2/ssl/", self.combobox_domain.get_active_text() +  ' ' + timestamp +'.crt')
        
         pkey = crypto.PKey()
+        print "Private key : " + privatekey_path
         if not Shell.command.sudo_exists(privatekey_path):
+            
             pkey.generate_key(crypto.TYPE_RSA, 1024)
             Shell.command.write_file( privatekey_path, crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey), False)
         else:
@@ -189,7 +191,7 @@ class CertificateRequestWindow:
         return
     
 
-    def load (self, domains, email, key):
+    def load (self, domains, email, private_key):
         
         # Attempt to detect country code
         code, enc = locale.getdefaultlocale()
@@ -208,7 +210,7 @@ class CertificateRequestWindow:
             self.combobox_domain.append_text("*."+ domain) # add sub domain wildcard
             
         self.combobox_domain.set_active(0)
-        self.key = key
+        self.key = private_key
         return
 				
     def on_destroy(self, widget, data=None):

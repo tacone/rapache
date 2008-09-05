@@ -219,10 +219,15 @@ class ErrorsTreeView ( ConfFilesTreeView ):
     def load(self, apache):    
         self.items = {}
         site_template = "<b><big>%s</big></b>"        
-        lstore = self._reset_model()
-        
+        lstore = self._reset_model()        
         res, text = apache.test_config()
+        # -1 = nothing to fix
+        # 0  = nothing auto-fixable
+        # 1 = something to be done
+        returncode = -1
+        
         if not res:       
+            returncode = 0
             iter = lstore.append()
             markup = site_template % "Apache Config Error"
             
@@ -234,7 +239,8 @@ class ErrorsTreeView ( ConfFilesTreeView ):
                 COLUMN_SEVERITY, "Apache Config Error",
                 COLUMN_MARKUP, markup + "\n" + text +"\n<small><i>You must resolve this error to restart apache</i></small>"
                 )
-        self._add_denormalized_vhosts()
+        fixable_items = self._add_denormalized_vhosts()
+        return max( returncode,  fixable_items )
     def unused(self):
         data = []  
         dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
@@ -275,6 +281,8 @@ class ErrorsTreeView ( ConfFilesTreeView ):
         print "=============="
         print "-->", "denormalized list:",  dirList
         self.items = {}
+        fixable_items = 0
+        
         for fname in  dirList :
             site = VirtualHostModel( fname )                        
             self.items[ fname ] = site
@@ -285,6 +293,8 @@ class ErrorsTreeView ( ConfFilesTreeView ):
             markup = site_template % site.get_name()
             if ( normalizable == False ):
                 markup = markup + " CANNOT FIX"
+            else:
+                fixable_items += 1
             iter = lstore.append()
             pixbuf = self.render_icon(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_LARGE_TOOLBAR)
             lstore.set(iter,
@@ -293,8 +303,9 @@ class ErrorsTreeView ( ConfFilesTreeView ):
                 COLUMN_SEVERITY, site.get_server_name(),
                 COLUMN_MARKUP, markup +  "\nThe virtual host file is only present inside /etc/apache/sites-enabled.\n<small><i>You must normalize in order to manage this host</i>.</small>"
                 )
-        print "-->",  self.items
-        print "-->",  len( lstore )
+        
+        if not len(lstore): return -1
+        return fixable_items
             
                 
     def toggled_callback(self, *args, **kwargs):

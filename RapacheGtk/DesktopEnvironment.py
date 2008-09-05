@@ -39,6 +39,7 @@ def open_url(url):
     if os.getuid() == 0 and os.environ.has_key('SUDO_USER'):
         command = ['sudo', '-u', os.environ['SUDO_USER']] + command
     subprocess.Popen(command)
-# TODO: find out how to open nautilus in background
+
 def open_dir( path):
-    Shell.command.sudo_execute ( ['nautilus',path, '--no-desktop']  )
+    # just call this locally as it wont apply over ssh
+    subprocess.Popen( ['gksu', subprocess.list2cmdline(['nautilus', path, '--no-desktop'])] )

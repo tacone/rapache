@@ -207,6 +207,14 @@ class BasicAuthenticationPlugin(PluginBaseObject):
     # Perform action on vhost properties update request
     def update_vhost_properties(self, vhost):
         
+        self.users_active = []
+        iter = self.treeview_users_store.get_iter_first()
+        while 1:
+            if not iter: break
+            if self.treeview_users_store.get_value(iter, 0):
+                self.users_active.append( self.treeview_users_store.get_value(iter, 2) )
+            iter = self.treeview_users_store.iter_next(iter)
+        
         ds = vhost.config.Directory.search(  [vhost.get_document_root()]  )
         d = None
         if len(ds) == 0:
@@ -214,18 +222,11 @@ class BasicAuthenticationPlugin(PluginBaseObject):
         else:
             d = ds[0]
         
-        if self.checkbutton_enable_auth_basic.get_active():
+        if self.checkbutton_enable_auth_basic.get_active() and len(self.users_active) > 0:
             d.AuthType.value = "Basic"
             
             d.AuthName.value = self.entry_warning_message.get_text() 
             d.AuthUserFile.value =  self.entry_location.get_text()
-            iter = self.treeview_users_store.get_iter_first()
-            self.users_active = []
-            while 1:
-                if not iter: break
-                if self.treeview_users_store.get_value(iter, 0):
-                    self.users_active.append( self.treeview_users_store.get_value(iter, 2) )
-                iter = self.treeview_users_store.iter_next(iter)
             d.Require.opts = ["user"] + self.users_active
             
         else:
