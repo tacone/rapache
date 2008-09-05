@@ -149,7 +149,6 @@ class ModuleWindow:
 			except Exception:
 				traceback.print_exc(file=sys.stdout)
 				
-
     def on_destroy(self, widget, data=None):
         gtk.main_quit()
 

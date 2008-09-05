@@ -74,12 +74,12 @@ class AdvancedVhostPlugin(PluginBaseObject):
             
     # Add item to tools menu
     def init_main_window(self, main_window):
-    
-   
-        self.menu_item = gtk.MenuItem("New SSL Host")
-        self.menu_item.connect("activate", self.on_menu_item_activate, main_window)
-        main_window.add_new_vhost_menu_item(self.menu_item)
+
+        #self.menu_item = gtk.MenuItem("New SSL Host")
+        #self.menu_item.connect("activate", self.on_menu_item_activate, main_window)
+        #main_window.add_new_vhost_menu_item(self.menu_item)
         #return self.menu_item
+        return
 
     def init_vhost_properties(self):
         # Get glade file XML

@@ -45,6 +45,7 @@ from RapacheCore.VirtualHost import *
 from RapacheCore.Apache import Apache2
 from RapacheGtk import ConfirmationWindow
 from RapacheGtk import GuiUtils
+from EditGeneric import EditGenericWindow
 from RapacheCore import Shell
 import VhostsTreeView
 import RapacheCore.Observer
@@ -91,7 +92,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "edit_button_clicked" : self.edit_button_clicked,
             "edit_module_button_clicked" : self.edit_module_button_clicked,
             "browse_sites_available" : self.browse_sites_available,
-            "fix_vhosts_clicked" : self.fix_vhosts,
+            "on_button_resolve_errors_clicked" : self.fix_vhosts,
             "surf_this_button_clicked" : self.surf_this,
             "browse_button_clicked" : self.browse_this,
             "about_clicked" : self.display_about,
@@ -258,10 +259,15 @@ class MainWindow( RapacheCore.Observer.Observable ) :
 
         
     def open_edit_vhost_window(self, vhost):
-        if not vhost.is_editable(): return False
-        new_vhost_window = VirtualHostWindow ( self )
-        new_vhost_window.load( vhost )
-        new_vhost_window.run()    
+        if not vhost.is_editable(): 
+            # Use generic editor instead
+            gew = EditGenericWindow()
+            gew.load( vhost.get_source_filename() )
+            gew.run()
+        else:
+            new_vhost_window = VirtualHostWindow ( self )
+            new_vhost_window.load( vhost )
+            new_vhost_window.run()    
         self.refresh_config_test()
         
     def delete_button_clicked( self, widget ):
@@ -397,7 +403,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             
             editable = vhost.is_editable()
             self.xml.get_widget( 'delete_button' ).set_sensitive( editable )
-            self.xml.get_widget( 'edit_button' ).set_sensitive( editable )
+            self.xml.get_widget( 'edit_button' ).set_sensitive( True )
             
             #surfable =  self.get_current_vhost().get_server_name() != None
             self.xml.get_widget( 'surf_this_button' ).set_sensitive( True )
@@ -418,6 +424,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         open_module_doc(name)
         
     def fix_vhosts(self, widget):
+        print "Attempting to fix virtualhosts"
         items = self.denormalized_treeview.get_items()
         for name in items:
             normalize_vhost( name )
