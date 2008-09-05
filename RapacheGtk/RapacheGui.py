@@ -166,7 +166,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         notebook = self.xml.get_widget( 'notebook' )
         button_resolve_errors = self.xml.get_widget( 'button_resolve_errors' )
         page = notebook.get_nth_page(0)
-        print total
+        print "Errors status:",  total
         if total > -1:
             page.show()
             notebook.set_current_page(0)  

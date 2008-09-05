@@ -45,15 +45,12 @@ def valid_domain_name ( name ):
     return valid
 
 def is_denormalized_vhost ( fname ):
-    try:   
-        print "---> checking ", fname
+    try:           
         flink = Shell.command.readlink( os.path.join(Configuration.SITES_ENABLED_DIR, fname))
-        flink = os.path.join(os.path.dirname( Configuration.SITES_AVAILABLE_DIR ), flink)                        
-        #no exceptions ? Means it's a link
-        print "link !"
+        flink = os.path.join(os.path.dirname( Configuration.SITES_AVAILABLE_DIR ), flink)
+        #no exceptions ? Means it's a link        
         return True
-    except:
-        print "not a link !"
+    except:        
         return False
     return False
 def is_not_normalizable( fname):
