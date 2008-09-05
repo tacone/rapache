@@ -111,24 +111,27 @@ class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
         data = []  
         dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
         dirList = [x for x in dirList if self._blacklisted( x ) == False ]
-        dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]                   
+        dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]             
+        
+        self.items = {}
         for fname in  dirList :
             site = VirtualHostModel( fname )                        
             self.items[ fname ] = site
-            site = None
-
+            site = None        
         for idx in sorted( self.items ):            
-            site = self.items[ idx ]
-            normalizable = not is_not_normalizable(site.data['ServerName'])
-            markup = site_template % site.data['ServerName']
+            site = self.items[ idx ]            
+            normalizable = not is_not_normalizable(site.get_name())
+            markup = site_template % site.get_name()
             if ( normalizable == False ):
                 markup = markup + " CANNOT FIX"
             iter = lstore.append()
+            
             lstore.set(iter,
                 COLUMN_FIXED, normalizable,
-                COLUMN_SEVERITY, site.data['ServerName'],
+                COLUMN_SEVERITY, site.get_name(), 
                 COLUMN_MARKUP, markup 
                 )
+                
     def toggled_callback(self, *args, **kwargs):
         pass
 gobject.type_register (DenormalizedVhostsTreeView )
@@ -213,28 +216,32 @@ class ErrorsTreeView ( ConfFilesTreeView ):
         self.column_checkbox.set_visible( True )        
         self.column_description.get_cell_renderers()[0].set_property('wrap-width', 500)  
         self.column_checkbox.get_cell_renderers()[0].set_property( 'activatable', False )
-    def load(self, apache):  
-        count = -1 
+    def load(self, apache):    
         self.items = {}
         site_template = "<b><big>%s</big></b>"        
-        lstore = self._reset_model()
-        
+        lstore = self._reset_model()        
         res, text = apache.test_config()
+        # -1 = nothing to fix
+        # 0  = nothing auto-fixable
+        # 1 = something to be done
+        returncode = -1
+        
         if not res:       
-            count = count + 1
+            returncode = 0
             iter = lstore.append()
             markup = site_template % "Apache Config Error"
             
             pixbuf = self.render_icon(gtk.STOCK_DIALOG_ERROR, gtk.ICON_SIZE_LARGE_TOOLBAR)
-
             
             lstore.set(iter,
                 COLUMN_ICON, pixbuf,
                 COLUMN_FIXED, False,
                 COLUMN_SEVERITY, "Apache Config Error",
-                COLUMN_MARKUP, markup + "\n" + text +"\n<small><i>You may need to resolve this error before starting apache</i></small>"
+                COLUMN_MARKUP, markup + "\n" + text +"\n<small><i>You must resolve this error to restart apache</i></small>"
                 )
-        
+        fixable_items = self._add_denormalized_vhosts()
+        return max( returncode,  fixable_items )
+    def unused(self):
         data = []  
         dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
         dirList = [x for x in dirList if self._blacklisted( x ) == False ]
@@ -252,9 +259,6 @@ class ErrorsTreeView ( ConfFilesTreeView ):
             
             if ( normalizable == False ):
                 markup = markup + " CANNOT FIX"
-            else:
-                count = count + 1
-                
             iter = lstore.append()
             
             pixbuf = self.render_icon(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_LARGE_TOOLBAR)
@@ -265,11 +269,45 @@ class ErrorsTreeView ( ConfFilesTreeView ):
                 COLUMN_SEVERITY, site.get_server_name(),
                 COLUMN_MARKUP, markup +  "\nThe virtual host file is only present inside /etc/apache/sites-enabled.\n<small><i>You must normalize in order to manage this host</i>.</small>"
                 )
-            
          
-
-        return count     
+    def _add_denormalized_vhosts( self ):
+        
+        site_template = "<b><big>%s</big></b>"              
+        lstore = self.get_model()
+        data = []  
+        dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
+        dirList = [x for x in dirList if self._blacklisted( x ) == False ]
+        dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]    
+        print "=============="
+        print "-->", "denormalized list:",  dirList
+        self.items = {}
+        fixable_items = 0
+        
+        for fname in  dirList :
+            site = VirtualHostModel( fname )                        
+            self.items[ fname ] = site
+            site = None        
+        for idx in sorted( self.items ):            
+            site = self.items[ idx ]            
+            normalizable = not is_not_normalizable(site.get_name())
+            markup = site_template % site.get_name()
+            if ( normalizable == False ):
+                markup = markup + " CANNOT FIX"
+            else:
+                fixable_items += 1
+            iter = lstore.append()
+            pixbuf = self.render_icon(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_LARGE_TOOLBAR)
+            lstore.set(iter,
+                COLUMN_ICON, pixbuf,
+                COLUMN_FIXED, normalizable,
+                COLUMN_SEVERITY, site.get_server_name(),
+                COLUMN_MARKUP, markup +  "\nThe virtual host file is only present inside /etc/apache/sites-enabled.\n<small><i>You must normalize in order to manage this host</i>.</small>"
+                )
+        
+        if not len(lstore): return -1
+        return fixable_items
+            
                 
     def toggled_callback(self, *args, **kwargs):
         pass
-gobject.type_register (DenormalizedVhostsTreeView )
+#gobject.type_register (DenormalizedVhostsTreeView )

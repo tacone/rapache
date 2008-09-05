@@ -113,6 +113,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         #hereby we create lists
         self.create_vhost_list()
         self.create_modules_list()
+        self.create_errors_list()
         #hereby we fill them
         self.refresh_lists()
         
@@ -126,14 +127,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.update_server_status(True)
         
         
-        self.treeview_errors = VhostsTreeView.ErrorsTreeView()
-        #treeview.selected_callback = self.row_selected
-        #treeview.connect_after("row-activated", self.edit_button_clicked )
-        #self.vhosts_treeview = treeview        
-        self.xml.get_widget( 'viewport_errors' ).add(self.treeview_errors) 
-        self.xml.get_widget( 'viewport_errors' ).show_all()
-        
-        self.refresh_config_test()
+       
         
         self.menu_tools = self.xml.get_widget( 'menu_tools' )
         for plugin in self.plugin_manager.plugins:
@@ -330,6 +324,17 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         sw.show_all()
         #hidden by default
         #self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+        
+    def create_errors_list(self):
+        self.treeview_errors = VhostsTreeView.ErrorsTreeView()
+        #treeview.selected_callback = self.row_selected
+        #treeview.connect_after("row-activated", self.edit_button_clicked )
+        #self.vhosts_treeview = treeview        
+        
+        self.xml.get_widget( 'viewport_errors' ).add(self.treeview_errors) 
+        self.xml.get_widget( 'viewport_errors' ).show_all()
+        
+        #self.refresh_config_test()
     
     def create_modules_list(self ):
         sw = self.xml.get_widget( 'modules_scroll_box' )
@@ -364,6 +369,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.refresh_vhosts()
         self.refresh_modules()
         self.refresh_denormalized_vhosts()
+        self.refresh_config_test()
     def please_restart ( self ):
         self.xml.get_widget( 'restart_apache_notice' ).show()
     def restart_apache ( self, widget ):
@@ -425,7 +431,11 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def get_current_vhost(self ):
         name = self.vhosts_treeview.get_selected_line()
         if ( name == None ): return None
-        return self.vhosts_treeview.items[ name ]
+
+        if self.vhosts_treeview.items.has_key( name ):
+            return self.vhosts_treeview.items[ name ]
+        else:
+            return VirtualHostModel( name )
     def surf_this(self, widget):
         name = self.vhosts_treeview.get_selected_line()
         if name == 'default':

@@ -10,6 +10,9 @@ import re
 
 # if p.notexisting.documentroot:pass should not trigger exception
 
+class ReadOnly( Exception ):
+    pass
+
 class ListWrapper (object):
     
     def __init__(self):
@@ -272,13 +275,15 @@ class PlainSelection(AbstractSelection):
         self.__dict__['_caller'] = caller
     def _sanitize_query(self,  query):
         return query
-    def _get_list(self): 
+    def _build_xpath(self):
         #print "query for", self._name, "in", self._caller
         name = self._query.lower()
         directive_attr = 'translate(@directive, "ABCDEFGHIJKLMNOPQRSTUVWXYZ",'\
         +'"abcdefghijklmnopqrstuvwxyz")'
-        query = '*[%s="%s"]' % (directive_attr, name)    
-        return self._caller.xpath( query )        
+        return '*[%s="%s"]' % (directive_attr, name)    
+        
+    def _get_list(self):         
+        return self._caller.xpath( self._build_xpath() )        
     def _set_list(self): 
         #shuold never be called (for now at least)
         pass
@@ -345,6 +350,11 @@ class SimpleSearch(PlainSelection):
         return result
     def _create_new(self ):
         return self._caller._create_new()
+class RecursiveSearch(PlainSelection):
+    def _build_xpath(self):
+        return "descendant::"+super( RecursiveSearch,  self )._build_xpath()
+    def _create_new(self ):
+        raise NotImplementedError
 class Parser(Line):
     def __init__(self, element=None):
         super (Parser, self).__init__( element )
@@ -359,6 +369,14 @@ class Parser(Line):
         """
     def __getattr__(self, name):
         return PlainSelection(self, name)
+    """def __setattr__(self, name,  value):
+        print dir(self)
+        if self.__dict__.has_key(name):
+            self.__dict__[name] = value
+        elif dir(self).has_key(name) and b.a
+        else:
+            raise ReadOnly,  "Selections are read-only. Were you trying to set "+name+".value maybe ?"
+    """
     def _get_lines(self):
         return TypeSelection(self,  'line')
     """Lines returns all the line elements"""
@@ -368,6 +386,9 @@ class Parser(Line):
     """section returns all section elements"""
     sections= property ( _get_sections )
     
+    def rsearch(self,  name):
+        return RecursiveSearch( self,  name )
+    
     def __delattr__(self,  name):                
         try: 
                 while (1):
@@ -375,26 +396,7 @@ class Parser(Line):
         except IndexError:
             pass
             
-    """def search(self,  *args,  **kwargs):
-        return SearchSelection(self,  *args,  **kwargs)    
-    search = property ( _search )"""
     
-    """""
-    def _get_key(self): 
-        if self.element == None : return None
-        return self.element.get('directive')
-    def _set_key(self, value): 
-        if self.element == None : return False
-        self.element.set('directive', value)
-    key = property ( _get_key, _set_key )
-    def _get_value(self):
-        if self.element == None : return None
-        #oh, by the way, should be the only element of the list
-        return self.element.get('value')
-    def _set_value(self, value):
-        return self.set_raw_value(value)
-    value = property ( _get_value, _set_value )
-    """
     def load(self, filename ):
         """Loads a configuration file in the parser"""        
         file = open ( filename, 'r' )
@@ -518,8 +520,7 @@ class Parser(Line):
             #hackish
             selection = etree.XPath( './line[attribute::directive]' )
             for el in selection(self.element):
-                print etree.tostring( el, pretty_print = True )
-    #useful for debug
+                print etree.tostring( el, pretty_print = True )    
     def create(self,  *args,  **kwargs):
         return self.lines.create( *args,  **kwargs )
 class Section(Parser):
