@@ -154,15 +154,16 @@ class AdvancedVhostPlugin(PluginBaseObject):
              vhost.config.ServerSignature.value = "on"
         else:
              vhost.config.ServerSignature.value = "off"
-
-        iter = self.treeview_default_document.get_model().get_iter_first()
+        
         self.documents = []
-        while 1:
-            if not iter: break
-            if self.treeview_default_document.get_model().get_value(iter, 0):
-                self.documents.append( self.treeview_default_document.get_model().get_value(iter, 0) )
-            iter = self.treeview_default_document.get_model().iter_next(iter)
-        vhost.config.DirectoryIndex.opts = self.documents
+        if self.treeview_default_document.get_model():
+            iter = self.treeview_default_document.get_model().get_iter_first()
+            while 1:
+                if not iter: break
+                if self.treeview_default_document.get_model().get_value(iter, 0):
+                    self.documents.append( self.treeview_default_document.get_model().get_value(iter, 0) )
+                iter = self.treeview_default_document.get_model().iter_next(iter)
+            vhost.config.DirectoryIndex.opts = self.documents
         
         if len(self.documents) == 0:
             del vhost.config.DirectoryIndex

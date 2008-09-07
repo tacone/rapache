@@ -182,18 +182,23 @@ class VirtualHostWindow:
 
     def on_notebook_switch_page(self, notebook, page, page_num):
        
+        # Save 
         if self.__previous_active_tab == notebook.get_n_pages() - 1:
-            # was on the edit tab update vhost
-            self.reload()
+            self.save_edit_tab()
+        elif self.__previous_active_tab == 0:
+            self.save_domain_tab()
         else:
-            self.update()
-
+            self.save_plugin_tab(self.__previous_active_tab)
+        
+        # Load
         if page_num == notebook.get_n_pages() - 1:
-            # open edit tab update content
-            buf = self.text_view_vhost_source.get_buffer()
-            text = self.vhost.get_source_generated()
-            buf.set_text( text )
-            buf.set_modified(False) 
+            self.load_edit_tab()
+        elif page_num == 0:
+            self.load_domain_tab()    
+        else:
+            self.update_plugin_tab(page_num)
+
+        self.window.set_title("VirtualHost Editor - " + self.vhost.get_server_name() )
 
         self.__previous_active_tab = page_num
 
@@ -239,34 +244,33 @@ class VirtualHostWindow:
     def load (self, vhost ):
         if vhost:
             self.vhost = vhost
-        self.__load()
+        self.load_domain_tab()
         
         for file in self.vhost.get_backup_files():
             self.combobox_vhost_backups.append_text("Backup " + file[0][-21:-4])
 
         self.label_path.set_text( self.vhost.get_source_filename() ) 
-        
-        buf = self.text_view_vhost_source.get_buffer()
-        text = self.vhost.get_source_generated()
-
-        buf.set_text( text )
-        buf.set_modified(False) 
-        
         self.on_entry_domain_changed()
          
-    def reload(self):
-    
+    def save_edit_tab(self):
+        print "Save edit tab"
         buf = self.text_view_vhost_source.get_buffer()
         content = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
         #try:
         self.vhost.load_from_string( content )
         #except "VhostUnparsable":            
         #    pass     
-         
-        self.__load()
-        
-    def __load(self):
 
+    def load_edit_tab(self):
+        print "load edit tab"
+        # open edit tab update content
+        buf = self.text_view_vhost_source.get_buffer()
+        text = self.vhost.get_source_generated()
+        buf.set_text( text )
+        buf.set_modified(False) 
+        
+    def load_domain_tab(self):
+        print "Load domain tab"
         server_name = self.vhost.get_server_name()
         self.window.set_title("VirtualHost Editor - " + server_name )
         self.window.set_icon_from_file(self.vhost.get_icon())
@@ -275,8 +279,6 @@ class VirtualHostWindow:
         iter = modal.get_iter(0)
         
         modal.set_value(iter, 0, self.window.get_icon())
-        
-        
 
         if not self.vhost.is_default():
             if ( server_name != None ):
@@ -296,13 +298,58 @@ class VirtualHostWindow:
             for domain in server_alias:
                 self.treeview_domain_store.append((domain, None))   
 
-        for plugin in self.plugins:
-        	try:
-        	    if plugin.is_enabled():          
-        	        plugin.load_vhost_properties(self.vhost)
-        	except Exception:
-        		traceback.print_exc(file=sys.stdout)
+    def save_domain_tab(self):
+        print "Save domain tab"
+        if self.entry_location.get_text() == "" and self.vhost.is_new:
+            self.set_default_values_from_domain( True )
+        
+        #if not self.vhost.is_default():
+        if self.entry_domain.get_text():
+            self.vhost.config.ServerName.value = self.entry_domain.get_text()
+        elif self.vhost.config.ServerName:
+            del self.vhost.config.ServerName 
+            
+        self.window.set_title("VirtualHost Editor - " + self.vhost.get_server_name() )
+        
+        if self.vhost.config.DocumentRoot:
+            old_document_root = self.vhost.config.DocumentRoot.value
+            if old_document_root != self.entry_location.get_text():
+                ds = self.vhost.config.Directory.search( [old_document_root] )
+                if len(ds) > 0:
+                    d = ds[0]
+                    d.value = self.entry_location.get_text()
+        self.vhost.config.DocumentRoot.value = self.entry_location.get_text()
 
+        aliases = self.get_server_aliases_list()
+        if len(aliases) > 0:
+            self.vhost.config.ServerAlias.opts = self.get_server_aliases_list()
+        elif self.vhost.config.ServerAlias:
+            del self.vhost.config.ServerAlias
+             
+        self.hack_hosts = self.checkbutton_hosts.get_active()      
+
+        return
+        
+    def update_plugin_tab(self, tab):
+        print "Update plugin : ", tab
+        if self.plugins:
+            for plugin in self.plugins:
+            	try:
+            	    if plugin.is_enabled() and plugin._tab_number == tab:          
+            	        plugin.load_vhost_properties(self.vhost)
+            	except Exception:
+            		traceback.print_exc(file=sys.stdout)
+
+    def save_plugin_tab(self, tab):
+        print "Save plugin : ", tab
+        if self.plugins:
+            for plugin in self.plugins:
+                try:
+                    if plugin.is_enabled() and plugin._tab_number == tab:  
+                        plugin.update_vhost_properties(self.vhost)
+                except Exception:
+            		traceback.print_exc(file=sys.stdout)
+                    
     def get_domain (self):
         return self.entry_domain.get_text().strip()
         #url.lower().startswith('http://')
@@ -383,21 +430,16 @@ class VirtualHostWindow:
         return  
             
     def on_button_save_clicked(self, widget):
-        
-        # Save editor content?
-        if self.__previous_active_tab == self.notebook.get_n_pages() - 1:
-            self.reload()
-        
-        res = self.update()
-        
-        if not res:
-            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format="Are you sure you want to continue\n\nThere are incomplete fields to be completed") #TODO: Terrible error text !!!
-            result = md.run()
-            md.destroy()
-            if result != gtk.RESPONSE_OK:
-                return
 
-        # Save plugins
+        # Save
+        if self.__previous_active_tab == self.notebook.get_n_pages() - 1:
+            self.save_edit_tab()
+        elif self.__previous_active_tab == 0:
+            self.save_domain_tab()
+        else:
+            self.save_plugin_tab(self.__previous_active_tab)
+        
+        # All plugins on save
         if self.plugins:
             for plugin in self.plugins:
                 try:
@@ -428,53 +470,7 @@ class VirtualHostWindow:
         self.parent.please_restart()
         self.window.destroy()
         
-    def update(self, tab_number=None):
-        result = True
-        
-        if self.entry_location.get_text() == "" and self.vhost.is_new:
-            self.set_default_values_from_domain( True )
-        
-        #if not self.vhost.is_default():
-        if self.entry_domain.get_text():
-            self.vhost.config.ServerName.value = self.entry_domain.get_text()
-        elif self.vhost.config.ServerName:
-            del self.vhost.config.ServerName 
-            
-        self.window.set_title("VirtualHost Editor - " + self.vhost.get_server_name() )
-        
-        if self.vhost.config.DocumentRoot:
-            old_document_root = self.vhost.config.DocumentRoot.value
-            if old_document_root != self.entry_location.get_text():
-                ds = self.vhost.config.Directory.search( [old_document_root] )
-                if len(ds) > 0:
-                    d = ds[0]
-                    d.value = self.entry_location.get_text()
-        self.vhost.config.DocumentRoot.value = self.entry_location.get_text()
 
-        aliases = self.get_server_aliases_list()
-        if len(aliases) > 0:
-            self.vhost.config.ServerAlias.opts = self.get_server_aliases_list()
-        elif self.vhost.config.ServerAlias:
-            del self.vhost.config.ServerAlias
-             
-        self.hack_hosts = self.checkbutton_hosts.get_active()      
-        
-	    # Update plugins
-        if self.plugins:
-            for plugin in self.plugins:
-                try:
-                    if plugin.is_enabled():
-                        res, message = plugin.update_vhost_properties(self.vhost)
-                        if not res:
-                            result = False
-                            if tab_number and plugin._tab_number == tab_number:
-                                self.show_error ( message )
-                            
-                except Exception:
-                    traceback.print_exc(file=sys.stdout) 
-        if result:
-            self.error_area.hide() 
-        return result
                                
     def on_button_cancel_clicked(self, widget):
         self.window.destroy()

@@ -402,11 +402,11 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         else:
             
             editable = vhost.is_editable()
-            self.xml.get_widget( 'delete_button' ).set_sensitive( editable )
+            self.xml.get_widget( 'delete_button' ).set_sensitive( True )
             self.xml.get_widget( 'edit_button' ).set_sensitive( True )
             
             #surfable =  self.get_current_vhost().get_server_name() != None
-            self.xml.get_widget( 'surf_this_button' ).set_sensitive( True )
+            self.xml.get_widget( 'surf_this_button' ).set_sensitive( editable )
             
             browsable = vhost.get_document_root() != None
             self.xml.get_widget( 'browse_button' ).set_sensitive( browsable )
