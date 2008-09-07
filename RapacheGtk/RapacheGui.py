@@ -425,13 +425,14 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
     def fix_vhosts(self, widget):
         print "Attempting to fix virtualhosts"
-        items = self.denormalized_treeview.get_items()
-        for name in items:
+        items = self.treeview_errors.get_items()
+        for name in items:            
             normalize_vhost( name )
         #since they were in the enabled, let's enabl'em again
         for name in items:
-            site = VirtualHostModel( name )
-            site.toggle(True)            
+             if self.vhosts_treeview.items.has_key( name ):            
+                self.vhosts_treeview.items[name].toggle(True)
+            #site.toggle(True)            
         self.refresh_vhosts()
         #self.refresh_denormalized_vhosts()
         self.refresh_config_test()
