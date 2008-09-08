@@ -111,6 +111,9 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.statusbar_server_status =  self.xml.get_widget( 'statusbar_server_status' )
         self.image_apache_status =  self.xml.get_widget( 'image_apache_status' )
         self.main_window = self.xml.get_widget("MainWindow")
+        self.menuitem_stop_apache = self.xml.get_widget("menuitem_stop_apache")
+        self.menuitem_start_apache = self.xml.get_widget("menuitem_start_apache")
+        self.menuitem_restart_apache = self.xml.get_widget("menuitem_restart_apache")
         #hereby we create lists
         self.create_vhost_list()
         self.create_modules_list()
@@ -202,12 +205,12 @@ class MainWindow( RapacheCore.Observer.Observable ) :
          , os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle_green.svg' ) #1
         ]
         
+        status_change_count = 0
+        last_status = self.apache.get_status()
         while True:
             status = self.apache.get_status()
             text = "Apache is stopped"
             image = gtk.STOCK_NO
-
-            # TODO: need ssh fail message here some where...
 
             if status == 1:
                 text = "Warning can not contact apache"
@@ -216,19 +219,30 @@ class MainWindow( RapacheCore.Observer.Observable ) :
                 text  = "Apache is running"   
                 image = gtk.STOCK_YES
                 
+            # All gtk actions must be on main thread
             gtk.gdk.threads_enter()
             self.image_apache_status.set_from_stock(image, gtk.ICON_SIZE_MENU)
             self.statusbar_server_status.pop(self.statusbar_server_status_context_id)
             self.statusbar_server_status.push(self.statusbar_server_status_context_id, text)
-            gtk.gdk.threads_leave()
-            
             self.main_window.set_icon_from_file(window_status_icons[status])
+            self.menuitem_stop_apache.set_sensitive(status == 2)
+            self.menuitem_start_apache.set_sensitive(status == 0)
+            self.menuitem_restart_apache.set_sensitive(status == 2)
+            gtk.gdk.threads_leave()
             
             if not loop:
                 break
                 
-            time.sleep( Configuration.TEST_CONNECTION_INTERVAL )
-            
+            # time out or check quickly for N times
+            if last_status == status and status_change_count == 0:
+                time.sleep( Configuration.TEST_CONNECTION_INTERVAL )
+            else:
+                time.sleep( 1 ) 
+                if last_status != status: status_change_count = 10
+                else: status_change_count = status_change_count - 1
+                last_status = status       
+                
+                
     def on_menuitem_stop_apache_activate(self, widget):
         self.apache.stop()
         self.update_server_status()
@@ -425,13 +439,14 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         
     def fix_vhosts(self, widget):
         print "Attempting to fix virtualhosts"
-        items = self.denormalized_treeview.get_items()
-        for name in items:
+        items = self.treeview_errors.get_items()
+        for name in items:            
             normalize_vhost( name )
         #since they were in the enabled, let's enabl'em again
         for name in items:
-            site = VirtualHostModel( name )
-            site.toggle(True)            
+             if self.vhosts_treeview.items.has_key( name ):            
+                self.vhosts_treeview.items[name].toggle(True)
+            #site.toggle(True)            
         self.refresh_vhosts()
         #self.refresh_denormalized_vhosts()
         self.refresh_config_test()
