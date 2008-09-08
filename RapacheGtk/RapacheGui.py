@@ -392,7 +392,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def please_restart ( self ):
         self.xml.get_widget( 'restart_apache_notice' ).show()
     def restart_apache ( self, widget ):
-        
+        if not Shell.command.ask_password(): return
         print "Restarting apache on user's request"
         self.apache.restart()
         self.update_server_status()
@@ -438,7 +438,9 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         if ( name == None ): return False
         open_module_doc(name)
         
-    def fix_vhosts(self, widget):
+    def fix_vhosts(self, widget):        
+        if not Shell.command.ask_password(): return
+        
         print "Attempting to fix virtualhosts"
         items = self.treeview_errors.get_items()
         for name in items:            
@@ -451,6 +453,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.refresh_vhosts()
         #self.refresh_denormalized_vhosts()
         self.refresh_config_test()
+        self.please_restart()
     def get_current_vhost(self ):
         name = self.vhosts_treeview.get_selected_line()
         if ( name == None ): return None
