@@ -65,7 +65,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
                 markup = site_template \
                 % ( site.get_server_name(), site.get_document_root() )
             else:
-                markup = site_unparsable_template % site.get_display_name()
+                markup = site_unparsable_template % site.get_server_name()
             iter = lstore.append()
             
             favicon = site.get_icon()

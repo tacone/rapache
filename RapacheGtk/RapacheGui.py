@@ -212,6 +212,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             text = "Apache is stopped"
             image = gtk.STOCK_NO
 
+
             if status == 1:
                 text = "Warning can not contact apache"
                 image = gtk.STOCK_DIALOG_WARNING

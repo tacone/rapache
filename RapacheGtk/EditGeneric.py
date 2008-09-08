@@ -103,7 +103,7 @@ class EditGenericWindow:
         return self.return_value
    
     def load (self, path):
-    
+        print path
         self.file_path = path
     
         self.window.set_title("Edit " + path)
@@ -112,6 +112,7 @@ class EditGenericWindow:
         for file in Shell.command.get_backup_files( path ):
             self.combobox_backups.append_text("Backup " + file[0][-21:-4])
         self.combobox_backups.set_active(0)
+        
         
         buf = self.text_view_source.get_buffer()
         buf.set_text( Shell.command.read_file( path ) )

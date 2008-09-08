@@ -92,6 +92,11 @@ class VirtualHostModel():
             try:
                 self.load(None)
                 self.parsable = True
+
+                if self.__name != self.get_server_name():
+                    print "FILE NAME MISMATCH"
+                    print self.__name
+                    print self.get_server_name()
             except:
                 pass
     # IO Methods
@@ -106,13 +111,15 @@ class VirtualHostModel():
              return False
              
     def load_from_string(self, content):
+        current_parser = self.__parser
         try:
             self.__parser = Parser()
             self.__parser.set_from_str( content )
             self.config = self.__parser.rsearch("VirtualHost")[0]
             return True
         except:
-             return False
+            self.__parser = current_parser
+            return False
          
     def save(self, content=None):
         if not Shell.command.ask_password(): return 
