@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Fri Sep  5 02:40:45 2008 -->
+<!--Generated with glade3 3.4.5 on Mon Sep  8 11:55:41 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="MainWindow">
     <property name="width_request">500</property>
@@ -104,7 +104,20 @@
                   <widget class="GtkMenu" id="menu_tools">
                     <property name="visible">True</property>
                     <child>
-                      <widget class="GtkImageMenuItem" id="menuitem2">
+                      <widget class="GtkImageMenuItem" id="menuitem_start_apache">
+                        <property name="visible">True</property>
+                        <property name="label" translatable="yes">_Start Apache</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="please_restart"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="menu-item-image7">
+                            <property name="stock">gtk-media-play</property>
+                          </widget>
+                        </child>
+                      </widget>
+                    </child>
+                    <child>
+                      <widget class="GtkImageMenuItem" id="menuitem_restart_apache">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">_Restart Apache</property>
                         <property name="use_underline">True</property>
@@ -453,7 +466,7 @@ web server is restarted</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="is_important">True</property>
-                                <property name="label" translatable="yes">Browse</property>
+                                <property name="label" translatable="yes">Browse Files</property>
                                 <property name="stock_id">gtk-open</property>
                                 <signal name="clicked" handler="browse_button_clicked"/>
                               </widget>
@@ -533,7 +546,7 @@ web server is restarted</property>
                     <child>
                       <widget class="GtkLabel" id="label2">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Virtual Hosts</property>
+                        <property name="label" translatable="yes">Web Sites</property>
                       </widget>
                       <packing>
                         <property name="padding">5</property>
@@ -651,7 +664,7 @@ web server is restarted</property>
                     <child>
                       <widget class="GtkLabel" id="label3">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Modules List</property>
+                        <property name="label" translatable="yes">Modules</property>
                       </widget>
                       <packing>
                         <property name="padding">5</property>
