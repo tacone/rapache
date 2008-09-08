@@ -86,19 +86,20 @@ class VirtualHostWindow:
         self.error_area = wtree.get_widget("error_area")
         self.treeview_menu = wtree.get_widget("treeview_menu")
         signals = {
-            "on_toolbutton_domain_add_clicked"       : self.on_toolbutton_domain_add_clicked,
-            "on_toolbutton_domain_edit_clicked"     : self.on_toolbutton_domain_edit_clicked,
-            "on_toolbutton_domain_delete_clicked"   : self.on_toolbutton_domain_delete_clicked,
+            "on_toolbutton_domain_add_clicked"  : self.on_toolbutton_domain_add_clicked,
+            "on_toolbutton_domain_edit_clicked" : self.on_toolbutton_domain_edit_clicked,
+            "on_toolbutton_domain_delete_clicked": self.on_toolbutton_domain_delete_clicked,
             "on_button_save_clicked"            : self.on_button_save_clicked,
             "on_button_cancel_clicked"          : self.on_button_cancel_clicked,
-            "on_entry_domain_changed"              : self.on_entry_domain_changed,
+            "on_entry_domain_changed"           : self.on_entry_domain_changed,
             "on_button_location_clicked"        : self.on_button_location_clicked,
-            "on_entry_domain_focus_out_event"    : self.on_entry_domain_focus_out_event,
-            "on_button_location_clear_clicked"    : self.on_button_location_clear_clicked,
+            "on_entry_domain_focus_out_event"   : self.on_entry_domain_focus_out_event,
+            "on_button_location_clear_clicked"  : self.on_button_location_clear_clicked,
             "on_button_restore_version_clicked" : self.on_button_restore_version_clicked,
             "on_linkbutton_documentation_clicked" : self.on_linkbutton_documentation_clicked,
-            "on_notebook_switch_page" : self.on_notebook_switch_page,
-            "on_treeview_menu_cursor_changed"   :   self.on_treeview_menu_cursor_changed
+            "on_notebook_switch_page"           : self.on_notebook_switch_page,
+            "on_treeview_menu_cursor_changed"   :   self.on_treeview_menu_cursor_changed,
+            "on_button_error_close_clicked"     : self.on_button_error_close_clicked
         }
         wtree.signal_autoconnect(signals)
         # add on destroy to quit loop
@@ -180,18 +181,24 @@ class VirtualHostWindow:
         page_number = model.get_value(iter, 2)
         
         # Save 
+        result = True
+        error = ""
         if self.__previous_active_tab == self.notebook.get_n_pages() - 1:
-            if not self.save_edit_tab():
-                md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK, message_format="Sorry your edited source does not seem to be valid syntax")
-                result = md.run()
-                md.destroy()
-                select = self.treeview_menu.get_selection()
-                select.select_path((self.notebook.get_n_pages() - 1))
-                return 
+            result, error =  self.save_edit_tab()
         elif self.__previous_active_tab == 0:
             self.save_domain_tab()
+            result = True
         else:
-            self.save_plugin_tab(self.__previous_active_tab)
+            result, error = self.save_plugin_tab(self.__previous_active_tab)
+        
+        # process     
+        if not result:
+            self.show_error("Sorry can not change tabs, " + error)
+            select = self.treeview_menu.get_selection()
+            select.select_path((self.__previous_active_tab))
+            return
+
+        self.clear_error()
         
         # Load
         if page_number == self.notebook.get_n_pages() - 1:
@@ -208,8 +215,6 @@ class VirtualHostWindow:
 
     def on_notebook_switch_page(self, notebook, page, page_num):
        return
-       
-
 
     def on_linkbutton_documentation_clicked(self, widget):
         Desktop.open_url( widget.get_uri() )
@@ -266,7 +271,7 @@ class VirtualHostWindow:
         buf = self.text_view_vhost_source.get_buffer()
         content = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
 
-        return self.vhost.load_from_string( content )
+        return self.vhost.load_from_string( content ), "your edited source does not seem to be valid syntax"
 
     def load_edit_tab(self):
         print "load edit tab"
@@ -348,15 +353,18 @@ class VirtualHostWindow:
             		traceback.print_exc(file=sys.stdout)
 
     def save_plugin_tab(self, tab):
+        result = True
+        error = ""
         print "Save plugin : ", tab
         if self.plugins:
             for plugin in self.plugins:
                 try:
                     if plugin.is_enabled() and plugin._tab_number == tab:  
-                        plugin.update_vhost_properties(self.vhost)
+                        result, error = plugin.update_vhost_properties(self.vhost)
                 except Exception:
             		traceback.print_exc(file=sys.stdout)
-                    
+        return result, error
+                 
     def get_domain (self):
         return self.entry_domain.get_text().strip()
         #url.lower().startswith('http://')
@@ -439,18 +447,21 @@ class VirtualHostWindow:
     def on_button_save_clicked(self, widget):
 
         # Save
+        result, error = True, ""
         if self.__previous_active_tab == self.notebook.get_n_pages() - 1:
-            if not self.save_edit_tab():
-                md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK, message_format="Sorry your edited source does not seem to be valid syntax")
-                result = md.run()
-                md.destroy()
-                return 
-                
+            result, error = self.save_edit_tab()
         elif self.__previous_active_tab == 0:
             self.save_domain_tab()
         else:
-            self.save_plugin_tab(self.__previous_active_tab)
+            result, error = self.save_plugin_tab(self.__previous_active_tab)
         
+        # if errors
+        if not result:
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK, message_format=error)
+            result = md.run()
+            md.destroy()
+            return 
+    
         # All plugins on save
         if self.plugins:
             for plugin in self.plugins:
@@ -481,14 +492,17 @@ class VirtualHostWindow:
         self.parent.refresh_vhosts()
         self.parent.please_restart()
         self.window.destroy()
-        
-
                                
     def on_button_cancel_clicked(self, widget):
         self.window.destroy()
         return    
         
+    def on_button_error_close_clicked(self, widget):
+        self.clear_error()
+                
     def show_error ( self, message ):
         self.message_text.set_label( '<b>'+message+'</b>' )
-        self.error_area.show()                 
-
+        self.error_area.show() 
+                        
+    def clear_error ( self):
+        self.error_area.hide()  

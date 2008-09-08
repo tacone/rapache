@@ -423,7 +423,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
             vhost.set_port(80)
 
         
-        return True, error
+        return True, ""
 
 
 def register( path ):

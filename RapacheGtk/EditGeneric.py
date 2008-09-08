@@ -103,7 +103,6 @@ class EditGenericWindow:
         return self.return_value
    
     def load (self, path):
-        print path
         self.file_path = path
     
         self.window.set_title("Edit " + path)

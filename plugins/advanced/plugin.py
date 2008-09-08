@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import re
 from RapacheCore.PluginBase import PluginBaseObject
 from EditDocumentNameGui import EditDocumentNameWindow
 try:
@@ -191,7 +192,8 @@ class AdvancedVhostPlugin(PluginBaseObject):
                 del d.Options
 
         server_admin = self.entry_admin_email.get_text()
-        return True, None
+        result = not server_admin or re.match("^[a-zA-Z0-9._%-]+@[a-zA-Z0-9._%-]+.[a-zA-Z]{2,6}$", server_admin)
+        return result, "Server Admin is not a valid email address"
 
 def register( path ):
     return AdvancedVhostPlugin( path )
