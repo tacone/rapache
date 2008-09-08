@@ -301,7 +301,7 @@ class ErrorsTreeView ( ConfFilesTreeView ):
             lstore.set(iter,
                 COLUMN_ICON, pixbuf,
                 COLUMN_FIXED, normalizable,
-                COLUMN_SEVERITY, site.get_server_name(),
+                COLUMN_SEVERITY, site.get_source_filename(),
                 COLUMN_MARKUP, markup +  "\nThe virtual host file is only present inside /etc/apache/sites-enabled.\n<small><i>You must normalize in order to manage this host</i>.</small>"
                 )
         
