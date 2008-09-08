@@ -285,7 +285,10 @@ class CommandHandler:
         output, error = p.communicate()
         returncode = p.returncode
         self.__output(command, returncode, output, error)
-        
+
+    def ask_password(self, description = "Super user priviledges are required to perform this operation"):
+        res = self.sudo_execute( ['echo'],  description = "Super user priviledges are required to perform this operation" )
+        return res[0] == 0
     def sudo_execute(self, command, description = "Super user priviledges are required to perform this operation"):
         #log = CommandLogEntry(command)
         #self.command_log.append( log )

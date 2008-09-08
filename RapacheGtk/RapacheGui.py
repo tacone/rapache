@@ -392,6 +392,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def please_restart ( self ):
         self.xml.get_widget( 'restart_apache_notice' ).show()
     def restart_apache ( self, widget ):
+        
         print "Restarting apache on user's request"
         self.apache.restart()
         self.update_server_status()

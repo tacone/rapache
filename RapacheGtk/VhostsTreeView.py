@@ -65,7 +65,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
                 markup = site_template \
                 % ( site.get_server_name(), site.get_document_root() )
             else:
-                markup = site_unparsable_template % site.get_display_name()
+                markup = site_unparsable_template % site.get_server_name()
             iter = lstore.append()
             
             favicon = site.get_icon()
@@ -77,7 +77,8 @@ class VhostsTreeView ( ConfFilesTreeView ):
                 COLUMN_SEVERITY, site.get_server_name(),
                 COLUMN_MARKUP, markup )
 
-    def __fixed_toggled(self, cell, path, treeview):        
+    def __fixed_toggled(self, cell, path, treeview): 
+        if not Shell.command.ask_password(): return 
         # get toggled iter        
         model = treeview.get_model()
         iter = model.get_iter((int(path),))

@@ -178,29 +178,38 @@ class VirtualHostWindow:
         model, iter =  self.treeview_menu.get_selection().get_selected()
         if not iter: return
         page_number = model.get_value(iter, 2)
-        self.notebook.set_current_page(page_number)  
-
-    def on_notebook_switch_page(self, notebook, page, page_num):
-       
+        
         # Save 
-        if self.__previous_active_tab == notebook.get_n_pages() - 1:
-            self.save_edit_tab()
+        if self.__previous_active_tab == self.notebook.get_n_pages() - 1:
+            if not self.save_edit_tab():
+                md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK, message_format="Sorry your edited source does not seem to be valid syntax")
+                result = md.run()
+                md.destroy()
+                select = self.treeview_menu.get_selection()
+                select.select_path((self.notebook.get_n_pages() - 1))
+                return 
         elif self.__previous_active_tab == 0:
             self.save_domain_tab()
         else:
             self.save_plugin_tab(self.__previous_active_tab)
         
         # Load
-        if page_num == notebook.get_n_pages() - 1:
+        if page_number == self.notebook.get_n_pages() - 1:
             self.load_edit_tab()
-        elif page_num == 0:
+        elif page_number == 0:
             self.load_domain_tab()    
         else:
-            self.update_plugin_tab(page_num)
+            self.update_plugin_tab(page_number)
 
         self.window.set_title("VirtualHost Editor - " + self.vhost.get_server_name() )
 
-        self.__previous_active_tab = page_num
+        self.__previous_active_tab = page_number
+        self.notebook.set_current_page(page_number)  
+
+    def on_notebook_switch_page(self, notebook, page, page_num):
+       return
+       
+
 
     def on_linkbutton_documentation_clicked(self, widget):
         Desktop.open_url( widget.get_uri() )
@@ -256,10 +265,8 @@ class VirtualHostWindow:
         print "Save edit tab"
         buf = self.text_view_vhost_source.get_buffer()
         content = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
-        #try:
-        self.vhost.load_from_string( content )
-        #except "VhostUnparsable":            
-        #    pass     
+
+        return self.vhost.load_from_string( content )
 
     def load_edit_tab(self):
         print "load edit tab"
@@ -433,7 +440,12 @@ class VirtualHostWindow:
 
         # Save
         if self.__previous_active_tab == self.notebook.get_n_pages() - 1:
-            self.save_edit_tab()
+            if not self.save_edit_tab():
+                md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK, message_format="Sorry your edited source does not seem to be valid syntax")
+                result = md.run()
+                md.destroy()
+                return 
+                
         elif self.__previous_active_tab == 0:
             self.save_domain_tab()
         else:
