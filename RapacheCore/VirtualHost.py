@@ -115,6 +115,7 @@ class VirtualHostModel():
              return False
          
     def save(self, content=None):
+        if not Shell.command.ask_password(): return 
         
         # Get parser content
         if not content: content = self.__parser.get_as_str()

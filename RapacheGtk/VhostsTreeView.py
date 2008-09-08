@@ -77,7 +77,8 @@ class VhostsTreeView ( ConfFilesTreeView ):
                 COLUMN_SEVERITY, site.get_server_name(),
                 COLUMN_MARKUP, markup )
 
-    def __fixed_toggled(self, cell, path, treeview):        
+    def __fixed_toggled(self, cell, path, treeview): 
+        if not Shell.command.ask_password(): return 
         # get toggled iter        
         model = treeview.get_model()
         iter = model.get_iter((int(path),))
