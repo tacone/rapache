@@ -65,7 +65,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
                 markup = site_template \
                 % ( site.get_server_name(), site.get_document_root() )
             else:
-                markup = site_unparsable_template % site.get_source_filename()
+                markup = site_unparsable_template % site.get_server_name()
             iter = lstore.append()
             
             favicon = site.get_icon()
@@ -74,7 +74,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
             lstore.set(iter,
                 COLUMN_FIXED, site.enabled,
                 COLUMN_ICON, pixbuf,
-                COLUMN_SEVERITY, site.get_source_filename(),
+                COLUMN_SEVERITY, site.get_name(),
                 COLUMN_MARKUP, markup )
 
     def __fixed_toggled(self, cell, path, treeview): 
@@ -273,7 +273,7 @@ class ErrorsTreeView ( ConfFilesTreeView ):
             lstore.set(iter,
                 COLUMN_ICON, pixbuf,
                 COLUMN_FIXED, normalizable,
-                COLUMN_SEVERITY, site.get_source_filename(),
+                COLUMN_SEVERITY, site.get_name(),
                 COLUMN_MARKUP, markup +  "\nThe virtual host file is only present inside /etc/apache/sites-enabled.\n<small><i>You must normalize in order to manage this host</i>.</small>"
                 )
         

@@ -267,14 +267,14 @@ class VirtualHostWindow:
         self.on_entry_domain_changed()
          
     def save_edit_tab(self):
-        print "Save edit tab"
+        #print "Save edit tab"
         buf = self.text_view_vhost_source.get_buffer()
         content = buf.get_text(buf.get_start_iter(), buf.get_end_iter())
 
         return self.vhost.load_from_string( content ), "your edited source does not seem to be valid syntax"
 
     def load_edit_tab(self):
-        print "load edit tab"
+        #print "load edit tab"
         # open edit tab update content
         buf = self.text_view_vhost_source.get_buffer()
         text = self.vhost.get_source_generated()
@@ -282,22 +282,28 @@ class VirtualHostWindow:
         buf.set_modified(False) 
         
     def load_domain_tab(self):
-        print "Load domain tab"
-        server_name = self.vhost.get_server_name()
-        self.window.set_title("VirtualHost Editor - " + server_name )
+        #print "Load domain tab"
+        
+        vhost_name = self.vhost.get_server_name()
+        self.window.set_title("VirtualHost Editor - " + vhost_name )
         self.window.set_icon_from_file(self.vhost.get_icon())
         
         modal = self.treeview_menu.get_model()
         iter = modal.get_iter(0)
         
         modal.set_value(iter, 0, self.window.get_icon())
-
-        if not self.vhost.is_default():
-            if ( server_name != None ):
-                self.entry_domain.set_text( server_name )
+        server_name = ''
+        if self.vhost.config and self.vhost.config.servername and self.vhost.config.servername.value:
+            server_name = self.vhost.config.servername.value
+            
+        self.entry_domain.set_text( server_name )
+        """ ???    
+        if not self.vhost.is_default():            
+            self.entry_domain.set_text( server_name )
         elif self.vhost.config.ServerName:
             self.entry_domain.set_sensitive(False)
-            
+        """
+        
         document_root = self.vhost.get_document_root()
         if ( document_root != None ):
             self.entry_location.set_text( document_root )
@@ -311,7 +317,7 @@ class VirtualHostWindow:
                 self.treeview_domain_store.append((domain, None))   
 
     def save_domain_tab(self):
-        print "Save domain tab"
+        #print "Save domain tab"
         if self.entry_location.get_text() == "" and self.vhost.is_new:
             self.set_default_values_from_domain( True )
         
@@ -343,7 +349,7 @@ class VirtualHostWindow:
         return
         
     def update_plugin_tab(self, tab):
-        print "Update plugin : ", tab
+        #print "Update plugin : ", tab
         if self.plugins:
             for plugin in self.plugins:
             	try:
@@ -355,7 +361,7 @@ class VirtualHostWindow:
     def save_plugin_tab(self, tab):
         result = True
         error = ""
-        print "Save plugin : ", tab
+        #print "Save plugin : ", tab
         if self.plugins:
             for plugin in self.plugins:
                 try:
@@ -383,7 +389,7 @@ class VirtualHostWindow:
         
     def on_entry_domain_changed(self, unused_widget = None):
         widget = self.entry_domain
-        name = widget.get_text()
+        name = widget.get_text()                
         if valid_domain_name( name ) or (self.vhost and self.vhost.is_default()):
             self.button_save.set_sensitive(True);
         else:
