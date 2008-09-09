@@ -278,21 +278,27 @@ class VirtualHostWindow:
         
     def load_domain_tab(self):
         print "Load domain tab"
-        server_name = self.vhost.get_server_name()
-        self.window.set_title("VirtualHost Editor - " + server_name )
+        
+        vhost_name = self.vhost.get_server_name()
+        self.window.set_title("VirtualHost Editor - " + vhost_name )
         self.window.set_icon_from_file(self.vhost.get_icon())
         
         modal = self.treeview_menu.get_model()
         iter = modal.get_iter(0)
         
         modal.set_value(iter, 0, self.window.get_icon())
-
-        if not self.vhost.is_default():
-            if ( server_name != None ):
-                self.entry_domain.set_text( server_name )
+        server_name = ''
+        if self.vhost.config and self.vhost.config.servername and self.vhost.config.servername.value:
+            server_name = self.vhost.config.servername.value
+            
+        self.entry_domain.set_text( server_name )
+        """ ???    
+        if not self.vhost.is_default():            
+            self.entry_domain.set_text( server_name )
         elif self.vhost.config.ServerName:
             self.entry_domain.set_sensitive(False)
-            
+        """
+        
         document_root = self.vhost.get_document_root()
         if ( document_root != None ):
             self.entry_location.set_text( document_root )
@@ -375,7 +381,7 @@ class VirtualHostWindow:
         
     def on_entry_domain_changed(self, unused_widget = None):
         widget = self.entry_domain
-        name = widget.get_text()
+        name = widget.get_text()                
         if valid_domain_name( name ) or (self.vhost and self.vhost.is_default()):
             self.button_save.set_sensitive(True);
         else:

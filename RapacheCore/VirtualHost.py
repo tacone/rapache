@@ -72,7 +72,7 @@ def normalize_vhost( fname ):
 
 # Replacment that uses new parser.....
 class VirtualHostModel():
-    def __init__(self, name = None, plugin_manager = None):
+    def __init__(self, name = None, plugin_manager = None):        
         self.__name = name
         self.__parser = Parser() 
         self.__is_default = name == "default"
