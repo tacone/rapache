@@ -65,7 +65,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
                 markup = site_template \
                 % ( site.get_server_name(), site.get_document_root() )
             else:
-                markup = site_unparsable_template % site.get_server_name()
+                markup = site_unparsable_template % site.get_source_filename()
             iter = lstore.append()
             
             favicon = site.get_icon()
@@ -74,7 +74,7 @@ class VhostsTreeView ( ConfFilesTreeView ):
             lstore.set(iter,
                 COLUMN_FIXED, site.enabled,
                 COLUMN_ICON, pixbuf,
-                COLUMN_SEVERITY, site.get_server_name(),
+                COLUMN_SEVERITY, site.get_source_filename(),
                 COLUMN_MARKUP, markup )
 
     def __fixed_toggled(self, cell, path, treeview): 
@@ -242,34 +242,6 @@ class ErrorsTreeView ( ConfFilesTreeView ):
                 )
         fixable_items = self._add_denormalized_vhosts()
         return max( returncode,  fixable_items )
-    def unused(self):
-        data = []  
-        dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
-        dirList = [x for x in dirList if self._blacklisted( x ) == False ]
-        #dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]                   
-        for fname in  dirList :
-            site = VirtualHostModel( fname )                        
-            self.items[ fname ] = site
-            site = None
-
-        for idx in sorted( self.items ):            
-            site = self.items[ idx ]
-            normalizable = not is_not_normalizable(site.get_server_name())
-            markup = site_template % site.get_server_name()
-            
-            
-            if ( normalizable == False ):
-                markup = markup + " CANNOT FIX"
-            iter = lstore.append()
-            
-            pixbuf = self.render_icon(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_LARGE_TOOLBAR)
-            
-            lstore.set(iter,
-                COLUMN_ICON, pixbuf,
-                COLUMN_FIXED, normalizable,
-                COLUMN_SEVERITY, site.get_server_name(),
-                COLUMN_MARKUP, markup +  "\nThe virtual host file is only present inside /etc/apache/sites-enabled.\n<small><i>You must normalize in order to manage this host</i>.</small>"
-                )
          
     def _add_denormalized_vhosts( self ):
         

@@ -149,7 +149,13 @@ class AdvancedVhostPlugin(PluginBaseObject):
     def update_vhost_properties(self, vhost):
      
         if self.entry_admin_email.get_text(): vhost.config.ServerAdmin.value = self.entry_admin_email.get_text()
+        elif vhost.config.ServerAdmin:
+            del vhost.config.ServerAdmin
+            
         if self.entry_log_location.get_text() : vhost.config.ErrorLog.value =  self.entry_log_location.get_text()
+        elif vhost.config.ErrorLog:
+            del vhost.config.ErrorLog
+
         vhost.config.LogLevel.value =  self.log_levels[ self.combobox_log_level.get_active() ]
         if self.checkbutton_server_signature.get_active():
              vhost.config.ServerSignature.value = "on"

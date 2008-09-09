@@ -368,8 +368,10 @@ class AdvancedVhostPlugin(PluginBaseObject):
     def on_button_csr_clicked(self, widget):
 
         w = CertificateRequestWindow(self.path)
-        
-        w.load( [self.vhost.get_server_name()] + list(self.vhost.get_server_alias()),  self.vhost.config.ServerAdmin, self.entry_ssl_key_location.get_text() )
+        ServerAdmin = ''
+        if self.vhost.config.ServerAdmin:
+            ServerAdmin = self.vhost.config.ServerAdmin.value
+        w.load( [self.vhost.get_server_name()] + list(self.vhost.get_server_alias()), ServerAdmin, self.entry_ssl_key_location.get_text() )
         cert = w.run()
         
         if cert:

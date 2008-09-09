@@ -225,7 +225,11 @@ class BasicAuthenticationPlugin(PluginBaseObject):
         if self.checkbutton_enable_auth_basic.get_active() and len(self.users_active) > 0:
             d.AuthType.value = "Basic"
             
-            d.AuthName.value = self.entry_warning_message.get_text() 
+            if self.entry_warning_message.get_text():
+                d.AuthName.value = self.entry_warning_message.get_text() 
+            elif d.AuthName:
+                del d.AuthName
+                
             d.AuthUserFile.value =  self.entry_location.get_text()
             d.Require.opts = ["user"] + self.users_active
             
