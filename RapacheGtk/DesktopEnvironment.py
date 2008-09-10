@@ -40,6 +40,11 @@ def open_url(url):
         command = ['sudo', '-u', os.environ['SUDO_USER']] + command
     subprocess.Popen(command)
 
-def open_dir( path):
+def open_dir( path ):
     # just call this locally as it wont apply over ssh
-    subprocess.Popen( ['gksu', subprocess.list2cmdline(['nautilus', path, '--no-desktop'])] )
+    command = ['nautilus', path, '--no-desktop']
+
+    if os.access(path, os.W_OK):
+        subprocess.Popen( command )
+    else:
+        subprocess.Popen( ['gksu', subprocess.list2cmdline(command)] )
