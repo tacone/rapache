@@ -256,7 +256,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.please_restart()
             return
         if event.name == 'please_reload_lists':
-            self.load_lists()
+            self.refresh_modules()
             return
     def browse_sites_available(self, widget):
         Desktop.open_dir( Configuration.SITES_AVAILABLE_DIR )
