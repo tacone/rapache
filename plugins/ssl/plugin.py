@@ -322,15 +322,17 @@ class AdvancedVhostPlugin(PluginBaseObject):
         
     def update_treeview(self):
         icon_theme = gtk.icon_theme_get_default()
-        #file_icon = icon_theme.load_icon(gtk.STOCK_DIALOG_INFO, 24, 0)
-        #auth_icon = icon_theme.load_icon(gtk.STOCK_DIALOG_AUTHENTICATION, 24, 0)
         cert_icon = icon_theme.lookup_icon("stock_lock", 24, 0).load_icon() 
-        #cert_icon = icon_theme.load_icon(icon, 24, 0)
+
         self.treeview_requests_store = gtk.ListStore(bool, gtk.gdk.Pixbuf,str, str, str, str)
         self.treeview_requests.set_model(self.treeview_requests_store)
         
         files = Shell.command.listdir("/etc/apache2/ssl/")
         files.sort()
+
+        domains = list(self.vhost.get_server_alias())
+        if self.vhost.config.ServerName:
+              domains = [self.vhost.get_server_name()] + domains
 
         if not self.active_cert:
             self.treeview_requests_store.append((True, None , "<b><i>No Certificate</i></b>", "", "", None))   
@@ -341,35 +343,44 @@ class AdvancedVhostPlugin(PluginBaseObject):
             full_path = os.path.join("/etc/apache2/ssl/", path)     
 
             if path.endswith(".crt"):
-                
-                cert = crypto.load_certificate(crypto.FILETYPE_PEM, Shell.command.read_file(full_path)) 
-                expired = self.get_expiry_date_hack(cert, full_path)
-                if cert.has_expired() : expired = "<b>Expired " + expired +"</b>"
 
-                if full_path == self.active_cert:
-                    self.treeview_requests_store.append((True, cert_icon, "<b>Certificate</b>", "<b>" + cert.get_subject().commonName +"</b>",  "<b>" +expired +"</b>", full_path))     
-                    select = self.treeview_requests.get_selection()
-                    select.select_path(len(self.treeview_requests_store) - 1)
-                    self.treeview_requests.scroll_to_cell(len(self.treeview_requests_store) - 1)
-                    
-                else: 
-                    self.treeview_requests_store.append((False, cert_icon, "Certificate", cert.get_subject().commonName , expired, full_path))     
-            #if path.endswith(".pkey"):
-            #    self.treeview_requests_store.append((auth_icon, "Key", path, path)) 
-        """
-        files = Shell.command.listdir("/etc/apache2/ssl/")
-        files.sort()
-        for path in files: 
-            full_path = os.path.join("/etc/apache2/ssl/", path)     
-            if path.endswith(".csr"):
-                cert_req = crypto.load_certificate_request(crypto.FILETYPE_PEM, Shell.command.read_file(full_path)) 
-                self.treeview_requests_store.append((file_icon, "Request", cert_req.get_subject().commonName, "",  full_path))"""
+                cert = crypto.load_certificate(crypto.FILETYPE_PEM, Shell.command.read_file(full_path)) 
+                domain = cert.get_subject().commonName
+                domain_match = False
+                # find domains that are relevent
+                for d in domains:
+
+                    if d == domain or (domain[0] == "*" and (d.endswith( domain[1:] ) or d == domain[2:])):
+                        domain_match = True      
+                        
+ 
+                        if domain_match:
+                            expired = self.get_expiry_date_hack(cert, full_path)
+                            if cert.has_expired() : expired = "<b>Expired " + expired +"</b>"
+
+                            if full_path == self.active_cert:
+                                self.treeview_requests_store.append((True, cert_icon, "<b>Certificate</b>", "<b>"+ domain +"</b>"         ,  "<b>" +expired +"</b>", full_path))     
+                                select = self.treeview_requests.get_selection()
+                                select.select_path(len(self.treeview_requests_store) - 1)
+                                self.treeview_requests.scroll_to_cell(len(self.treeview_requests_store) - 1)
+                                
+                            else: 
+                                self.treeview_requests_store.append((False, cert_icon, "Certificate", domain , expired, full_path))
+                                  
+                        break   
 
     def on_button_csr_clicked(self, widget):
 
         w = CertificateRequestWindow(self.path)
+        ServerAdmin = ''
+        if self.vhost.config.ServerAdmin:
+            ServerAdmin = self.vhost.config.ServerAdmin.value
         
-        w.load( [self.vhost.get_server_name()] + list(self.vhost.get_server_alias()),  self.vhost.config.ServerAdmin, self.entry_ssl_key_location.get_text() )
+        domains = list(self.vhost.get_server_alias())
+        if self.vhost.config.ServerName:
+              domains = [self.vhost.get_server_name()] + domains
+              
+        w.load( domains , ServerAdmin, self.entry_ssl_key_location.get_text() )
         cert = w.run()
         
         if cert:
@@ -423,7 +434,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
             vhost.set_port(80)
 
         
-        return True, error
+        return True, ""
 
 
 def register( path ):

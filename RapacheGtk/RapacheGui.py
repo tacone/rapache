@@ -256,7 +256,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.please_restart()
             return
         if event.name == 'please_reload_lists':
-            self.load_lists()
+            self.refresh_modules()
             return
     def browse_sites_available(self, widget):
         Desktop.open_dir( Configuration.SITES_AVAILABLE_DIR )
@@ -463,6 +463,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             return self.vhosts_treeview.items[ name ]
         else:
             return VirtualHostModel( name )
+            
     def surf_this(self, widget):
         name = self.vhosts_treeview.get_selected_line()
         if name == 'default':
@@ -470,10 +471,10 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         else:
             server_name = self.get_current_vhost().get_server_name()
             
+        # TODO: move to vhost.get_url()    
         protocol = "http"    
-        #FIXME: reimplement this when we have port methods again
-        #if str(self.vhosts_treeview.items[ name ].get_value("port", "80")) == "443":
-        #    protocol = "https"
+        if self.get_current_vhost().get_port() == 443:
+           protocol = "https"
             
         if ( server_name ): Desktop.open_url( protocol+"://" + server_name )
     def browse_this(self, widget):

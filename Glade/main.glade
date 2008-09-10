@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Mon Sep  8 11:55:41 2008 -->
+<!--Generated with glade3 3.4.5 on Tue Sep  9 16:52:16 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="MainWindow">
     <property name="width_request">500</property>
@@ -364,6 +364,7 @@ web server is restarted</property>
                           <widget class="GtkViewport" id="viewport_errors">
                             <property name="visible">True</property>
                             <property name="resize_mode">GTK_RESIZE_QUEUE</property>
+                            <property name="shadow_type">GTK_SHADOW_NONE</property>
                             <child>
                               <placeholder/>
                             </child>
@@ -373,9 +374,6 @@ web server is restarted</property>
                       <packing>
                         <property name="position">1</property>
                       </packing>
-                    </child>
-                    <child>
-                      <placeholder/>
                     </child>
                   </widget>
                 </child>
@@ -391,7 +389,7 @@ web server is restarted</property>
                     <child>
                       <widget class="GtkLabel" id="label6">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">Errors</property>
+                        <property name="label" translatable="yes">Problems</property>
                       </widget>
                       <packing>
                         <property name="padding">5</property>

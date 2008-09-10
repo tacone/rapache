@@ -206,8 +206,9 @@ class CertificateRequestWindow:
             count = count + 1
     
         for domain in domains:
-            self.combobox_domain.append_text(domain)
-            self.combobox_domain.append_text("*."+ domain) # add sub domain wildcard
+            if domain:
+                self.combobox_domain.append_text(domain)
+                self.combobox_domain.append_text("*."+ domain) # add sub domain wildcard
             
         self.combobox_domain.set_active(0)
         self.key = private_key
