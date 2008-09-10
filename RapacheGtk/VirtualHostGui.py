@@ -409,6 +409,10 @@ class VirtualHostWindow:
                         gtk.RESPONSE_OK))
                         
         location = self.entry_location.get_text().strip()
+        
+        while not Shell.command.exists(location):
+            location = os.path.abspath(os.path.join(location, os.path.pardir))
+        
         if not location:
             location = "/var/www"    
         chooser.set_current_folder(location)
