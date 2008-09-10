@@ -79,4 +79,4 @@ class PluginBaseObject():
         
     # Perform action on vhost properties save, return false if validation fails
     def save_vhost_properties(self, vhost):
-        return True
+        return True, ""
