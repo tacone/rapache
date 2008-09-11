@@ -74,6 +74,7 @@ class VirtualHostWindow:
         self.button_location = wtree.get_widget("button_location")
         self.treeview_domain = wtree.get_widget("treeview_domain")
         self.checkbutton_hosts = wtree.get_widget("checkbutton_hosts")
+        self.label_hosts = wtree.get_widget("label_hosts")
         self.toolbutton_domain_add = wtree.get_widget("toolbutton_domain_add")
         self.toolbutton_domain_edit = wtree.get_widget("toolbutton_domain_edit")
         self.toolbutton_domain_delete = wtree.get_widget("toolbutton_domain_delete")
@@ -258,6 +259,11 @@ class VirtualHostWindow:
     def load (self, vhost ):
         if vhost:
             self.vhost = vhost
+            #hosts tooggling not supported on editing
+            self.checkbutton_hosts.hide()
+            self.label_hosts.hide()
+        else:
+            self.checkbutton_hosts.set_active(True)
         self.load_domain_tab()
         
         for file in self.vhost.get_backup_files():
@@ -265,7 +271,7 @@ class VirtualHostWindow:
 
         self.label_path.set_text( self.vhost.get_source_filename() ) 
         self.on_entry_domain_changed()
-         
+        
     def save_edit_tab(self):
         #print "Save edit tab"
         buf = self.text_view_vhost_source.get_buffer()
@@ -484,15 +490,29 @@ class VirtualHostWindow:
                                 self.show_error ( message )
                 except Exception:
                     traceback.print_exc(file=sys.stdout) 
-                    
+        
+
+        is_new = self.vhost.is_new
         # save over buffer content
         self.vhost.save()
         
+        #update /etc/hosts only if it's a new vhost
+        
+        if is_new:
+            if self.hack_hosts:
+                #update servername
+                if self.vhost.config.ServerName and self.vhost.config.ServerName.value:
+                    Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, "hosts-manager"), '-a', self.vhost.config.ServerName.value ] )
+                #add an entry for each host
+                if self.vhost.config.ServerAlias:
+                    for alias in self.vhost.config.ServerAlias:
+                        Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, 'hosts-manager'), '-a', alias ])
+                    
         # check apache config
         returncode, error = self.parent.apache.test_config()
         if not returncode:
             error = error.strip()
-            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format=error + "\n\nAre you sure you want to continue, apache may not start until all errors are resolved")
+            md = gtk.MessageDialog(self.window, flags=0, type=gtk.MESSAGE_ERROR, buttons=gtk.BUTTONS_OK_CANCEL, message_format="Changes have been saved, but an error has been detected: \n\n"+error + "\n\nAre you sure you want to continue? Apache may not start until all errors are resolved.")
             result = md.run()
             md.destroy()
             if result != gtk.RESPONSE_OK:

@@ -148,11 +148,13 @@ class VirtualHostModel():
         if self.is_new: self.__name = ServerName
 
         Shell.command.write_file(self.get_source_filename(), content)
-          
+        #not needed anymore (nor invoked)
+        """
         if self.hack_hosts:
             Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, "hosts-manager"), '-a', ServerName ] )
             for alias in self.config.ServerAlias:
                 Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, 'hosts-manager'), '-a', alias ])
+        """
         
         if self.is_new:      
             self.toggle( True ) #activate by default 
