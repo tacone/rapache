@@ -32,10 +32,8 @@ from RapacheCore.HostsManager import HostsManager
 from RapacheCore import Shell
 
 VHOST_TEMPLATE = """#created for you by Rapache
-<VirtualHost *>
-    #ServerAdmin webmaster@example.com
-    ServerName example
-    DocumentRoot /var/www/examplepath
+<VirtualHost *:80>
+    
 </VirtualHost>"""
 
 
