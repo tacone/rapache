@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Mon Sep  8 15:25:55 2008 -->
+<!--Generated with glade3 3.4.5 on Thu Sep 11 04:48:39 2008 -->
 <glade-interface>
   <widget class="GtkDialog" id="dialog_edit_vhost">
     <property name="border_width">5</property>
@@ -185,7 +185,7 @@
                       </packing>
                     </child>
                     <child>
-                      <widget class="GtkLabel" id="create_hosts_label1">
+                      <widget class="GtkLabel" id="label_hosts">
                         <property name="visible">True</property>
                         <property name="label" translatable="yes">If you have a domain that is not registered you will need an entry in your &lt;b&gt;/etc/hosts&lt;/b&gt; file.</property>
                         <property name="use_markup">True</property>
