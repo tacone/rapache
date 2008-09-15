@@ -22,6 +22,7 @@ import re
 from RapacheCore.VirtualHost import *
 from RapacheCore import Module
 from RapacheCore import Configuration
+from xml.sax import saxutils
 
 class ConfFilesTreeView( CheckListView ):
     def __init__ (self, *args, **kwargs):
@@ -41,7 +42,6 @@ gobject.type_register (ConfFilesTreeView)
 class VhostsTreeView ( ConfFilesTreeView ):
     def __init__ (self, *args, **kwargs):
         super (VhostsTreeView, self).__init__ (*args, **kwargs)
-        self.icon_callback = self.__get_row_icon  
         self.toggled_callback = self.__fixed_toggled
     
     
@@ -52,49 +52,34 @@ class VhostsTreeView ( ConfFilesTreeView ):
         
         lstore = self._reset_model()
             
-        data = []          
+        data = []
         dirList=os.listdir( Configuration.SITES_AVAILABLE_DIR )
         dirList = [x for x in dirList if self._blacklisted( x ) == False ]            
         for fname in  dirList :                        
             site = VirtualHostModel( fname )
-            try:
-                site.load()
-            except "VhostUnparsable":
-                pass
-            self.items[ fname ] = site
-            site = None
+            if not site.is_new:
+                self.items[ fname ] = site
                             
         for idx in sorted( self.items ):
             site = self.items[ idx ]
             if ( site.parsable ):
                 markup = site_template \
-                % ( site.data['name'] , site.data[ 'DocumentRoot' ] )
+                % ( site.get_server_name(), site.get_document_root() )
             else:
-                markup = site_unparsable_template % site.data['name']
+                markup = site_unparsable_template % site.get_server_name()
             iter = lstore.append()
+            
+            favicon = site.get_icon()
+            pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
+                       
             lstore.set(iter,
-                COLUMN_FIXED, site.data['enabled'],
-                COLUMN_SEVERITY, site.data['name'],
+                COLUMN_FIXED, site.enabled,
+                COLUMN_ICON, pixbuf,
+                COLUMN_SEVERITY, site.get_name(),
                 COLUMN_MARKUP, markup )
 
-    #TODO: warning ! This function get's called even on mousehover
-    #      check for a way to optimize it
-    def __get_row_icon (self, column, cell, model, iter):
-        """ Provides the icon for a virtual host looking up it's favicon"""        
-        """node = model.get_value(iter, MODEL_FIELD_NODE)
-        pixbuf = getPixbufForNode(node)
-        cell.set_property('pixbuf', pixbuf)"""                
-        favicon = os.path.join( Configuration.GLADEPATH, 'browser.png' )
-        fname = model.get_value(iter, COLUMN_SEVERITY )
-        site = self.items[ fname ]
-        if site.data['DocumentRoot'] != None:
-            custom_favicon = os.path.join(os.path.dirname( site.data['DocumentRoot']+"/" ), "favicon.ico")                                                    
-            if ( os.path.exists( custom_favicon ) ): favicon = custom_favicon
-            
-        pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
-        cell.set_property("pixbuf", pixbuf)
-        
-    def __fixed_toggled(self, cell, path, treeview):        
+    def __fixed_toggled(self, cell, path, treeview): 
+        if not Shell.command.ask_password(): return 
         # get toggled iter        
         model = treeview.get_model()
         iter = model.get_iter((int(path),))
@@ -109,15 +94,15 @@ class VhostsTreeView ( ConfFilesTreeView ):
         # set new value        
         site = VirtualHostModel( name )
         site.toggle( fixed )
-        model.set(iter, COLUMN_FIXED, site.data['enabled'] )        
+        model.set(iter, COLUMN_FIXED, site.enabled )        
         if ( site.changed ):
             self.raise_event( 'please_restart_apache' )                
 gobject.type_register (VhostsTreeView)
-
+"""
 class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
     def __init__ (self, *args, **kwargs):
         super (DenormalizedVhostsTreeView, self).__init__ (*args, **kwargs)
-        print self.column_checkbox, self.column_description, self.column_icon
+        #print self.column_checkbox, self.column_description, self.column_icon
         self.column_checkbox.set_visible( False )
         self.column_icon.get_cell_renderers()[0].set_property( 'stock-id',  gtk.STOCK_DIALOG_WARNING )        
     def load(self):    
@@ -128,28 +113,31 @@ class DenormalizedVhostsTreeView ( ConfFilesTreeView ):
         data = []  
         dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
         dirList = [x for x in dirList if self._blacklisted( x ) == False ]
-        dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]                   
+        dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]             
+        
+        self.items = {}
         for fname in  dirList :
             site = VirtualHostModel( fname )                        
             self.items[ fname ] = site
-            site = None
-
+            site = None        
         for idx in sorted( self.items ):            
-            site = self.items[ idx ]
-            normalizable = not is_not_normalizable(site.data['name'])
-            markup = site_template % site.data['name']
+            site = self.items[ idx ]            
+            normalizable = not is_not_normalizable(site.get_name())
+            markup = site_template % site.get_name()
             if ( normalizable == False ):
                 markup = markup + " CANNOT FIX"
             iter = lstore.append()
+            
             lstore.set(iter,
                 COLUMN_FIXED, normalizable,
-                COLUMN_SEVERITY, site.data['name'],
+                COLUMN_SEVERITY, site.get_name(), 
                 COLUMN_MARKUP, markup 
                 )
+                
     def toggled_callback(self, *args, **kwargs):
         pass
 gobject.type_register (DenormalizedVhostsTreeView )
-
+"""
 class ModulesTreeView ( ConfFilesTreeView ):
     def __init__ (self, *args, **kwargs):
         super (ModulesTreeView, self).__init__ (*args, **kwargs)
@@ -194,8 +182,8 @@ class ModulesTreeView ( ConfFilesTreeView ):
                 if len( mod.data[ 'dependancies' ] ) > 0:
                     markup += "\n<small><b>%s</b></small>" % ( "Dependencies: " + \
                     ", ".join( mod.data[ 'dependancies' ] ) )
-                else:
-                    markup += "\n<small><i>No dependencies</i></small>"
+                #else:
+                #    markup += "\n<small><i>No dependencies</i></small>"
             else:
                 markup = mod_unparsable_template % mod.data['name']
             iter = lstore.append()
@@ -218,20 +206,122 @@ class ModulesTreeView ( ConfFilesTreeView ):
         if ( mod.changed ):
             self.raise_event( 'please_restart_apache' ) 
         self.raise_event( 'please_reload_lists', {}, True ) 
-    #TODO: warning ! This function get's called even on mousehover
-    #      check for a way to optimize it
-    def __get_row_icon (self, column, cell, model, iter):
-        """ Provides the icon for a module"""        
-        """node = model.get_value(iter, MODEL_FIELD_NODE)
-        pixbuf = getPixbufForNode(node)
-        cell.set_property('pixbuf', pixbuf)"""                
-        favicon = os.path.join( Configuration.GLADEPATH, 'browser.png' )
-        fname = model.get_value(iter, COLUMN_SEVERITY )
-        site = self.items[ fname ]
-        if site.data['DocumentRoot'] != None:
-            custom_favicon = os.path.join(os.path.dirname( site.data['DocumentRoot']+"/" ), "favicon.ico")                                                    
-            if ( os.path.exists( custom_favicon ) ): favicon = custom_favicon
-            
-        pixbuf = gtk.gdk.pixbuf_new_from_file( favicon )
-        cell.set_property("pixbuf", pixbuf)
+
 gobject.type_register ( ModulesTreeView )
+
+
+
+class ErrorsTreeView ( ConfFilesTreeView ):
+    def __init__ (self, *args, **kwargs):
+        super (ErrorsTreeView, self).__init__ (*args, **kwargs)
+        #print self.column_checkbox, self.column_description, self.column_icon
+        self.column_checkbox.set_visible( True )        
+        self.column_description.get_cell_renderers()[0].set_property('wrap-width', 400)  
+        self.column_checkbox.get_cell_renderers()[0].set_property( 'activatable', False )
+ 
+    def load(self, apache, test_apache=False):    
+        self.items = {}
+        site_template = "<b><big>%s</big></b>"        
+        lstore = self._reset_model()   
+        res, text  = True, ""     
+        
+        # -1 = nothing to fix
+        # 0  = nothing auto-fixable
+        # 1 = something to be done
+        returncode = -1
+        if test_apache:
+            res, text = apache.test_config()
+            text = saxutils.escape(text)
+            if not res:       
+                returncode = 0
+                iter = lstore.append()
+                markup = site_template % "Apache Config Error"
+                
+                pixbuf = self.render_icon(gtk.STOCK_DIALOG_ERROR, gtk.ICON_SIZE_LARGE_TOOLBAR)
+                
+                lstore.set(iter,
+                    COLUMN_ICON, pixbuf,
+                    COLUMN_FIXED, False,
+                    COLUMN_SEVERITY, "Apache Config Error",
+                    COLUMN_MARKUP, markup + "\n" + text +"\n<small><i>You may need to resolve this error to restart apache</i></small>"
+                    )
+                    
+        self._add_ssl_port_error_vhosts()
+        fixable_items = self._add_denormalized_vhosts()
+        return max( returncode,  fixable_items )
+
+    def _add_ssl_port_error_vhosts( self ):
+        
+        mod = Module.ModuleModel( "ssl" )
+        if mod.data['enabled']:
+            site_template = "<b><big>%s</big></b>"              
+            lstore = self.get_model()
+            data = []  
+            dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
+            dirList = [x for x in dirList if self._blacklisted( x ) == False ]
+
+            fixable_items = 0
+            bad_items = {}
+            
+            for fname in  dirList :                
+                site = VirtualHostModel( fname )   
+                if site.enabled and not site.has_port():                 
+                    bad_items[ fname ] = site
+                    site = None        
+            for idx in sorted( bad_items ):                    
+                site = bad_items[ idx ]            
+                fixable = False
+                markup = site_template % site.get_name()                
+                markup = markup + " CANNOT FIX"
+                
+                iter = lstore.append()
+                pixbuf = self.render_icon(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_LARGE_TOOLBAR)
+                lstore.set(iter,
+                    COLUMN_ICON, pixbuf,
+                    COLUMN_FIXED, False,
+                    COLUMN_SEVERITY, site.get_name(),
+                    COLUMN_MARKUP, markup +  "\nThe virtual host does not have a port number and you have enabled ssl\n<small><i>You must add a port number (80)</i>.</small>"
+                    )
+            if not len(lstore): return -1
+        return fixable_items
+
+
+    def _add_denormalized_vhosts( self ):
+        
+        site_template = "<b><big>%s</big></b>"              
+        lstore = self.get_model()
+        data = []  
+        dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
+        dirList = [x for x in dirList if self._blacklisted( x ) == False ]
+        dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]    
+                       
+        fixable_items = 0
+        
+        for fname in  dirList :
+            site = VirtualHostModel( fname )                        
+            self.items[ fname ] = site
+            site = None        
+        for idx in sorted( self.items ):            
+            site = self.items[ idx ]            
+            normalizable = not is_not_normalizable(site.get_name())
+            markup = site_template % site.get_name()
+            if ( normalizable == False ):
+                markup = markup + " CANNOT FIX"
+            else:
+                fixable_items += 1
+            iter = lstore.append()
+            pixbuf = self.render_icon(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_LARGE_TOOLBAR)
+            lstore.set(iter,
+                COLUMN_ICON, pixbuf,
+                COLUMN_FIXED, normalizable,
+                COLUMN_SEVERITY, site.get_name(),
+                COLUMN_MARKUP, markup +  "\nThe virtual host file is only present inside /etc/apache/sites-enabled.\n<small><i>You must normalize in order to manage this host</i>.</small>"
+                )
+        
+        if not len(lstore): return -1
+        return fixable_items
+            
+                
+    def toggled_callback(self, *args, **kwargs):
+        pass
+#gobject.type_register (DenormalizedVhostsTreeView )

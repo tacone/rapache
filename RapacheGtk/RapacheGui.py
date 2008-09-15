@@ -32,11 +32,9 @@ import gobject
 import gtk
 import os
 import re
-(
-    COLUMN_FIXED,
-    COLUMN_SEVERITY,
-    COLUMN_MARKUP
-) = range(3)
+import threading
+import time
+import copy
 
 
 from RapacheGtk.VirtualHostGui import VirtualHostWindow
@@ -44,21 +42,33 @@ from RapacheGtk.ModuleGui import ModuleWindow
 from RapacheCore.PluginManager import PluginManager
 from RapacheGtk.ModuleGui import open_module_doc
 from RapacheCore.VirtualHost import *
+from RapacheCore.Apache import Apache2
 from RapacheGtk import ConfirmationWindow
 from RapacheGtk import GuiUtils
+from EditGeneric import EditGenericWindow
 from RapacheCore import Shell
 import VhostsTreeView
 import RapacheCore.Observer
 from RapacheGtk.EventDispatcher import Master
 import subprocess
 import RapacheGtk.DesktopEnvironment as Desktop
-
+import traceback
 data = \
 [(False, "Loading", "please wait" )]
 
 APPNAME="Rapache"
-APPVERSION="0.6"
+APPVERSION="0.7"
 
+# Turn on gtk threading
+gtk.gdk.threads_init()
+
+# Define threaded attribute
+def threaded(f):
+	def wrapper(*args):
+		t = threading.Thread(target=f, args=args)
+		t.setDaemon(True) # wont keep app alive
+		t.start()
+	return wrapper
 
 class MainWindow( RapacheCore.Observer.Observable ) :
     """This is an Hello World Rapacheefication application"""
@@ -69,6 +79,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
 
         self.denormalized_virtual_hosts = {}
         self.plugin_manager = PluginManager()
+        self.apache = Apache2()
+        
         #gnome.init(APPNAME, APPVERSION)
         self.gladefile = Configuration.GLADEPATH + "/" + "main.glade"  
         self.xml = gtk.glade.XML(self.gladefile)         
@@ -80,25 +92,161 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             "edit_button_clicked" : self.edit_button_clicked,
             "edit_module_button_clicked" : self.edit_module_button_clicked,
             "browse_sites_available" : self.browse_sites_available,
-            "fix_vhosts_clicked" : self.fix_vhosts,
+            "on_button_resolve_errors_clicked" : self.fix_vhosts,
             "surf_this_button_clicked" : self.surf_this,
             "browse_button_clicked" : self.browse_this,
             "about_clicked" : self.display_about,
             "open_doc_button_clicked" : self.open_doc_button_clicked,
             "on_button_hide_warning_clicked" : self.on_button_hide_warning_clicked,
-            "quit" : self.quit }
-        gtk.window_set_default_icon(self.xml.get_widget("MainWindow").get_icon())
+            "quit" : self.quit,
+            "on_menuitem_stop_apache_activate" : self.on_menuitem_stop_apache_activate,
+            "on_button_open_log_clicked" : self.on_button_open_log_clicked
+        }
+        
+        gtk.window_set_default_icon_from_file(os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle_golden.svg'))
+        
         self.xml.signal_autoconnect(dic)
         GuiUtils.change_button_label ( self.xml.get_widget( 'restart_apache' ), "Restart Apache" )
-        GuiUtils.change_button_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
+        #GuiUtils.change_button_label ( self.xml.get_widget( 'fix_vhosts' ), "Fix Virtual Hosts" )
+        self.statusbar_server_status =  self.xml.get_widget( 'statusbar_server_status' )
+        self.image_apache_status =  self.xml.get_widget( 'image_apache_status' )
+        self.main_window = self.xml.get_widget("MainWindow")
+        self.menuitem_stop_apache = self.xml.get_widget("menuitem_stop_apache")
+        self.menuitem_start_apache = self.xml.get_widget("menuitem_start_apache")
+        self.menuitem_restart_apache = self.xml.get_widget("menuitem_restart_apache")
         #hereby we create lists
         self.create_vhost_list()
         self.create_modules_list()
+        self.create_errors_list()
         #hereby we fill them
-        self.refresh_lists()
+        self.refresh_lists(False)
         
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
-        GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )    
+        #GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )  
+        #GuiUtils.style_as_tooltip( self.xml.get_widget( 'hbox_apache_config_error' ) )   
+       
+        # start status update
+        self.statusbar_server_status_context_id = self.statusbar_server_status.get_context_id("Apache Server Status") 
+        self.statusbar_server_status.push(self.statusbar_server_status_context_id, "Attempting to connect to server")
+        self.update_server_status(True)
+        
+        
+       
+        
+        self.menu_tools = self.xml.get_widget( 'menu_tools' )
+        for plugin in self.plugin_manager.plugins:
+        	try:
+        	    if plugin.is_enabled():      	        
+        	        menu_item = plugin.init_main_window(self)
+                    if menu_item != None:
+                        self.menu_tools.add(menu_item)
+                        menu_item.show()
+        	except Exception:
+        		traceback.print_exc(file=sys.stdout)
+
+
+
+        # Add rich edit to log
+        self.text_view_log = GuiUtils.new_apache_sourceview()
+        self.xml.get_widget( 'scroll_window_log' ).add( self.text_view_log )
+        self.text_view_log.show()
+        combobox_log = self.xml.get_widget( 'combobox_log' )
+        files = Shell.command.listdir("/var/log/apache2")
+        for file in files:
+            if file.endswith(".log"):
+                combobox_log.append_text(file)
+        combobox_log.set_active(0)
+        
+    def on_button_open_log_clicked(self, widget):
+        file = self.xml.get_widget( 'combobox_log' ).get_active_text()
+        path = os.path.join("/var/log/apache2", file)
+        text = Shell.command.read_file( path )
+        self.text_view_log.get_buffer().set_text( text )
+        self.text_view_log.set_editable(False)
+        self.xml.get_widget( 'label_log_path').set_text( path )
+
+    def refresh_config_test(self, focus=False): 
+        total = self.treeview_errors.load(self.apache, focus)
+        notebook = self.xml.get_widget( 'notebook' )
+        button_resolve_errors = self.xml.get_widget( 'button_resolve_errors' )
+        page = notebook.get_nth_page(0)
+        print "Errors status:",  total
+        if total > -1:
+            page.show()
+            if focus: notebook.set_current_page(0)  
+        else:
+            page.hide()
+        
+        # focus tab if we have fixable errors
+        if total > 0:  
+            button_resolve_errors.set_sensitive(True)
+        else:
+            button_resolve_errors.set_sensitive(False)
+
+    def add_new_vhost_menu_item(self, menu_item):
+        new_button = self.xml.get_widget( 'new_button')
+        menu = new_button.get_menu()
+        
+        if not menu:
+            menu = gtk.Menu()
+            new_button.set_menu( menu )
+    
+        menu.add(menu_item)
+        menu.show_all()
+
+    @threaded    
+    def update_server_status(self, loop=False):
+        window_status_icons = [ 
+          # 0 - apache stopped
+          os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle.svg' )
+          # 1 - apache unreachable
+         , os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle_orange.svg' ) #1
+          # 2 - apache started
+         , os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle_green.svg' ) #1
+        ]
+        
+        status_change_count = 0
+        last_status = self.apache.get_status()
+        while True:
+            status = self.apache.get_status()
+            text = "Apache is stopped"
+            image = gtk.STOCK_NO
+
+
+            if status == 1:
+                text = "Warning can not contact apache"
+                image = gtk.STOCK_DIALOG_WARNING
+            if status == 2:
+                text  = "Apache is running"   
+                image = gtk.STOCK_YES
+                
+            # All gtk actions must be on main thread
+            gtk.gdk.threads_enter()
+            self.image_apache_status.set_from_stock(image, gtk.ICON_SIZE_MENU)
+            self.statusbar_server_status.pop(self.statusbar_server_status_context_id)
+            self.statusbar_server_status.push(self.statusbar_server_status_context_id, text)
+            self.main_window.set_icon_from_file(window_status_icons[status])
+            self.menuitem_stop_apache.set_sensitive(status == 2)
+            self.menuitem_start_apache.set_sensitive(status == 0)
+            self.menuitem_restart_apache.set_sensitive(status == 2)
+            gtk.gdk.threads_leave()
+            
+            if not loop:
+                break
+                
+            # time out or check quickly for N times
+            if last_status == status and status_change_count == 0:
+                time.sleep( Configuration.TEST_CONNECTION_INTERVAL )
+            else:
+                time.sleep( 1 ) 
+                if last_status != status: status_change_count = 10
+                else: status_change_count = status_change_count - 1
+                last_status = status       
+                
+                
+    def on_menuitem_stop_apache_activate(self, widget):
+        self.apache.stop()
+        self.update_server_status()
         
     def on_button_hide_warning_clicked(self, widget):
         self.xml.get_widget( 'restart_apache_notice' ).hide()
@@ -108,23 +256,35 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             self.please_restart()
             return
         if event.name == 'please_reload_lists':
-            self.load_lists()
+            self.refresh_modules()
             return
     def browse_sites_available(self, widget):
-        Desktop.open_dir( Configuration.SITES_AVAILABLE_DIR )
+        Desktop.open_dir( Configuration.SYSCONFDIR )
         return
     
     def new_button_clicked(self, widget):
         new_vhost_window = VirtualHostWindow ( self )
-        #new_vhost_window.load()
+        new_vhost_window.load("")
         new_vhost_window.run()
+        self.refresh_config_test()
+        
     def edit_button_clicked(self, widget, notused = None, notused2 = None):         
         name = self.vhosts_treeview.get_selected_line()
-        print "edit button clicked on:" + name          
-        if ( self.is_vhost_editable( name ) == False ): return False
-        new_vhost_window = VirtualHostWindow ( self )
-        new_vhost_window.load( name )
-        new_vhost_window.run()    
+        self.open_edit_vhost_window( VirtualHostModel( name ) )
+
+        
+    def open_edit_vhost_window(self, vhost):
+        if not vhost.is_editable(): 
+            # Use generic editor instead
+            gew = EditGenericWindow()
+            gew.load( vhost.get_source_filename() )
+            gew.run()
+        else:
+            new_vhost_window = VirtualHostWindow ( self )
+            new_vhost_window.load( vhost )
+            new_vhost_window.run()    
+        self.refresh_config_test()
+        
     def delete_button_clicked( self, widget ):
         name = self.vhosts_treeview.get_selected_line()
         if ( self.is_vhost_editable( name ) == False ): return False
@@ -137,13 +297,17 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         site.delete()
         self.vhosts_treeview.load()
         self.please_restart()
+        self.refresh_config_test()
+        
     def edit_module_button_clicked(self, widget, notused = None, notused2 = None):
         name = self.modules_treeview.get_selected_line()
         if ( self.is_module_editable( name ) == False ): return False
         print "module edit button clicked on:", name          
         module_window = ModuleWindow ( self )
         module_window.load( name )
-        module_window.run()        
+        module_window.run()  
+        self.refresh_config_test()
+              
     def quit (self, widget):
         print 'quitting'
         gtk.main_quit()
@@ -172,15 +336,25 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         # moving them in /etc/apache2/sites-available and linking them back
         # from /etc/apache2/sites-enabled
         
-        denormalized_treeview = VhostsTreeView.DenormalizedVhostsTreeView()
-        self.denormalized_treeview = denormalized_treeview        
-        self.xml.get_widget( 'problems_area' ).add(denormalized_treeview)        
-        self.xml.get_widget( 'problems_area' ).reorder_child( denormalized_treeview, 2)
-        denormalized_treeview.set_sensitive( False )
-        denormalized_treeview.show()
+        #denormalized_treeview = VhostsTreeView.DenormalizedVhostsTreeView()
+        #self.denormalized_treeview = denormalized_treeview        
+        
+        #denormalized_treeview.set_sensitive( False )
+        #denormalized_treeview.show()
+        
         sw.show_all()
-        #hidden by default
-        self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+        
+        
+    def create_errors_list(self):
+        self.treeview_errors = VhostsTreeView.ErrorsTreeView()
+        #treeview.selected_callback = self.row_selected
+        #treeview.connect_after("row-activated", self.edit_button_clicked )
+        #self.vhosts_treeview = treeview        
+        
+        self.xml.get_widget( 'viewport_errors' ).add(self.treeview_errors) 
+        self.xml.get_widget( 'viewport_errors' ).show_all()
+        
+        #self.refresh_config_test()
     
     def create_modules_list(self ):
         sw = self.xml.get_widget( 'modules_scroll_box' )
@@ -200,29 +374,32 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def refresh_vhosts ( self ):
         print "reloading vhosts.."            
         self.vhosts_treeview.load()
-    def refresh_denormalized_vhosts (self):
+    """def refresh_denormalized_vhosts (self):
         self.denormalized_treeview.load()
-        if ( len( self.denormalized_treeview.items ) > 0 ):
-            self.xml.get_widget( 'unnormalized_notice' ).show_all()
-            self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).show()
-        else:
-            self.xml.get_widget( 'unnormalized_notice' ).hide_all()
-            self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).hide()
+        #if ( len( self.denormalized_treeview.items ) > 0 ):
+            #self.xml.get_widget( 'unnormalized_notice' ).show_all()
+            #self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).show()
+        #else:
+            #self.xml.get_widget( 'unnormalized_notice' ).hide_all()
+            #self.xml.get_widget( 'notebook' ).get_nth_page( 2 ).hide()"""
     def refresh_modules (self):    
         print "reloading modules.."            
         self.modules_treeview.load()
-    def refresh_lists (self):
+    def refresh_lists (self, focus_error=False):
         self.refresh_vhosts()
         self.refresh_modules()
-        self.refresh_denormalized_vhosts()
+        self.refresh_config_test(focus_error)
+        
     def please_restart ( self ):
         self.xml.get_widget( 'restart_apache_notice' ).show()
     def restart_apache ( self, widget ):
+        if not Shell.command.ask_password(): return
         print "Restarting apache on user's request"
-        Shell.command.sudo_execute( ['/etc/init.d/apache2', 'stop'] )
-        Shell.command.sudo_execute( ['/etc/init.d/apache2', 'start'] )
+        self.apache.restart()
+        self.update_server_status()
         self.xml.get_widget( 'restart_apache_notice' ).hide()
-        self.refresh_lists()
+        self.refresh_lists(True)
+        
     def is_vhost_editable (self, name):
         return name != 'default'
     def is_module_editable (self, name):
@@ -232,19 +409,23 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             editable = mod.data[ 'configurable' ]
         return editable
     def row_selected( self, widget ):
-        name = self.vhosts_treeview.get_selected_line()
-        if ( name == None ):
+        vhost = self.get_current_vhost()
+        if not vhost:
             self.xml.get_widget( 'delete_button' ).set_sensitive( False )
             self.xml.get_widget( 'edit_button' ).set_sensitive( False )
             self.xml.get_widget( 'surf_this_button' ).set_sensitive( False )
         else:
-            editable = self.is_vhost_editable( name )
-            self.xml.get_widget( 'delete_button' ).set_sensitive( editable )
-            self.xml.get_widget( 'edit_button' ).set_sensitive( editable )
-            surfable =  self.get_current_vhost_directive( 'ServerName' ) != None
-            self.xml.get_widget( 'surf_this_button' ).set_sensitive( surfable )
-            browsable =  self.get_current_vhost_directive( 'DocumentRoot' ) != None
+            
+            editable = vhost.is_editable()
+            self.xml.get_widget( 'delete_button' ).set_sensitive( True )
+            self.xml.get_widget( 'edit_button' ).set_sensitive( True )
+            
+            #surfable =  self.get_current_vhost().get_server_name() != None
+            self.xml.get_widget( 'surf_this_button' ).set_sensitive( editable )
+            
+            browsable = vhost.get_document_root() != None
             self.xml.get_widget( 'browse_button' ).set_sensitive( browsable )
+            
     def module_row_selected( self, widget):
         name = self.modules_treeview.get_selected_line()
         editable = self.is_module_editable(name)
@@ -257,29 +438,45 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         if ( name == None ): return False
         open_module_doc(name)
         
-    def fix_vhosts(self, widget):
-        items = self.denormalized_treeview.get_items()
-        for name in items:
+    def fix_vhosts(self, widget):        
+        if not Shell.command.ask_password(): return
+        print "Attempting to fix virtualhosts"
+        items = self.treeview_errors.get_items()        
+        for name in items:                
             normalize_vhost( name )
         #since they were in the enabled, let's enabl'em again
         for name in items:
-            site = VirtualHostModel( name )
-            site.toggle(True)            
+             if self.vhosts_treeview.items.has_key( name ):            
+                self.vhosts_treeview.items[name].toggle(True)
+            #site.toggle(True)            
         self.refresh_vhosts()
-        self.refresh_denormalized_vhosts()
-    def get_current_vhost_directive (self, directive_name ):
+        #self.refresh_denormalized_vhosts()
+        self.refresh_config_test()
+        self.please_restart()
+    def get_current_vhost(self ):
         name = self.vhosts_treeview.get_selected_line()
         if ( name == None ): return None
-        return self.vhosts_treeview.items[ name ].data[ directive_name ]
+
+        if self.vhosts_treeview.items.has_key( name ):
+            return self.vhosts_treeview.items[ name ]
+        else:
+            return VirtualHostModel( name )
+            
     def surf_this(self, widget):
         name = self.vhosts_treeview.get_selected_line()
         if name == 'default':
             server_name = 'localhost'
         else:
-            server_name = self.get_current_vhost_directive( 'ServerName' )
-        if ( server_name ): Desktop.open_url( "http://" + server_name )
+            server_name = self.get_current_vhost().get_server_name()
+            
+        # TODO: move to vhost.get_url()    
+        protocol = "http"    
+        if self.get_current_vhost().get_port() == 443:
+           protocol = "https"
+            
+        if ( server_name ): Desktop.open_url( protocol+"://" + server_name )
     def browse_this(self, widget):
-        document_root = self.get_current_vhost_directive( 'DocumentRoot' )
+        document_root = self.get_current_vhost().config.DocumentRoot.value
         Desktop.open_dir( document_root )
         
 

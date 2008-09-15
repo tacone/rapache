@@ -68,7 +68,8 @@ class ConfirmationWindow:
         if self.title: self.window.set_title ( self.title )
         if self.question: self.question_label.set_text( self.question )
         
-        self.window.show()           
+        self.window.show()   
+                
         gtk.main()
 
     def on_destroy(self, widget, data=None):

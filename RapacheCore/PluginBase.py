@@ -18,44 +18,65 @@ from Module import ModuleModel
 
 class PluginBaseObject():
 
-	def __init__(self, path):
-			
-		# The path to the plugin
-		self.path = path
-	
-		# module this plugin works with
-		self.module = ""
-		
-		# Define what additional config should be read from vhost file
-		self.vhosts_config = {  } # 0 value | 1 options
-	
-	def is_module_enabled(self):
-		if self.module:
-			module = ModuleModel(self.module)
-			module.load()
-			print "STATUS : " + self.module + " - " + str( module.is_enabled())
-			return module.is_enabled()
-		return True
-		
-	def is_enabled(self):
-		enabled = self.is_module_enabled()
-		
-		#TODO: Method of activating / deactivating plugins
-		
-		return enabled
-		
-	# Customise the module properties window
-	def load_module_properties(self, notebook, module):
-		return True
+    def __init__(self, path):
+            
+        # The path to the plugin
+        self.path = path
+    
+        # module this plugin works with
+        self.module = ""
+        
+        # Define what additional config should be read from vhost file
+        self.vhosts_config = {  } # 0 value | 1 options
+        
+        # Number set when plugin UI is added to notebook
+        self._tab_number = -1
+    
+    def is_module_enabled(self):
+        if self.module:
+            module = ModuleModel(self.module)
+            module.load()
+            #print "STATUS : " + self.module + " - " + str( module.is_enabled())
+            return module.is_enabled()
+        return True
+        
+    def is_enabled(self):
+        enabled = self.is_module_enabled()
+        
+        #TODO: Method of activating / deactivating plugins
+        
+        return enabled
+        
+    # Add item to tools menu
+    def init_main_window(self, MainWindow):
+        return None
+        
+        
+    # Customise the module properties window
+    def load_module_properties(self, notebook, module):
+        return True
 
-	# Perform action on module properties save
-	def save_module_properties(self, module):
-		return True
+    # Perform action on module properties save
+    def save_module_properties(self, module):
+        return True
 
-	# Customise the vhost properties window
-	def load_vhost_properties(self, notebook, vhost_data):
-		return True
-		
-	# Perform action on vhost properties save
-	def save_vhost_properties(self, vhost_data):
-		return True
+
+
+
+
+
+    # Init the vhost propertis window
+    def init_vhost_properties(self, notebook):
+        return None, None, None
+
+    # Tab recives focus load properties from vhost object
+    def load_vhost_properties(self,  vhost):
+        return True
+        
+    # Tab blurs update vhost object with changes
+    def update_vhost_properties(self, vhost):
+        return True, ""
+        
+    # Perform action on vhost properties save, return false if validation fails
+    def save_vhost_properties(self, vhost):
+        return True, ""

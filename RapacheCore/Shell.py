@@ -33,19 +33,16 @@ import os
     
 import sys   
 import gksu2
-import gobject
-import md5
 import tempfile
 import getpass
 import subprocess
-import StringIO
 import sys
-import urllib
 from subprocess import *
 import traceback
 import time
 import glob
 import operator
+import Configuration
 
 class CommandLogEntry:
 
@@ -92,9 +89,8 @@ class CommandHandler:
             statinfo = os.stat(flist[i])
             flist[i] = flist[i], statinfo.st_ctime
         flist.sort(key=operator.itemgetter(1))
-        print len(flist)
+        flist.reverse()
         return flist
-
 
     def read_file_version(self, path, date_stamp):
         backup_path = self.__get_backup_path(path)
@@ -112,11 +108,9 @@ class CommandHandler:
         backup_file = backup_path + " " +time.strftime("%y-%m-%d %H:%M:%S.bak", time.localtime() )
 
         if existing_content:
-            new_content_md5 = md5.new(new_content).digest()
-            existing_content_md5 = md5.new(existing_content).digest()
 
-            if new_content_md5 != existing_content_md5:
-                # back up the file has changed
+            if new_content != existing_content:
+                # back up, the file has changed
 
                 if self.verbose >= 1:
                     print "CREATE BACKUP : " + backup_file
@@ -125,11 +119,10 @@ class CommandHandler:
                 f.write(existing_content)
                 f.close()
 
-                # cleanup backups keep last N
-                N = 10
+                # cleanup backups keep last N - TODO - make a config option
                 flist = self.get_backup_files(path)
                 # delete older entries                    
-                for i in range(0, len(flist) - N):
+                for i in range(Configuration.NUMBER_OF_BACKUPS, len(flist)):
                     if self.verbose >= 1:
                         print "REMOVE BACKUP : " + flist[i][0]
                     os.remove( flist[i][0] )
@@ -144,6 +137,7 @@ class CommandHandler:
         return False # file dosnt exist and no new content
        
     def read_file(self, path):
+
         if self.verbose >= 1:
             print "READING : " + path
         # TODO: add ssh handler
@@ -154,27 +148,55 @@ class CommandHandler:
             return result
         return ""
     
-    def write_file(self, path, content):
+    def write_file(self, path, content, backup=True):
 
-        if self.create_backup(path, content):
+        if not backup or self.create_backup(path, content):
             
             if self.verbose >= 1:
                 print "WRITING : " + path
             
             # Update local backup copy
-            local_path = self.__get_backup_path(path)
+            if backup:
+                local_path = self.__get_backup_path(path)
+            else:
+                f, local_path = tempfile.mkstemp()
+                
             f = open(local_path, "w")
             f.write(content)
             f.close()
+            
+            self.create_complete_path(os.path.dirname(path))
 
             # copy file now using sudo
             self.sudo_execute( ["cp", local_path, path] )
+            
+            # remove the local copy if no backups
+            if not backup:
+                os.remove(local_path)
 
     def listdir(self, path):
-        return os.listdir( path )
-       
+        return os.listdir(path)
+
+    def create_complete_path ( self, complete_path ):
+        if not self.exists( complete_path ):
+            if self.verbose >= 1:
+                print "Creating Path: " + complete_path
+            tokens = complete_path.split( '/' )
+            del tokens[ 0 ]        
+            path = '/'
+            for piece in tokens:
+                path = os.path.join(path, piece)
+                if not self.exists( path ):
+                    try:
+                        self.sudo_execute( ["mkdir", path] )
+                    except:
+                        print "error on creating path"+path
+                        return False                   
+            return True 
+
+
     def exists(self, path):
-        return os.path.exists(path)
+        return os.path.exists( path )
         
     def readlink(self, path):
         return os.readlink(path)
@@ -194,7 +216,7 @@ class CommandHandler:
     def __sudo_popen (self, command, password ): 
         #don't enable the following line
         #print "using password:", password
-        
+
         # prepend sudo to command and allow piping in 
         command.insert(0, "sudo")
         command.insert(1, "-S")
@@ -202,12 +224,15 @@ class CommandHandler:
         #we need a try catch to avoid tracebacks to be printed
         #as they would show the password
         try:    
-            p.stdin.write( password )
+            if p.stdin and not p.stdin.closed:
+                p.stdin.write( password )
+        except IOError:
+            pass # catch the IOError as its meaningless
         except:
             #don't enable the following line as you password
             #will be printed out
             #traceback.print_exc() #<-- CAUTION !
-            
+
             print "ERROR: in __sudo_popen()"
             pass
         return p
@@ -219,12 +244,13 @@ class CommandHandler:
         #because we have not encoding declared in this file
         #http://www.python.org/dev/peps/pep-0263/
         fakepass= 'xxxASAISUHAISGHauyguyagUDBhb2156412-,1-2.,1212'
-        command = [ 'head', '/var/log/syslog', '-n 1' ]
+        #command = [ 'head', '/var/log/syslog', '-n 1' ]
+        command = [ '-v' ]
         p = self.__sudo_popen( command, fakepass)
         output, error = p.communicate()
         returncode = p.returncode        
         self.__output(command, returncode, output, error)    
-        print "needs login:", returncode
+        #print "needs login:", returncode
         if returncode == 0:
             return False
         else:          
@@ -259,7 +285,10 @@ class CommandHandler:
         output, error = p.communicate()
         returncode = p.returncode
         self.__output(command, returncode, output, error)
-        
+
+    def ask_password(self, description = "Super user priviledges are required to perform this operation"):
+        res = self.sudo_execute( ['echo'],  description = "Super user priviledges are required to perform this operation" )
+        return res[0] == 0
     def sudo_execute(self, command, description = "Super user priviledges are required to perform this operation"):
         #log = CommandLogEntry(command)
         #self.command_log.append( log )
@@ -307,9 +336,25 @@ class CommandHandler:
         
         return (returncode, output, error)
 
+    def sudo_read_file(self, path):
+        returncode, output, error = self.sudo_execute( ["cat", path] )
+        if returncode == 0:
+            return output
+        return ""
+
+    def sudo_exists(self, path):
+        returncode, output, error = self.sudo_execute( ["ls", path] )
+        return returncode == 0
+
+    def sudo_listdir(self, path):
+        returncode, output, error = self.sudo_execute( ["ls", "-1", path] )
+        if returncode == 0:
+            return output.split("\n")
+        return []
+
 # Look ma'! A singleton !
 command = CommandHandler()    
-command.verbose = 1
+#command.verbose = 1
 
 if __name__ == "__main__":
     c = CommandHandler()
