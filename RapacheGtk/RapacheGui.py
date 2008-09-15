@@ -57,7 +57,7 @@ data = \
 [(False, "Loading", "please wait" )]
 
 APPNAME="Rapache"
-APPVERSION="0.6"
+APPVERSION="0.7"
 
 # Turn on gtk threading
 gtk.gdk.threads_init()
