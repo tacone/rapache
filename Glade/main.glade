@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.4.5 on Tue Sep  9 16:52:16 2008 -->
+<!--Generated with glade3 3.4.5 on Mon Sep 15 06:53:14 2008 -->
 <glade-interface>
   <widget class="GtkWindow" id="MainWindow">
     <property name="width_request">500</property>
@@ -25,7 +25,6 @@
                     <property name="visible">True</property>
                     <child>
                       <widget class="GtkImageMenuItem" id="menuitem_connect">
-                        <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="label" translatable="yes">_Connect</property>
                         <property name="use_underline">True</property>
@@ -39,7 +38,6 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="menuitem_disconnect">
-                        <property name="visible">True</property>
                         <property name="sensitive">False</property>
                         <property name="label" translatable="yes">_Disconnect</property>
                         <property name="use_underline">True</property>
@@ -53,7 +51,6 @@
                     </child>
                     <child>
                       <widget class="GtkSeparatorMenuItem" id="separatormenuitem1">
-                        <property name="visible">True</property>
                       </widget>
                     </child>
                     <child>
@@ -151,7 +148,7 @@
                     <child>
                       <widget class="GtkImageMenuItem" id="browse_sites_available">
                         <property name="visible">True</property>
-                        <property name="label" translatable="yes">_Browse sites</property>
+                        <property name="label" translatable="yes">_Browse Configuration</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="browse_sites_available"/>
                         <child internal-child="image">

@@ -293,14 +293,14 @@ class VirtualHostModel():
     
     
     def has_port(self):
-        value = self.config.value
-        if value is None: return False
-        tokens = value.split(':')
-        if len(tokens) < 2: return False
-        if tokens[-1] =="*": return False
+        if self.parsable and self.config:
+            value = self.config.value
+            if value is None: return False
+            tokens = value.split(':')
+            if len(tokens) < 2: return False
+            if tokens[-1] =="*": return False
         return True
-    
-    
+
     def get_port(self):
         value = self.config.value
         if value is None: return None

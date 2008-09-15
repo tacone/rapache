@@ -22,6 +22,7 @@ import re
 from RapacheCore.VirtualHost import *
 from RapacheCore import Module
 from RapacheCore import Configuration
+from xml.sax import saxutils
 
 class ConfFilesTreeView( CheckListView ):
     def __init__ (self, *args, **kwargs):
@@ -217,29 +218,34 @@ class ErrorsTreeView ( ConfFilesTreeView ):
         self.column_checkbox.set_visible( True )        
         self.column_description.get_cell_renderers()[0].set_property('wrap-width', 400)  
         self.column_checkbox.get_cell_renderers()[0].set_property( 'activatable', False )
-    def load(self, apache):    
+ 
+    def load(self, apache, test_apache=False):    
         self.items = {}
         site_template = "<b><big>%s</big></b>"        
-        lstore = self._reset_model()        
-        res, text = apache.test_config()
+        lstore = self._reset_model()   
+        res, text  = True, ""     
+        
         # -1 = nothing to fix
         # 0  = nothing auto-fixable
         # 1 = something to be done
         returncode = -1
-        
-        if not res:       
-            returncode = 0
-            iter = lstore.append()
-            markup = site_template % "Apache Config Error"
-            
-            pixbuf = self.render_icon(gtk.STOCK_DIALOG_ERROR, gtk.ICON_SIZE_LARGE_TOOLBAR)
-            
-            lstore.set(iter,
-                COLUMN_ICON, pixbuf,
-                COLUMN_FIXED, False,
-                COLUMN_SEVERITY, "Apache Config Error",
-                COLUMN_MARKUP, markup + "\n<small>" + text +"\n<i>You must resolve this error to restart apache</i></small>"
-                )
+        if test_apache:
+            res, text = apache.test_config()
+            text = saxutils.escape(text)
+            if not res:       
+                returncode = 0
+                iter = lstore.append()
+                markup = site_template % "Apache Config Error"
+                
+                pixbuf = self.render_icon(gtk.STOCK_DIALOG_ERROR, gtk.ICON_SIZE_LARGE_TOOLBAR)
+                
+                lstore.set(iter,
+                    COLUMN_ICON, pixbuf,
+                    COLUMN_FIXED, False,
+                    COLUMN_SEVERITY, "Apache Config Error",
+                    COLUMN_MARKUP, markup + "\n" + text +"\n<small><i>You may need to resolve this error to restart apache</i></small>"
+                    )
+                    
         self._add_ssl_port_error_vhosts()
         fixable_items = self._add_denormalized_vhosts()
         return max( returncode,  fixable_items )
