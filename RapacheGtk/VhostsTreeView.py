@@ -251,7 +251,7 @@ class ErrorsTreeView ( ConfFilesTreeView ):
         return max( returncode,  fixable_items )
 
     def _add_ssl_port_error_vhosts( self ):
-        
+        fixable_items = 0
         mod = Module.ModuleModel( "ssl" )
         if mod.data['enabled']:
             site_template = "<b><big>%s</big></b>"              
@@ -260,7 +260,7 @@ class ErrorsTreeView ( ConfFilesTreeView ):
             dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
             dirList = [x for x in dirList if self._blacklisted( x ) == False ]
 
-            fixable_items = 0
+            
             bad_items = {}
             
             for fname in  dirList :                
