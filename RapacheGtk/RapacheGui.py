@@ -57,7 +57,7 @@ data = \
 [(False, "Loading", "please wait" )]
 
 APPNAME="Rapache"
-APPVERSION="0.6"
+APPVERSION="0.7"
 
 # Turn on gtk threading
 gtk.gdk.threads_init()
@@ -119,7 +119,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.create_modules_list()
         self.create_errors_list()
         #hereby we fill them
-        self.refresh_lists()
+        self.refresh_lists(False)
         
         GuiUtils.style_as_tooltip( self.xml.get_widget( 'restart_apache_notice' ) )
         #GuiUtils.style_as_tooltip( self.xml.get_widget( 'unnormalized_notice' ) )  
@@ -166,7 +166,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.xml.get_widget( 'label_log_path').set_text( path )
 
     def refresh_config_test(self, focus=False): 
-        total = self.treeview_errors.load(self.apache)
+        total = self.treeview_errors.load(self.apache, focus)
         notebook = self.xml.get_widget( 'notebook' )
         button_resolve_errors = self.xml.get_widget( 'button_resolve_errors' )
         page = notebook.get_nth_page(0)
@@ -385,11 +385,11 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def refresh_modules (self):    
         print "reloading modules.."            
         self.modules_treeview.load()
-    def refresh_lists (self):
+    def refresh_lists (self, focus_error=False):
         self.refresh_vhosts()
         self.refresh_modules()
-        #self.refresh_denormalized_vhosts()
-        self.refresh_config_test()
+        self.refresh_config_test(focus_error)
+        
     def please_restart ( self ):
         self.xml.get_widget( 'restart_apache_notice' ).show()
     def restart_apache ( self, widget ):
@@ -398,8 +398,7 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         self.apache.restart()
         self.update_server_status()
         self.xml.get_widget( 'restart_apache_notice' ).hide()
-        self.refresh_lists()
-        self.refresh_config_test(True)
+        self.refresh_lists(True)
         
     def is_vhost_editable (self, name):
         return name != 'default'
@@ -440,11 +439,10 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         open_module_doc(name)
         
     def fix_vhosts(self, widget):        
-        
+        if not Shell.command.ask_password(): return
         print "Attempting to fix virtualhosts"
-        items = self.treeview_errors.get_items()
-        for name in items:            
-            print name
+        items = self.treeview_errors.get_items()        
+        for name in items:                
             normalize_vhost( name )
         #since they were in the enabled, let's enabl'em again
         for name in items:

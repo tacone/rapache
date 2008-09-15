@@ -22,6 +22,7 @@ import re
 from RapacheCore.VirtualHost import *
 from RapacheCore import Module
 from RapacheCore import Configuration
+from xml.sax import saxutils
 
 class ConfFilesTreeView( CheckListView ):
     def __init__ (self, *args, **kwargs):
@@ -217,35 +218,40 @@ class ErrorsTreeView ( ConfFilesTreeView ):
         self.column_checkbox.set_visible( True )        
         self.column_description.get_cell_renderers()[0].set_property('wrap-width', 400)  
         self.column_checkbox.get_cell_renderers()[0].set_property( 'activatable', False )
-    def load(self, apache):    
+ 
+    def load(self, apache, test_apache=False):    
         self.items = {}
         site_template = "<b><big>%s</big></b>"        
-        lstore = self._reset_model()        
-        res, text = apache.test_config()
+        lstore = self._reset_model()   
+        res, text  = True, ""     
+        
         # -1 = nothing to fix
         # 0  = nothing auto-fixable
         # 1 = something to be done
         returncode = -1
-        
-        if not res:       
-            returncode = 0
-            iter = lstore.append()
-            markup = site_template % "Apache Config Error"
-            
-            pixbuf = self.render_icon(gtk.STOCK_DIALOG_ERROR, gtk.ICON_SIZE_LARGE_TOOLBAR)
-            
-            lstore.set(iter,
-                COLUMN_ICON, pixbuf,
-                COLUMN_FIXED, False,
-                COLUMN_SEVERITY, "Apache Config Error",
-                COLUMN_MARKUP, markup + "\n<small>" + text +"\n<i>You must resolve this error to restart apache</i></small>"
-                )
-        fixable_items = self._add_denormalized_vhosts() + self._add_ssl_port_error_vhosts()
+        if test_apache:
+            res, text = apache.test_config()
+            text = saxutils.escape(text)
+            if not res:       
+                returncode = 0
+                iter = lstore.append()
+                markup = site_template % "Apache Config Error"
+                
+                pixbuf = self.render_icon(gtk.STOCK_DIALOG_ERROR, gtk.ICON_SIZE_LARGE_TOOLBAR)
+                
+                lstore.set(iter,
+                    COLUMN_ICON, pixbuf,
+                    COLUMN_FIXED, False,
+                    COLUMN_SEVERITY, "Apache Config Error",
+                    COLUMN_MARKUP, markup + "\n" + text +"\n<small><i>You may need to resolve this error to restart apache</i></small>"
+                    )
+                    
+        self._add_ssl_port_error_vhosts()
+        fixable_items = self._add_denormalized_vhosts()
         return max( returncode,  fixable_items )
 
-
     def _add_ssl_port_error_vhosts( self ):
-        self.items = {}
+        
         mod = Module.ModuleModel( "ssl" )
         if mod.data['enabled']:
             site_template = "<b><big>%s</big></b>"              
@@ -255,20 +261,19 @@ class ErrorsTreeView ( ConfFilesTreeView ):
             dirList = [x for x in dirList if self._blacklisted( x ) == False ]
 
             fixable_items = 0
+            bad_items = {}
             
-            for fname in  dirList :
+            for fname in  dirList :                
                 site = VirtualHostModel( fname )   
                 if site.enabled and not site.has_port():                 
-                    self.items[ fname ] = site
+                    bad_items[ fname ] = site
                     site = None        
-            for idx in sorted( self.items ):            
-                site = self.items[ idx ]            
-                fixable = site.parsable
-                markup = site_template % site.get_name()
-                if not site.parsable:
-                    markup = markup + " CANNOT FIX"
-                else:
-                    fixable_items += 1
+            for idx in sorted( bad_items ):                    
+                site = bad_items[ idx ]            
+                fixable = False
+                markup = site_template % site.get_name()                
+                markup = markup + " CANNOT FIX"
+                
                 iter = lstore.append()
                 pixbuf = self.render_icon(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_LARGE_TOOLBAR)
                 lstore.set(iter,
@@ -289,9 +294,7 @@ class ErrorsTreeView ( ConfFilesTreeView ):
         dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
         dirList = [x for x in dirList if self._blacklisted( x ) == False ]
         dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]    
-        
-        
-        self.items = {}
+                       
         fixable_items = 0
         
         for fname in  dirList :

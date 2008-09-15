@@ -27,6 +27,11 @@ Special thanks to (contributors):
  * Andrew H (rugby471)
  * Sense Hofstede (qense)
 
+Htpassword class adapted from existing code:
+
+Original author: Eli Carter
+Copyright (C) 2003-2008 Edgewall Software
+
 Other credits:
 
 glade/browser.png icon taken from browser.svg in Neu theme:
