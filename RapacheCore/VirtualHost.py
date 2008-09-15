@@ -73,6 +73,7 @@ class VirtualHostModel():
     def __init__(self, name = None, plugin_manager = None):        
         self.__name = name
         self.__parser = Parser() 
+        self.__server_alias = []
         self.__is_default = name == "default"
         self.is_new = name == "" or not Shell.command.exists( self.get_source_filename() )
         self.data = None
