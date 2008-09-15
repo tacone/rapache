@@ -89,6 +89,7 @@ class VirtualHostModel():
             try:
                 self.load(None)
                 self.parsable = True
+                self.__server_alias = self.get_server_alias()
 
                 if self.__name != self.get_server_name():
                     print "FILE NAME MISMATCH"
@@ -146,13 +147,21 @@ class VirtualHostModel():
         if self.is_new: self.__name = ServerName
 
         Shell.command.write_file(self.get_source_filename(), content)
+       
         #not needed anymore (nor invoked)
-        """
         if self.hack_hosts:
+            # remove old one
+            Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, "hosts-manager"), '-r', self.__name ] )
+            
             Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, "hosts-manager"), '-a', ServerName ] )
-            for alias in self.config.ServerAlias:
+            
+            for alias in self.__server_alias:
+                Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, 'hosts-manager'), '-r', alias ])
+
+            for alias in self.get_server_alias():
                 Shell.command.sudo_execute ( [os.path.join(Configuration.APPPATH, 'hosts-manager'), '-a', alias ])
-        """
+        
+        self.__server_alias = self.get_server_alias()
         
         if self.is_new:      
             self.toggle( True ) #activate by default 
@@ -267,7 +276,7 @@ class VirtualHostModel():
     def get_server_alias(self):
         try:
             if self.config.ServerAlias:
-                return self.config.ServerAlias.opts
+                return list(self.config.ServerAlias.opts)
         except:
             pass
         return []    

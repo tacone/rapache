@@ -260,8 +260,8 @@ class VirtualHostWindow:
         if vhost:
             self.vhost = vhost
             #hosts tooggling not supported on editing
-            self.checkbutton_hosts.hide()
-            self.label_hosts.hide()
+            #self.checkbutton_hosts.hide()
+            #self.label_hosts.hide()
         else:
             self.checkbutton_hosts.set_active(True)
         self.load_domain_tab()
@@ -493,6 +493,9 @@ class VirtualHostWindow:
         
 
         is_new = self.vhost.is_new
+        
+        self.vhost.hack_hosts = self.checkbutton_hosts.get_active()
+        
         # save over buffer content
         self.vhost.save()
         
