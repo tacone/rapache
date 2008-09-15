@@ -146,7 +146,7 @@ class AdvancedVhostPlugin(PluginBaseObject):
         self.spinbutton_port.set_value(443)
         
         icon_theme = gtk.icon_theme_get_default()
-        pixbuf = icon_theme.lookup_icon("stock_lock", 24, 0).load_icon()
+        pixbuf = icon_theme.lookup_icon("application-certificate", 24, 0).load_icon()
         
         return table_ssl, "SSL", pixbuf
 
@@ -322,7 +322,8 @@ class AdvancedVhostPlugin(PluginBaseObject):
         
     def update_treeview(self):
         icon_theme = gtk.icon_theme_get_default()
-        cert_icon = icon_theme.lookup_icon("stock_lock", 24, 0).load_icon() 
+        cert_icon = icon_theme.lookup_icon("application-certificate", 24, 0).load_icon() 
+        cert_icon_self = icon_theme.lookup_icon("application-certificate", 24, 0).load_icon() 
 
         self.treeview_requests_store = gtk.ListStore(bool, gtk.gdk.Pixbuf,str, str, str, str)
         self.treeview_requests.set_model(self.treeview_requests_store)
@@ -356,16 +357,21 @@ class AdvancedVhostPlugin(PluginBaseObject):
  
                         if domain_match:
                             expired = self.get_expiry_date_hack(cert, full_path)
+                            icon = cert_icon
+                            
+                            if domain == cert.get_issuer().commonName:
+                                icon = cert_icon_self
+                            
                             if cert.has_expired() : expired = "<b>Expired " + expired +"</b>"
 
                             if full_path == self.active_cert:
-                                self.treeview_requests_store.append((True, cert_icon, "<b>Certificate</b>", "<b>"+ domain +"</b>"         ,  "<b>" +expired +"</b>", full_path))     
+                                self.treeview_requests_store.append((True, icon, "<b>Certificate</b>", "<b>"+ domain +"</b>"         ,  "<b>" +expired +"</b>", full_path))     
                                 select = self.treeview_requests.get_selection()
                                 select.select_path(len(self.treeview_requests_store) - 1)
                                 self.treeview_requests.scroll_to_cell(len(self.treeview_requests_store) - 1)
                                 
                             else: 
-                                self.treeview_requests_store.append((False, cert_icon, "Certificate", domain , expired, full_path))
+                                self.treeview_requests_store.append((False, icon, "Certificate", domain , expired, full_path))
                                   
                         break   
 
