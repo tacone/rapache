@@ -442,8 +442,8 @@ class MainWindow( RapacheCore.Observer.Observable ) :
     def fix_vhosts(self, widget):        
         if not Shell.command.ask_password(): return
         print "Attempting to fix virtualhosts"
-        items = self.treeview_errors.get_items()
-        for name in items:                        
+        items = self.treeview_errors.get_items()        
+        for name in items:                
             normalize_vhost( name )
         #since they were in the enabled, let's enabl'em again
         for name in items:

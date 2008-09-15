@@ -240,12 +240,12 @@ class ErrorsTreeView ( ConfFilesTreeView ):
                 COLUMN_SEVERITY, "Apache Config Error",
                 COLUMN_MARKUP, markup + "\n<small>" + text +"\n<i>You must resolve this error to restart apache</i></small>"
                 )
-        fixable_items = self._add_denormalized_vhosts() + self._add_ssl_port_error_vhosts()
+        self._add_ssl_port_error_vhosts()
+        fixable_items = self._add_denormalized_vhosts()
         return max( returncode,  fixable_items )
 
-
     def _add_ssl_port_error_vhosts( self ):
-        self.items = {}
+        
         mod = Module.ModuleModel( "ssl" )
         if mod.data['enabled']:
             site_template = "<b><big>%s</big></b>"              
@@ -255,20 +255,19 @@ class ErrorsTreeView ( ConfFilesTreeView ):
             dirList = [x for x in dirList if self._blacklisted( x ) == False ]
 
             fixable_items = 0
+            bad_items = {}
             
-            for fname in  dirList :
+            for fname in  dirList :                
                 site = VirtualHostModel( fname )   
                 if site.enabled and not site.has_port():                 
-                    self.items[ fname ] = site
+                    bad_items[ fname ] = site
                     site = None        
-            for idx in sorted( self.items ):            
-                site = self.items[ idx ]            
-                fixable = site.parsable
-                markup = site_template % site.get_name()
-                if not site.parsable:
-                    markup = markup + " CANNOT FIX"
-                else:
-                    fixable_items += 1
+            for idx in sorted( bad_items ):                    
+                site = bad_items[ idx ]            
+                fixable = False
+                markup = site_template % site.get_name()                
+                markup = markup + " CANNOT FIX"
+                
                 iter = lstore.append()
                 pixbuf = self.render_icon(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_LARGE_TOOLBAR)
                 lstore.set(iter,
@@ -289,9 +288,7 @@ class ErrorsTreeView ( ConfFilesTreeView ):
         dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
         dirList = [x for x in dirList if self._blacklisted( x ) == False ]
         dirList = [x for x in dirList if is_denormalized_vhost( x ) == False ]    
-        
-        
-        self.items = {}
+                       
         fixable_items = 0
         
         for fname in  dirList :
