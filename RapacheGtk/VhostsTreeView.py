@@ -181,8 +181,8 @@ class ModulesTreeView ( ConfFilesTreeView ):
                 if len( mod.data[ 'dependancies' ] ) > 0:
                     markup += "\n<small><b>%s</b></small>" % ( "Dependencies: " + \
                     ", ".join( mod.data[ 'dependancies' ] ) )
-                else:
-                    markup += "\n<small><i>No dependencies</i></small>"
+                #else:
+                #    markup += "\n<small><i>No dependencies</i></small>"
             else:
                 markup = mod_unparsable_template % mod.data['name']
             iter = lstore.append()
@@ -215,7 +215,7 @@ class ErrorsTreeView ( ConfFilesTreeView ):
         super (ErrorsTreeView, self).__init__ (*args, **kwargs)
         #print self.column_checkbox, self.column_description, self.column_icon
         self.column_checkbox.set_visible( True )        
-        self.column_description.get_cell_renderers()[0].set_property('wrap-width', 500)  
+        self.column_description.get_cell_renderers()[0].set_property('wrap-width', 400)  
         self.column_checkbox.get_cell_renderers()[0].set_property( 'activatable', False )
     def load(self, apache):    
         self.items = {}
@@ -238,11 +238,49 @@ class ErrorsTreeView ( ConfFilesTreeView ):
                 COLUMN_ICON, pixbuf,
                 COLUMN_FIXED, False,
                 COLUMN_SEVERITY, "Apache Config Error",
-                COLUMN_MARKUP, markup + "\n" + text +"\n<small><i>You must resolve this error to restart apache</i></small>"
+                COLUMN_MARKUP, markup + "\n<small>" + text +"\n<i>You must resolve this error to restart apache</i></small>"
                 )
-        fixable_items = self._add_denormalized_vhosts()
+        fixable_items = self._add_denormalized_vhosts() + self._add_ssl_port_error_vhosts()
         return max( returncode,  fixable_items )
-         
+
+
+    def _add_ssl_port_error_vhosts( self ):
+        self.items = {}
+        mod = Module.ModuleModel( "ssl" )
+        if mod.data['enabled']:
+            site_template = "<b><big>%s</big></b>"              
+            lstore = self.get_model()
+            data = []  
+            dirList=os.listdir( Configuration.SITES_ENABLED_DIR )
+            dirList = [x for x in dirList if self._blacklisted( x ) == False ]
+
+            fixable_items = 0
+            
+            for fname in  dirList :
+                site = VirtualHostModel( fname )   
+                if site.enabled and not site.has_port():                 
+                    self.items[ fname ] = site
+                    site = None        
+            for idx in sorted( self.items ):            
+                site = self.items[ idx ]            
+                fixable = site.parsable
+                markup = site_template % site.get_name()
+                if not site.parsable:
+                    markup = markup + " CANNOT FIX"
+                else:
+                    fixable_items += 1
+                iter = lstore.append()
+                pixbuf = self.render_icon(gtk.STOCK_DIALOG_WARNING, gtk.ICON_SIZE_LARGE_TOOLBAR)
+                lstore.set(iter,
+                    COLUMN_ICON, pixbuf,
+                    COLUMN_FIXED, False,
+                    COLUMN_SEVERITY, site.get_name(),
+                    COLUMN_MARKUP, markup +  "\nThe virtual host does not have a port number and you have enabled ssl\n<small><i>You must add a port number (80)</i>.</small>"
+                    )
+            if not len(lstore): return -1
+        return fixable_items
+
+
     def _add_denormalized_vhosts( self ):
         
         site_template = "<b><big>%s</big></b>"              
