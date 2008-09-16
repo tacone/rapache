@@ -28,7 +28,7 @@ setup(
     description='Simple tool for managing and configuring an apache2 instance',
     url = 'http://www.rapache.org',
     license='GNU GPL',
-    packages=['RapacheCore', 'RapacheGtk'],
+    packages=['RapacheCore', 'RapacheGtk', 'plugins'],
     scripts=['rapache', 'hosts-manager'],
     data_files=[
                 ('share/rapache/Glade', glob.glob('Glade/*')),
