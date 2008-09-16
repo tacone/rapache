@@ -26,6 +26,7 @@ class PluginManager():
 		print "-- Loading plugins --"
 		self.plugins = []
 		self.__add(os.path.join(sys.path[0], "plugins"))
+		self.__add("/usr/lib/rapache/plugins")
 		self.__add(os.path.expanduser("~/.rapache/plugins"))
 		print ""
 		
