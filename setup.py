@@ -28,10 +28,14 @@ setup(
     description='Simple tool for managing and configuring an apache2 instance',
     url = 'http://www.rapache.org',
     license='GNU GPL',
-    packages=['RapacheCore', 'RapacheGtk', 'plugins'],
+    packages=['RapacheCore', 'RapacheGtk'],
     scripts=['rapache', 'hosts-manager'],
     data_files=[
                 ('share/rapache/Glade', glob.glob('Glade/*')),
+                ('lib/rapache/plugins/', glob.glob('plugins/__init__.py')),
+                ('lib/rapache/plugins/ssl', glob.glob('plugins/ssl/*')),
+                ('lib/rapache/plugins/advanced', glob.glob('plugins/advanced/*')),
+                ('lib/rapache/plugins/basic_authentication', glob.glob('plugins/basic_authentication/*')),
                 ('share/applications', ['data/rapache.desktop']),
                ],
     )
