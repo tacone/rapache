@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=rapache
 Comment=Simple tool for managing and configuring an apache2 instance
-TryExec=rapache
-Exec=rapache
+TryExec=sudo rapache
+Exec=sudo rapache
 Icon=/usr/share/rapache/Glade/icon_cadsoft_eagle.svg
 Type=Application
 Categories=System;

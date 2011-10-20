@@ -32,7 +32,7 @@ import gobject
 import gtk
 import os
 import re
-import threading
+#import threading
 import time
 import copy
 
@@ -60,15 +60,17 @@ APPNAME="Rapache"
 APPVERSION="0.7"
 
 # Turn on gtk threading
-gtk.gdk.threads_init()
+#gtk.gdk.threads_init()
 
+
+#fixthreads
 # Define threaded attribute
-def threaded(f):
-	def wrapper(*args):
-		t = threading.Thread(target=f, args=args)
-		t.setDaemon(True) # wont keep app alive
-		t.start()
-	return wrapper
+#def threaded(f):
+#	def wrapper(*args):
+#		t = threading.Thread(target=f, args=args)
+#		t.setDaemon(True) # wont keep app alive
+#		t.start()
+#	return wrapper
 
 class MainWindow( RapacheCore.Observer.Observable ) :
     """This is an Hello World Rapacheefication application"""
@@ -194,8 +196,10 @@ class MainWindow( RapacheCore.Observer.Observable ) :
         menu.add(menu_item)
         menu.show_all()
 
-    @threaded    
+    #fixthreads
+    #@threaded    
     def update_server_status(self, loop=False):
+    	return
         window_status_icons = [ 
           # 0 - apache stopped
           os.path.join( Configuration.GLADEPATH, 'icon_cadsoft_eagle.svg' )
@@ -219,17 +223,18 @@ class MainWindow( RapacheCore.Observer.Observable ) :
             if status == 2:
                 text  = "Apache is running"   
                 image = gtk.STOCK_YES
-                
+             
+            #fixthreads    
             # All gtk actions must be on main thread
-            gtk.gdk.threads_enter()
-            self.image_apache_status.set_from_stock(image, gtk.ICON_SIZE_MENU)
-            self.statusbar_server_status.pop(self.statusbar_server_status_context_id)
-            self.statusbar_server_status.push(self.statusbar_server_status_context_id, text)
-            self.main_window.set_icon_from_file(window_status_icons[status])
-            self.menuitem_stop_apache.set_sensitive(status == 2)
-            self.menuitem_start_apache.set_sensitive(status == 0)
-            self.menuitem_restart_apache.set_sensitive(status == 2)
-            gtk.gdk.threads_leave()
+            #gtk.gdk.threads_enter()
+            #self.image_apache_status.set_from_stock(image, gtk.ICON_SIZE_MENU)
+            #self.statusbar_server_status.pop(self.statusbar_server_status_context_id)
+            #self.statusbar_server_status.push(self.statusbar_server_status_context_id, text)
+            #self.main_window.set_icon_from_file(window_status_icons[status])
+            #self.menuitem_stop_apache.set_sensitive(status == 2)
+            #self.menuitem_start_apache.set_sensitive(status == 0)
+            #self.menuitem_restart_apache.set_sensitive(status == 2)
+            #gtk.gdk.threads_leave()
             
             if not loop:
                 break
