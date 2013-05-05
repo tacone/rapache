@@ -4,14 +4,15 @@ Rapache
 An Apache GUI configurator created for Ubuntu. <br/>
 *(please note: it has nothing to do with R-Apache)*
 
-**This is now the official repository of Rapache, the [previous](https://launchpad.net/rapache) is deprecated and unmantained**
+**Find the source code at: [https://github.com/tacone/rapache/](https://github.com/tacone/rapache/)** <br/>
+*the [launchpad project](https://launchpad.net/rapache) is deprecated and unmantained*
 
 To know more about (story, instructions) Rapache please visit this page and try to ignore my grammar 
 mistakes: My posts about [Rapache](http://www.stefanoforenza.com/category/rapache/)
 
 ## Purpose
 
-Be able to swiftly create virtualhosts and disable/enable apache modules without messing with text-files.
+The goal is to let a web developer to swiftly create virtualhosts and disable/enable apache modules without messing with text-files.
 
 ## Installation
 
