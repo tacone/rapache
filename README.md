@@ -33,7 +33,6 @@ sudo apt-get install python-gtk2 python-gtksourceview2 gksu
 ## Notes
 
 - the project is inactive and barely mantained, just to scratch my own itches
-
 - works only on Ubuntu and has been made with Python-Gkt
 - needs sudo to run, as in `sudo ./rapache`
 - it's `localhost` only, won't work via SSH
@@ -44,5 +43,5 @@ This tool has been co-authored by [Killerkiwi](https://github.com/killerkiwi), b
 
 ## License
 
-Everything is GPL3 except where otherwise noted (there are some LGPL3 files)
+Everything is GPL3 except where otherwise noted (some files are dual licensed LGPL3/GPL3)
 
