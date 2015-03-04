@@ -1,3 +1,7 @@
+## Unmantained - does not work on recent Ubuntu versions.
+
+This repository is kept for historical record only.
+
 Rapache
 =======
 
@@ -8,7 +12,7 @@ An Apache GUI configurator created for Ubuntu. <br/>
 *the [launchpad project](https://launchpad.net/rapache) is deprecated and unmantained*
 
 To know more about (story, instructions) Rapache please visit this page and try to ignore my grammar 
-mistakes: My posts about [Rapache](http://www.stefanoforenza.com/category/rapache/)
+mistakes: My posts about Rapache
 
 ## Purpose
 
@@ -26,9 +30,7 @@ sudo apt-get install python-gtk2 python-gtksourceview2 gksu
 
 ## Screenshots
 
-![Main screen](http://www.stefanoforenza.com/blog/wp-content/uploads/2008/07/rapache-main.png)
-![Edit virtualhost](http://www.stefanoforenza.com/blog/wp-content/uploads/2008/09/rapache-security.png)
-![Code Editor](http://www.stefanoforenza.com/blog/wp-content/uploads/2008/07/rapache-syntax-highlightining.png)
+Not available.
 
 ## Notes
 
